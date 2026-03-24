@@ -1,0 +1,69 @@
+package com.bookapp.ui.auth
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import com.bookapp.R
+import com.bookapp.data.api.LoginRequest
+import com.bookapp.data.api.RetrofitClient
+import com.bookapp.ui.admin.AdminActivity
+import com.bookapp.ui.home.HomeActivity
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+class LoginActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_login)
+
+        val username = findViewById<EditText>(R.id.edtUsername)
+        val password = findViewById<EditText>(R.id.edtPassword)
+        val btnLogin = findViewById<Button>(R.id.btnLogin)
+
+        btnLogin.setOnClickListener {
+            val usernameValue = username.text.toString().trim()
+            val passwordValue = password.text.toString()
+
+            if (usernameValue.isEmpty() || passwordValue.isEmpty()) {
+                Toast.makeText(this, "Vui long nhap day du tai khoan va mat khau", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val request = LoginRequest(usernameValue, passwordValue)
+
+            RetrofitClient.instance.login(request)
+                .enqueue(object : Callback<com.bookapp.data.api.LoginResponse> {
+                    override fun onResponse(
+                        call: Call<com.bookapp.data.api.LoginResponse>,
+                        response: Response<com.bookapp.data.api.LoginResponse>
+                    ) {
+                        if (response.isSuccessful) {
+                            val role = response.body()?.role
+
+                            if (role == "ADMIN") {
+                                startActivity(Intent(this@LoginActivity, AdminActivity::class.java))
+                            } else {
+                                startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
+                            }
+                            finish()
+                        } else {
+                            val errorText = response.errorBody()?.string()?.take(120)
+                            val message = if (errorText.isNullOrBlank()) {
+                                "Login failed (HTTP ${response.code()})"
+                            } else {
+                                "Login failed (HTTP ${response.code()}): $errorText"
+                            }
+                            Toast.makeText(this@LoginActivity, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<com.bookapp.data.api.LoginResponse>, t: Throwable) {
+                        Toast.makeText(this@LoginActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }
+    }
+}
