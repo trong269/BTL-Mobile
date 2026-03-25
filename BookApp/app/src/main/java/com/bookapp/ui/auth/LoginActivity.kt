@@ -2,10 +2,14 @@ package com.bookapp.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bookapp.R
 import com.bookapp.data.api.LoginRequest
+import com.bookapp.data.api.LoginResponse
 import com.bookapp.data.api.RetrofitClient
 import com.bookapp.ui.admin.AdminActivity
 import com.bookapp.ui.home.HomeActivity
@@ -22,6 +26,11 @@ class LoginActivity : AppCompatActivity() {
         val username = findViewById<EditText>(R.id.edtUsername)
         val password = findViewById<EditText>(R.id.edtPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
+        val tvGoToRegister = findViewById<TextView>(R.id.tvGoToRegister)
+
+        tvGoToRegister.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
+        }
 
         btnLogin.setOnClickListener {
             val usernameValue = username.text.toString().trim()
@@ -33,13 +42,18 @@ class LoginActivity : AppCompatActivity() {
             }
 
             val request = LoginRequest(usernameValue, passwordValue)
+            btnLogin.isEnabled = false
+            btnLogin.text = "Dang xu ly..."
 
             RetrofitClient.instance.login(request)
-                .enqueue(object : Callback<com.bookapp.data.api.LoginResponse> {
+                .enqueue(object : Callback<LoginResponse> {
                     override fun onResponse(
-                        call: Call<com.bookapp.data.api.LoginResponse>,
-                        response: Response<com.bookapp.data.api.LoginResponse>
+                        call: Call<LoginResponse>,
+                        response: Response<LoginResponse>
                     ) {
+                        btnLogin.isEnabled = true
+                        btnLogin.text = "Dang nhap"
+
                         if (response.isSuccessful) {
                             val role = response.body()?.role
 
@@ -60,7 +74,9 @@ class LoginActivity : AppCompatActivity() {
                         }
                     }
 
-                    override fun onFailure(call: Call<com.bookapp.data.api.LoginResponse>, t: Throwable) {
+                    override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                        btnLogin.isEnabled = true
+                        btnLogin.text = "Dang nhap"
                         Toast.makeText(this@LoginActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })

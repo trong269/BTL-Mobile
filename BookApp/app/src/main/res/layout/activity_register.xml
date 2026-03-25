@@ -17,49 +17,32 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="BookApp"
+            android:text="Tao tai khoan"
             android:textColor="@android:color/white"
-            android:textSize="34sp"
+            android:textSize="30sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="Nen tang doc sach cho nguoi yeu tri thuc"
+            android:text="Tham gia BookApp de quan ly thu vien cua ban"
             android:textColor="#D8FFFFFF"
             android:textSize="14sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/auth_card_bg"
             android:elevation="6dp"
             android:orientation="vertical"
             android:padding="20dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Dang nhap"
-                android:textColor="#1B1F24"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Dang nhap de tiep tuc doc sach cua ban"
-                android:textColor="#6C7380"
-                android:textSize="13sp" />
-
             <EditText
-                android:id="@+id/edtUsername"
+                android:id="@+id/edtRegisterUsername"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="16dp"
                 android:background="@drawable/auth_input_bg"
                 android:hint="Username"
                 android:inputType="text"
@@ -68,7 +51,19 @@
                 android:textColorHint="#8A909A" />
 
             <EditText
-                android:id="@+id/edtPassword"
+                android:id="@+id/edtRegisterEmail"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/auth_input_bg"
+                android:hint="Email"
+                android:inputType="textEmailAddress"
+                android:paddingHorizontal="14dp"
+                android:textColor="#1B1F24"
+                android:textColorHint="#8A909A" />
+
+            <EditText
+                android:id="@+id/edtRegisterPassword"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="10dp"
@@ -79,25 +74,37 @@
                 android:textColor="#1B1F24"
                 android:textColorHint="#8A909A" />
 
+            <EditText
+                android:id="@+id/edtRegisterConfirmPassword"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/auth_input_bg"
+                android:hint="Confirm password"
+                android:inputType="textPassword"
+                android:paddingHorizontal="14dp"
+                android:textColor="#1B1F24"
+                android:textColorHint="#8A909A" />
+
             <Button
-                android:id="@+id/btnLogin"
+                android:id="@+id/btnRegister"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/auth_primary_button_bg"
-                android:text="Dang nhap"
+                android:text="Dang ky"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvGoToRegister"
+                android:id="@+id/tvGoToLogin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
-                android:text="Chua co tai khoan? Dang ky ngay"
+                android:text="Da co tai khoan? Quay lai dang nhap"
                 android:textColor="@color/auth_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
