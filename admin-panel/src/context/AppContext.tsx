@@ -62,6 +62,9 @@ interface AppContextType {
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   activities: Activity[];
   setActivities: React.Dispatch<React.SetStateAction<Activity[]>>;
+  isAuthenticated: boolean;
+  userProfile: { id: number; name: string; email: string; role: string } | null;
+  setAuthState: (next: { isAuthenticated: boolean; userProfile: AppContextType['userProfile'] }) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -407,9 +410,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : initialActivities;
   });
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const saved = localStorage.getItem('isAuthenticated');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const [userProfile, setUserProfile] = useState<AppContextType['userProfile']>(() => {
+    const saved = localStorage.getItem('userProfile');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const setAuthState = (next: { isAuthenticated: boolean; userProfile: AppContextType['userProfile'] }) => {
+    setIsAuthenticated(next.isAuthenticated);
+    setUserProfile(next.userProfile);
+  };
+
   // Sync category counts whenever books or categories change
   useEffect(() => {
-    setCategories(prevCategories => 
+    setCategories(prevCategories =>
       prevCategories.map(cat => ({
         ...cat,
         count: books.filter(book => book.categories.includes(cat.title)).length
@@ -433,8 +451,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('activities', JSON.stringify(activities));
   }, [activities]);
 
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', JSON.stringify(isAuthenticated));
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+  }, [userProfile]);
+
   return (
-    <AppContext.Provider value={{ books, setBooks, categories, setCategories, users, setUsers, activities, setActivities }}>
+    <AppContext.Provider value={{ books, setBooks, categories, setCategories, users, setUsers, activities, setActivities, isAuthenticated, userProfile, setAuthState }}>
       {children}
     </AppContext.Provider>
   );

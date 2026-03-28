@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Edit2, Trash2, X, Users as UsersIcon, UserCheck, Crown, Shield, Camera } from 'lucide-react';
+import { Search, Edit2, Trash2, X, Users as UsersIcon, Crown, Shield, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppContext } from '../context/AppContext';
+import { useUsers } from '../api/queries';
+import type { UserDto } from '../api/usersApi';
 
 export default function Users() {
   const { users: userList, setUsers: setUserList } = useAppContext();
@@ -12,17 +14,22 @@ export default function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const useMock = import.meta.env.VITE_USE_MOCK_API === 'true';
+  const { data: usersPage } = useUsers({ page: currentPage - 1, size: itemsPerPage });
+  const apiUsers = usersPage?.content ?? [];
+  const effectiveUsers: UserDto[] = useMock ? (userList as UserDto[]) : apiUsers;
+
   // Reset to page 1 when search or filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, activeFilter]);
 
-  const filteredUsers = userList.filter(user => {
+  const filteredUsers = effectiveUsers.filter((user: UserDto) => {
     // Search filter
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // Category filter
     let matchesCategory = true;
     if (activeFilter === "admin") {
@@ -42,7 +49,7 @@ export default function Users() {
 
   const confirmDelete = () => {
     if (deletingUser) {
-      setUserList(userList.filter(u => u.id !== deletingUser.id));
+      setUserList(userList.filter((u: UserDto) => u.id !== deletingUser.id));
       setDeletingUser(null);
       toast.success('Đã xóa người dùng!');
     }
@@ -51,7 +58,7 @@ export default function Users() {
   const saveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUser) {
-      setUserList(userList.map(u => u.id === editingUser.id ? editingUser : u));
+      setUserList(userList.map((u: UserDto) => u.id === editingUser.id ? editingUser : u));
       setEditingUser(null);
       toast.success('Đã cập nhật thông tin người dùng!');
     }
@@ -65,9 +72,9 @@ export default function Users() {
     }
   };
 
-  const totalUsers = userList.length;
-  const adminUsers = userList.filter(u => u.role === 'admin').length;
-  const premiumUsers = userList.filter(u => u.plan === 'Premium').length;
+  const totalUsers = effectiveUsers.length;
+  const adminUsers = effectiveUsers.filter((u: UserDto) => u.role === 'admin').length;
+  const premiumUsers = effectiveUsers.filter((u: UserDto) => u.plan === 'Premium').length;
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -118,11 +125,11 @@ export default function Users() {
         <div className="p-6 border-b border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full sm:max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant" />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm người dùng..." 
+            <input
+              type="text"
+              placeholder="Tìm kiếm người dùng..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               className="w-full bg-surface-container-low border border-outline-variant/50 rounded-full py-2.5 pl-12 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
             />
           </div>
@@ -241,8 +248,8 @@ export default function Users() {
             Hiển thị {filteredUsers.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredUsers.length)} của {filteredUsers.length}
           </span>
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            <button
+              onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="px-3 py-1.5 rounded-lg border border-outline-variant/50 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -251,8 +258,8 @@ export default function Users() {
             <div className="text-sm font-medium text-on-surface px-2">
               Trang {currentPage} / {totalPages || 1}
             </div>
-            <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            <button
+              onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
               className="px-3 py-1.5 rounded-lg border border-outline-variant/50 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -283,41 +290,41 @@ export default function Users() {
                 </div>
                 <div className="w-full">
                   <label className="block text-xs font-medium text-on-surface-variant mb-1.5">Hoặc nhập link ảnh (URL)</label>
-                  <input 
-                    type="url" 
+                  <input
+                    type="url"
                     placeholder="https://example.com/avatar.jpg"
                     value={editingUser.avatar.startsWith('data:') ? '' : editingUser.avatar}
-                    onChange={(e) => setEditingUser({...editingUser, avatar: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingUser({ ...editingUser, avatar: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-on-surface mb-1.5">Tên người dùng</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={editingUser.name}
-                  onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingUser({ ...editingUser, name: e.target.value })}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-on-surface mb-1.5">Email</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
                   value={editingUser.email}
-                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingUser({ ...editingUser, email: e.target.value })}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Vai trò</label>
-                  <select 
+                  <select
                     value={editingUser.role}
-                    onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditingUser({ ...editingUser, role: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   >
                     <option value="user">User</option>
@@ -326,9 +333,9 @@ export default function Users() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Gói</label>
-                  <select 
+                  <select
                     value={editingUser.plan}
-                    onChange={(e) => setEditingUser({...editingUser, plan: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditingUser({ ...editingUser, plan: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   >
                     <option value="Cơ bản">Cơ bản</option>

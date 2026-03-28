@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Plus, BookOpen, X, Edit2, Trash2, Camera, CheckCircle2, Sparkles, Star, MessageSquare } from 'lucide-react';
+import { Search, MoreVertical, Plus, BookOpen, X, Edit2, Trash2, Camera, CheckCircle2, Sparkles, Star, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { useAppContext, Book } from '../context/AppContext';
+import { useBooks } from '../api/queries';
+import type { BookDto } from '../api/booksApi';
 
 const filters = ["Tất cả", "Sẵn sàng", "Đang xử lý AI"];
 
 export default function Library() {
   const { books: bookList, setBooks: setBookList, categories } = useAppContext();
-  const CATEGORIES = categories.map(c => c.title);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [editingBook, setEditingBook] = useState<any>(null);
   const [deletingBook, setDeletingBook] = useState<any>(null);
@@ -18,6 +19,12 @@ export default function Library() {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const itemsPerPage = 9;
+
+  const useMock = import.meta.env.VITE_USE_MOCK_API === 'true';
+  const { data: booksPage } = useBooks({ page: currentPage - 1, size: itemsPerPage });
+  const apiBooks = booksPage?.content ?? [];
+  const effectiveBooks: BookDto[] = useMock ? (bookList as BookDto[]) : apiBooks;
+  const CATEGORIES = categories.map((c: { title: string }) => c.title);
 
   // Reset to page 1 when search or filter changes
   useEffect(() => {
@@ -31,9 +38,9 @@ export default function Library() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const filteredBooks = bookList.filter(book => {
-    const matchesSearch = 
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredBooks = effectiveBooks.filter((book: BookDto) => {
+    const matchesSearch =
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.author.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = activeFilter === "Tất cả" || book.status === activeFilter;
     return matchesSearch && matchesFilter;
@@ -47,7 +54,7 @@ export default function Library() {
 
   const confirmDelete = () => {
     if (deletingBook) {
-      setBookList(bookList.filter(b => b.id !== deletingBook.id));
+      setBookList(bookList.filter((b: Book) => b.id !== deletingBook.id));
       setDeletingBook(null);
       setSelectedBook(null);
       toast.success('Đã xóa sách khỏi thư viện!');
@@ -68,7 +75,7 @@ export default function Library() {
       
       if (editingBook.id) {
         // Update existing book
-        setBookList(bookList.map(b => b.id === editingBook.id ? updatedBook : b));
+        setBookList(bookList.map((b: Book) => b.id === editingBook.id ? updatedBook : b));
         if (selectedBook?.id === editingBook.id) {
           setSelectedBook(updatedBook);
         }
@@ -112,7 +119,7 @@ export default function Library() {
       rating: Number(newAverageRating.toFixed(1))
     };
 
-    setBookList(bookList.map(b => b.id === selectedBook.id ? updatedBook : b));
+    setBookList(bookList.map((b: Book) => b.id === selectedBook.id ? updatedBook : b));
     setSelectedBook(updatedBook);
     setNewReview({ rating: 5, comment: "" });
     toast.success('Đã gửi đánh giá của bạn!');
@@ -151,11 +158,11 @@ export default function Library() {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant" />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm theo tên sách, tác giả..." 
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên sách, tác giả..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-full py-3 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
@@ -179,7 +186,7 @@ export default function Library() {
 
       {/* Book Grid - Asymmetric */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentBooks.map((book, idx) => (
+        {currentBooks.map((book: BookDto, idx: number) => (
           <div 
             key={book.id} 
             onClick={() => setSelectedBook(book)}
@@ -197,8 +204,8 @@ export default function Library() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent"></div>
               
               <div className="absolute top-4 right-4 z-20">
-                <button 
-                  onClick={(e) => {
+                <button
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
                     setOpenMenuId(openMenuId === book.id ? null : book.id);
                   }}
@@ -214,7 +221,7 @@ export default function Library() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -10 }}
                       transition={{ duration: 0.15 }}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
                       className="absolute right-0 top-full mt-2 w-36 bg-surface rounded-xl shadow-lg border border-outline-variant/20 overflow-hidden z-30"
                     >
                       <button 
@@ -290,8 +297,8 @@ export default function Library() {
             Hiển thị {filteredBooks.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredBooks.length)} của {filteredBooks.length} sách
           </span>
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            <button
+              onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="px-3 py-1.5 rounded-lg border border-outline-variant/50 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -300,8 +307,8 @@ export default function Library() {
             <div className="text-sm font-medium text-on-surface px-2">
               Trang {currentPage} / {totalPages || 1}
             </div>
-            <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            <button
+              onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages || totalPages === 0}
               className="px-3 py-1.5 rounded-lg border border-outline-variant/50 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -448,7 +455,7 @@ export default function Library() {
                       </div>
                       <textarea
                         value={newReview.comment}
-                        onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewReview({ ...newReview, comment: e.target.value })}
                         placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..."
                         className="w-full bg-surface border border-outline-variant/50 rounded-xl px-4 py-3 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none min-h-[80px] mb-3"
                         required
@@ -534,32 +541,32 @@ export default function Library() {
                 </div>
                 <div className="w-full">
                   <label className="block text-xs font-medium text-on-surface-variant mb-1.5">Hoặc nhập link ảnh (URL)</label>
-                  <input 
-                    type="url" 
+                  <input
+                    type="url"
                     placeholder="https://example.com/image.jpg"
                     value={editingBook.cover.startsWith('data:') ? '' : editingBook.cover}
-                    onChange={(e) => setEditingBook({...editingBook, cover: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingBook({ ...editingBook, cover: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-on-surface mb-1.5">Tên sách</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={editingBook.title}
-                  onChange={(e) => setEditingBook({...editingBook, title: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingBook({ ...editingBook, title: e.target.value })}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-on-surface mb-1.5">Tác giả</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={editingBook.author}
-                  onChange={(e) => setEditingBook({...editingBook, author: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingBook({ ...editingBook, author: e.target.value })}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
@@ -567,7 +574,7 @@ export default function Library() {
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Thể loại</label>
                   <div className="flex flex-wrap gap-2 p-3 bg-surface-container-lowest border border-outline-variant/50 rounded-xl">
-                    {CATEGORIES.map(cat => {
+                    {CATEGORIES.map((cat: string) => {
                       const isSelected = editingBook.categories?.includes(cat);
                       return (
                         <button
@@ -595,9 +602,9 @@ export default function Library() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Ngôn ngữ</label>
-                  <select 
+                  <select
                     value={editingBook.language}
-                    onChange={(e) => setEditingBook({...editingBook, language: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditingBook({ ...editingBook, language: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   >
                     <option value="Tiếng Việt">Tiếng Việt</option>
@@ -613,19 +620,19 @@ export default function Library() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Ngày xuất bản</label>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     value={editingBook.publishDate}
-                    onChange={(e) => setEditingBook({...editingBook, publishDate: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingBook({ ...editingBook, publishDate: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-on-surface mb-1.5">Trạng thái</label>
-                <select 
+                <select
                   value={editingBook.status}
-                  onChange={(e) => setEditingBook({...editingBook, status: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditingBook({ ...editingBook, status: e.target.value })}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 >
                   <option value="Sẵn sàng">Sẵn sàng</option>
@@ -634,10 +641,10 @@ export default function Library() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-on-surface mb-1.5">Tóm tắt</label>
-                <textarea 
+                <textarea
                   rows={3}
                   value={editingBook.summary}
-                  onChange={(e) => setEditingBook({...editingBook, summary: e.target.value})}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingBook({ ...editingBook, summary: e.target.value })}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
                 />
               </div>

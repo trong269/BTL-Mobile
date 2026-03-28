@@ -14,6 +14,8 @@ import {
   X
 } from "lucide-react";
 import { toast } from "sonner";
+import { logout } from "../api/authApi";
+import { useAppContext } from "../context/AppContext";
 import { cn } from "../lib/utils";
 
 const LogoIcon = ({ className }: { className?: string }) => (
@@ -36,6 +38,7 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { setAuthState } = useAppContext();
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
@@ -55,8 +58,14 @@ export default function Layout() {
     setShowAdminMenu(false);
   };
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     setShowLogoutConfirm(false);
+    try {
+      await logout();
+    } catch (error) {
+      toast.error('Không thể đăng xuất. Vui lòng thử lại.');
+    }
+    setAuthState({ isAuthenticated: false, userProfile: null });
     toast.success('Đã đăng xuất!');
     navigate('/login');
   };
