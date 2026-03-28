@@ -118,7 +118,18 @@ export default function Login() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded cursor-pointer accent-primary"
+                  className="
+                    h-4 w-4 rounded border border-outline-variant
+                    appearance-none relative cursor-pointer
+                    checked:bg-primary checked:border-primary
+                    checked:after:content-[''] checked:after:block
+                    checked:after:w-1.5 checked:after:h-2.5
+                    checked:after:border-b-2 checked:after:border-r-2
+                    checked:after:border-white
+                    checked:after:rotate-45 checked:after:absolute
+                    checked:after:left-1/2 checked:after:top-1/2
+                    checked:after:-translate-x-1/2 checked:after:-translate-y-1/2
+                  "
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-on-surface-variant cursor-pointer">
                   Ghi nhớ đăng nhập
