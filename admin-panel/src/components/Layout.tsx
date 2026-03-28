@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  LayoutDashboard, 
-  Library, 
-  Tags, 
-  Settings, 
-  Users, 
+import {
+  LayoutDashboard,
+  Library,
+  Tags,
+  Settings,
+  Users,
   HelpCircle,
-  Bell,
-  Search,
   LogOut,
-  X
+  X,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { logout } from "../api/authApi";
@@ -38,9 +38,10 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setAuthState } = useAppContext();
+  const { setAuthState, userProfile } = useAppContext();
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,17 +74,46 @@ export default function Layout() {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-72 bg-surface border-r border-outline-variant/30 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#A04A00] flex items-center justify-center shadow-lg shadow-primary/30">
-              <LogoIcon className="w-6 h-6 text-white" />
+      <aside
+        className={cn(
+          "hidden md:flex flex-col bg-surface border-r border-outline-variant/30 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-all duration-300",
+          isSidebarCollapsed ? "w-20" : "w-72"
+        )}
+      >
+        <div className={cn("flex items-center", isSidebarCollapsed ? "p-3" : "p-4")}>
+          <div className={cn("flex items-center", isSidebarCollapsed ? "gap-0" : "gap-3")}
+          >
+            <div className="w-9 h-9 rounded-full bg-[#A04A00] flex items-center justify-center shadow-lg shadow-primary/30">
+              <LogoIcon className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-2xl font-serif font-semibold text-on-surface tracking-tight">Book App</h1>
+            <h1
+              className={cn(
+                "text-xl font-serif font-semibold text-on-surface tracking-tight transition-all duration-300 overflow-hidden",
+                isSidebarCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              )}
+            >
+              Book App
+            </h1>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            className={cn(
+              "ml-auto rounded-full p-2 hover:bg-surface-container transition-colors",
+              isSidebarCollapsed ? "mx-auto" : ""
+            )}
+            aria-label={isSidebarCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          >
+            {isSidebarCollapsed ? (
+              <ChevronsRight className="w-5 h-5" />
+            ) : (
+              <ChevronsLeft className="w-5 h-5" />
+            )}
+          </button>
         </div>
-        
-        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto relative mt-4">
+
+        <nav className={cn("flex-1 space-y-1 overflow-y-auto relative", isSidebarCollapsed ? "px-2 mt-2" : "px-4 mt-3")}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -91,10 +121,12 @@ export default function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
+                title={item.name}
                 className={cn(
-                  "relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors z-10",
-                  isActive 
-                    ? "text-primary font-medium" 
+                  "relative flex items-center rounded-2xl transition-colors z-10",
+                  isSidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-4 py-3",
+                  isActive
+                    ? "text-primary font-medium"
                     : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
                 )}
               >
@@ -106,19 +138,37 @@ export default function Layout() {
                   />
                 )}
                 <Icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-on-surface-variant")} />
-                {item.name}
+                <span
+                  className={cn(
+                    "transition-all duration-300 overflow-hidden",
+                    isSidebarCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                  )}
+                >
+                  {item.name}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <button 
+        <div className={cn("mt-auto", isSidebarCollapsed ? "p-3" : "p-4")}>
+          <button
             onClick={handleLogoutClick}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-error hover:bg-error-container/50 transition-colors font-medium"
+            className={cn(
+              "w-full flex items-center rounded-2xl text-error hover:bg-error-container/50 transition-colors font-medium",
+              isSidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-4 py-3"
+            )}
+            title="Đăng xuất"
           >
             <LogOut className="w-5 h-5" />
-            Đăng xuất
+            <span
+              className={cn(
+                "transition-all duration-300 overflow-hidden",
+                isSidebarCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              )}
+            >
+              Đăng xuất
+            </span>
           </button>
         </div>
       </aside>
@@ -136,9 +186,9 @@ export default function Layout() {
 
           <div className="flex items-center gap-4 ml-auto">
             <div className="relative flex items-center pl-2" ref={adminMenuRef}>
-              <img 
-                src="https://i.pravatar.cc/150?img=32" 
-                alt="Admin" 
+              <img
+                src={userProfile?.avatar || "https://i.pravatar.cc/150?img=32"}
+                alt={userProfile?.name || "Admin"}
                 onClick={() => setShowAdminMenu(!showAdminMenu)}
                 className="w-9 h-9 rounded-full object-cover ring-2 ring-surface shadow-sm cursor-pointer hover:ring-primary/50 transition-all"
               />
@@ -153,15 +203,19 @@ export default function Layout() {
                     className="absolute right-0 top-full mt-3 w-64 bg-surface-container-lowest rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-outline-variant/30 p-5 z-50 origin-top-right"
                   >
                     <div className="flex items-center gap-4 mb-4">
-                      <img src="https://i.pravatar.cc/150?img=32" alt="Admin" className="w-14 h-14 rounded-full object-cover ring-4 ring-primary/10" />
+                      <img
+                        src={userProfile?.avatar || "https://i.pravatar.cc/150?img=32"}
+                        alt={userProfile?.name || "Admin"}
+                        className="w-14 h-14 rounded-full object-cover ring-4 ring-primary/10"
+                      />
                       <div>
-                        <p className="text-base font-semibold text-on-surface">Admin User</p>
-                        <p className="text-xs text-on-surface-variant mt-0.5">admin@bookapp.com</p>
+                        <p className="text-base font-semibold text-on-surface">{userProfile?.name || "Admin"}</p>
+                        <p className="text-xs text-on-surface-variant mt-0.5">{userProfile?.email || ""}</p>
                       </div>
                     </div>
                     <div className="border-t border-outline-variant/30 pt-4 flex items-center justify-between">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-container/50 text-primary">
-                        Quản trị viên
+                        {userProfile?.role || ""}
                       </span>
                       <span className="text-xs text-on-surface-variant">Hoạt động</span>
                     </div>

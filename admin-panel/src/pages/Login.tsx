@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { User, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -9,7 +9,7 @@ import { login } from "../api/authApi";
 import { useAppContext } from "../context/AppContext";
 
 const loginSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
+  username: z.string().min(1, "Username không được để trống"),
   password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
 });
 
@@ -69,24 +69,24 @@ export default function Login() {
         <div className="bg-surface py-8 px-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:rounded-[2rem] sm:px-10 border border-outline-variant/30">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-on-surface">
-                Email
+              <label htmlFor="username" className="block text-sm font-medium text-on-surface">
+                Username
               </label>
               <div className="mt-2 relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-on-surface-variant" />
+                  <User className="h-5 w-5 text-on-surface-variant" />
                 </div>
                 <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  {...register('email')}
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  {...register('username')}
                   className="block w-full pl-11 pr-4 py-3 bg-surface-container-lowest border border-outline-variant/50 rounded-xl text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all sm:text-sm"
-                  placeholder="admin@bookapp.com"
+                  placeholder="admin"
                 />
               </div>
-              {errors.email && (
-                <p className="mt-2 text-sm text-error">{errors.email.message}</p>
+              {errors.username && (
+                <p className="mt-2 text-sm text-error">{errors.username.message}</p>
               )}
             </div>
 
@@ -118,7 +118,18 @@ export default function Login() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded cursor-pointer accent-primary"
+                  className="
+                    h-4 w-4 rounded border border-outline-variant
+                    appearance-none relative cursor-pointer
+                    checked:bg-primary checked:border-primary
+                    checked:after:content-[''] checked:after:block
+                    checked:after:w-1.5 checked:after:h-2.5
+                    checked:after:border-b-2 checked:after:border-r-2
+                    checked:after:border-white
+                    checked:after:rotate-45 checked:after:absolute
+                    checked:after:left-1/2 checked:after:top-1/2
+                    checked:after:-translate-x-1/2 checked:after:-translate-y-1/2
+                  "
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-on-surface-variant cursor-pointer">
                   Ghi nhớ đăng nhập
