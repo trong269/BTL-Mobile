@@ -126,11 +126,7 @@ export default function Layout() {
           </div>
 
           <div className="flex items-center gap-4 ml-auto">
-            <button className="p-2.5 rounded-full bg-surface-container-lowest border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-primary/30 transition-all shadow-sm relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full ring-2 ring-surface-container-lowest"></span>
-            </button>
-            <div className="relative flex items-center pl-2 md:border-l border-outline-variant/30" ref={adminMenuRef}>
+            <div className="relative flex items-center pl-2" ref={adminMenuRef}>
               <img 
                 src="https://i.pravatar.cc/150?img=32" 
                 alt="Admin" 
@@ -251,7 +247,7 @@ export default function Layout() {
                   </button>
                   <button 
                     onClick={confirmLogout}
-                    className="px-5 py-2.5 rounded-full font-medium bg-error text-on-error hover:bg-error/90 transition-colors"
+                    className="px-5 py-2.5 rounded-full font-medium text-white bg-error text-on-error hover:bg-error/90 transition-colors"
                   >
                     Đăng xuất
                   </button>

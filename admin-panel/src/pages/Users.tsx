@@ -79,10 +79,6 @@ export default function Users() {
         </div>
         
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-surface-container-highest text-on-surface px-5 py-2.5 rounded-full font-medium hover:bg-outline-variant/30 transition-colors">
-            <Filter className="w-5 h-5" />
-            <span className="hidden sm:inline">Lọc</span>
-          </button>
         </div>
       </div>
 
