@@ -63,7 +63,7 @@ interface AppContextType {
   activities: Activity[];
   setActivities: React.Dispatch<React.SetStateAction<Activity[]>>;
   isAuthenticated: boolean;
-  userProfile: { id: number; name: string; email: string; role: string } | null;
+  userProfile: { id: string; name: string; email: string; role: string; avatar?: string } | null;
   setAuthState: (next: { isAuthenticated: boolean; userProfile: AppContextType['userProfile'] }) => void;
 }
 

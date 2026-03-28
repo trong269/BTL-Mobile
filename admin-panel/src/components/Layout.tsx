@@ -38,7 +38,7 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setAuthState } = useAppContext();
+  const { setAuthState, userProfile } = useAppContext();
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -186,9 +186,9 @@ export default function Layout() {
 
           <div className="flex items-center gap-4 ml-auto">
             <div className="relative flex items-center pl-2" ref={adminMenuRef}>
-              <img 
-                src="https://i.pravatar.cc/150?img=32" 
-                alt="Admin" 
+              <img
+                src={userProfile?.avatar || "https://i.pravatar.cc/150?img=32"}
+                alt={userProfile?.name || "Admin"}
                 onClick={() => setShowAdminMenu(!showAdminMenu)}
                 className="w-9 h-9 rounded-full object-cover ring-2 ring-surface shadow-sm cursor-pointer hover:ring-primary/50 transition-all"
               />
@@ -203,15 +203,19 @@ export default function Layout() {
                     className="absolute right-0 top-full mt-3 w-64 bg-surface-container-lowest rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-outline-variant/30 p-5 z-50 origin-top-right"
                   >
                     <div className="flex items-center gap-4 mb-4">
-                      <img src="https://i.pravatar.cc/150?img=32" alt="Admin" className="w-14 h-14 rounded-full object-cover ring-4 ring-primary/10" />
+                      <img
+                        src={userProfile?.avatar || "https://i.pravatar.cc/150?img=32"}
+                        alt={userProfile?.name || "Admin"}
+                        className="w-14 h-14 rounded-full object-cover ring-4 ring-primary/10"
+                      />
                       <div>
-                        <p className="text-base font-semibold text-on-surface">Admin User</p>
-                        <p className="text-xs text-on-surface-variant mt-0.5">admin@bookapp.com</p>
+                        <p className="text-base font-semibold text-on-surface">{userProfile?.name || "Admin"}</p>
+                        <p className="text-xs text-on-surface-variant mt-0.5">{userProfile?.email || ""}</p>
                       </div>
                     </div>
                     <div className="border-t border-outline-variant/30 pt-4 flex items-center justify-between">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-container/50 text-primary">
-                        Quản trị viên
+                        {userProfile?.role || ""}
                       </span>
                       <span className="text-xs text-on-surface-variant">Hoạt động</span>
                     </div>
