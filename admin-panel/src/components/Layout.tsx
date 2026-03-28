@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  LayoutDashboard, 
-  Library, 
-  Tags, 
-  Settings, 
-  Users, 
+import {
+  LayoutDashboard,
+  Library,
+  Tags,
+  Settings,
+  Users,
   HelpCircle,
-  Bell,
-  Search,
   LogOut,
-  X
+  X,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { logout } from "../api/authApi";
@@ -41,6 +41,7 @@ export default function Layout() {
   const { setAuthState } = useAppContext();
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const adminMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,17 +74,46 @@ export default function Layout() {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex flex-col w-72 bg-surface border-r border-outline-variant/30 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#A04A00] flex items-center justify-center shadow-lg shadow-primary/30">
-              <LogoIcon className="w-6 h-6 text-white" />
+      <aside
+        className={cn(
+          "hidden md:flex flex-col bg-surface border-r border-outline-variant/30 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-all duration-300",
+          isSidebarCollapsed ? "w-20" : "w-72"
+        )}
+      >
+        <div className={cn("flex items-center", isSidebarCollapsed ? "p-3" : "p-4")}>
+          <div className={cn("flex items-center", isSidebarCollapsed ? "gap-0" : "gap-3")}
+          >
+            <div className="w-9 h-9 rounded-full bg-[#A04A00] flex items-center justify-center shadow-lg shadow-primary/30">
+              <LogoIcon className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-2xl font-serif font-semibold text-on-surface tracking-tight">Book App</h1>
+            <h1
+              className={cn(
+                "text-xl font-serif font-semibold text-on-surface tracking-tight transition-all duration-300 overflow-hidden",
+                isSidebarCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              )}
+            >
+              Book App
+            </h1>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            className={cn(
+              "ml-auto rounded-full p-2 hover:bg-surface-container transition-colors",
+              isSidebarCollapsed ? "mx-auto" : ""
+            )}
+            aria-label={isSidebarCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          >
+            {isSidebarCollapsed ? (
+              <ChevronsRight className="w-5 h-5" />
+            ) : (
+              <ChevronsLeft className="w-5 h-5" />
+            )}
+          </button>
         </div>
-        
-        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto relative mt-4">
+
+        <nav className={cn("flex-1 space-y-1 overflow-y-auto relative", isSidebarCollapsed ? "px-2 mt-2" : "px-4 mt-3")}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -91,10 +121,12 @@ export default function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
+                title={item.name}
                 className={cn(
-                  "relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors z-10",
-                  isActive 
-                    ? "text-primary font-medium" 
+                  "relative flex items-center rounded-2xl transition-colors z-10",
+                  isSidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-4 py-3",
+                  isActive
+                    ? "text-primary font-medium"
                     : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
                 )}
               >
@@ -106,19 +138,37 @@ export default function Layout() {
                   />
                 )}
                 <Icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-on-surface-variant")} />
-                {item.name}
+                <span
+                  className={cn(
+                    "transition-all duration-300 overflow-hidden",
+                    isSidebarCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                  )}
+                >
+                  {item.name}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <button 
+        <div className={cn("mt-auto", isSidebarCollapsed ? "p-3" : "p-4")}>
+          <button
             onClick={handleLogoutClick}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-error hover:bg-error-container/50 transition-colors font-medium"
+            className={cn(
+              "w-full flex items-center rounded-2xl text-error hover:bg-error-container/50 transition-colors font-medium",
+              isSidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-4 py-3"
+            )}
+            title="Đăng xuất"
           >
             <LogOut className="w-5 h-5" />
-            Đăng xuất
+            <span
+              className={cn(
+                "transition-all duration-300 overflow-hidden",
+                isSidebarCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              )}
+            >
+              Đăng xuất
+            </span>
           </button>
         </div>
       </aside>
