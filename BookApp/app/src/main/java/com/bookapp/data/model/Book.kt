@@ -12,5 +12,8 @@ data class Book(
     val totalPages: Int? = null,
     val views: Int? = null,
     val avgRating: Double? = null,
-    val createdAt: String? = null
+    val featured: Boolean? = null,
+    val tags: List<String>? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 )
