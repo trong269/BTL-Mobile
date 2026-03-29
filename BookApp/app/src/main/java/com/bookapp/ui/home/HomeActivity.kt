@@ -3,9 +3,7 @@ package com.bookapp.ui.home
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +13,6 @@ import com.bookapp.data.api.RetrofitClient
 import com.bookapp.data.model.Book
 import com.bookapp.ui.admin.AdminActivity
 import com.bookapp.ui.auth.LoginActivity
-import com.bookapp.ui.book.BookCatalogActivity
 import com.bookapp.ui.feature.FeatureActivity
 import retrofit2.Call
 import retrofit2.Callback
@@ -130,22 +127,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun bindFeatureButtons() {
-        val edtSearch = findViewById<EditText>(R.id.edtSearch)
-        edtSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                val query = edtSearch.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    val intent = Intent(this, BookCatalogActivity::class.java).apply {
-                        putExtra(BookCatalogActivity.EXTRA_QUERY, query)
-                    }
-                    startActivity(intent)
-                }
-                true
-            } else {
-                false
-            }
-        }
-
         findViewById<Button>(R.id.btnContinueRead).setOnClickListener {
             openFeature("Tiep tuc doc", "Mo lai sach dang doc va tiep tuc hanh trinh cua ban.")
         }
@@ -153,8 +134,7 @@ class HomeActivity : AppCompatActivity() {
             openFeature("Thu vien", "Quan ly tat ca sach ban da mua, dang doc va da doc.")
         }
         findViewById<Button>(R.id.btnCategories).setOnClickListener {
-            val intent = Intent(this, BookCatalogActivity::class.java)
-            startActivity(intent)
+            openFeature("The loai", "Kham pha sach theo chu de va the loai yeu thich.")
         }
         findViewById<Button>(R.id.btnFavorites).setOnClickListener {
             openFeature("Yeu thich", "Xem danh sach sach ban da danh dau yeu thich.")
@@ -163,18 +143,15 @@ class HomeActivity : AppCompatActivity() {
             openFeature("Lich su doc", "Theo doi tien trinh va lich su doc gan day.")
         }
         findViewById<TextView>(R.id.btnSeeAllRecommended).setOnClickListener {
-            val intent = Intent(this, BookCatalogActivity::class.java).apply {
-                putExtra(BookCatalogActivity.EXTRA_MODE, "all")
-            }
-            startActivity(intent)
+            openFeature("De xuat", "Danh sach de xuat sach theo so thich cua ban.")
         }
-//        findViewById<Button>(R.id.btnAdminPanel).setOnClickListener {
-//            startActivity(Intent(this, AdminActivity::class.java))
-//        }
-//        findViewById<Button>(R.id.btnLogout).setOnClickListener {
-//            startActivity(Intent(this, LoginActivity::class.java))
-//            finish()
-//        }
+        findViewById<Button>(R.id.btnAdminPanel).setOnClickListener {
+            startActivity(Intent(this, AdminActivity::class.java))
+        }
+        findViewById<Button>(R.id.btnLogout).setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
     }
 
     private fun bindBottomNavigation() {
@@ -182,10 +159,7 @@ class HomeActivity : AppCompatActivity() {
             Toast.makeText(this, "Ban dang o trang Home", Toast.LENGTH_SHORT).show()
         }
         findViewById<Button>(R.id.navExplore).setOnClickListener {
-            val intent = Intent(this, BookCatalogActivity::class.java).apply {
-                putExtra(BookCatalogActivity.EXTRA_MODE, "all")
-            }
-            startActivity(intent)
+            openFeature("Kham pha", "Xem bang xep hang, xu huong va sach moi phat hanh.")
         }
         findViewById<Button>(R.id.navLibrary).setOnClickListener {
             openFeature("Thu vien", "Truy cap thu vien ca nhan cua ban.")
