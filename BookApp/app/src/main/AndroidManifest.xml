@@ -27,6 +27,12 @@
             android:name=".ui.home.HomeActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.book.BookCatalogActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.book.BookDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="true">
             <intent-filter>
