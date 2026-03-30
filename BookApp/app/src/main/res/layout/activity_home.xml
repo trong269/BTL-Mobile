@@ -242,28 +242,28 @@
                 android:layout_marginTop="16dp"
                 android:orientation="horizontal">
 
-<!--                <Button-->
-<!--                    android:id="@+id/btnAdminPanel"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="46dp"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:background="@drawable/home_chip_bg"-->
-<!--                    android:text="Quan tri"-->
-<!--                    android:textAllCaps="false"-->
-<!--                    android:textColor="#1D2A52"-->
-<!--                    android:textStyle="bold" />-->
+                <Button
+                    android:id="@+id/btnAdminPanel"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/home_chip_bg"
+                    android:text="Quan tri"
+                    android:textAllCaps="false"
+                    android:textColor="#1D2A52"
+                    android:textStyle="bold" />
 
-<!--                <Button-->
-<!--                    android:id="@+id/btnLogout"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="46dp"-->
-<!--                    android:layout_marginStart="10dp"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:background="@drawable/home_chip_bg"-->
-<!--                    android:text="Dang xuat"-->
-<!--                    android:textAllCaps="false"-->
-<!--                    android:textColor="#1D2A52"-->
-<!--                    android:textStyle="bold" />-->
+                <Button
+                    android:id="@+id/btnLogout"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/home_chip_bg"
+                    android:text="Dang xuat"
+                    android:textAllCaps="false"
+                    android:textColor="#1D2A52"
+                    android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

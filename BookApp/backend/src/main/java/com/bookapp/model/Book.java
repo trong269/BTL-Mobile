@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -29,5 +30,9 @@ public class Book {
     private int views;
     private double avgRating;
 
+    private boolean featured;
+    private List<String> tags;
+
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
