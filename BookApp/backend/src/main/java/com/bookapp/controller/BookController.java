@@ -21,4 +21,14 @@ public class BookController {
         return bookService.findAll();
     }
 
+    @GetMapping("/top-week")
+    public List<Book> findTopWeekBooks() {
+        return bookService.findTopWeek();
+    }
+
+    @GetMapping("/top-month")
+    public List<Book> findTopMonthBooks() {
+        return bookService.findTopMonth();
+    }
+
 }

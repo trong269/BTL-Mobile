@@ -33,4 +33,10 @@ interface ApiService {
 
     @GET("api/books")
     fun getAllBooks(): Call<List<Book>>
+
+    @GET("api/books/top-week")
+    fun getTopBooksWeek(): Call<List<Book>>
+
+    @GET("api/books/top-month")
+    fun getTopBooksMonth(): Call<List<Book>>
 }
