@@ -15,3 +15,10 @@ class SummarizeAgentState(TypedDict):
     book_name: str
     messages: Annotated[list[BaseMessage], operator.add]
     result: str
+
+class VisionAgentState(TypedDict):
+    question: str
+    image_url: str
+    book_name: str
+    messages: Annotated[list[BaseMessage], operator.add]
+    result: str

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from dataclasses import dataclass
 from dotenv import load_dotenv
 from src.utils.logging import get_logger
 
@@ -35,6 +36,13 @@ def _substitute_env_vars(text: str) -> str:
 
     # Pattern: ${VAR:-default} hoặc ${VAR}
     return re.sub(r"\$\{([^}:]+)(?::-(.*?))?\}", _replace, text)
+
+@dataclass
+class LangfuseConfig:
+    enabled: bool
+    public_key: str
+    secret_key: str
+    host: str
 
 
 class ConfigManager:
@@ -145,6 +153,30 @@ class ConfigManager:
     @property
     def ollama_base_url(self) -> str:
         return str(self.get("llm", "ollama", "base_url", default="http://localhost:11434"))
+
+    # ─── Tracing ──────────────────────────────────────────────────────────────
+
+    @property
+    def langfuse_public_key(self) -> str:
+        return str(self.get("tracing", "langfuse", "public_key", default=""))
+
+    @property
+    def langfuse_secret_key(self) -> str:
+        return str(self.get("tracing", "langfuse", "secret_key", default=""))
+
+    @property
+    def langfuse_host(self) -> str:
+        return str(self.get("tracing", "langfuse", "host", default="https://cloud.langfuse.com"))
+
+    def get_langfuse_config(self) -> LangfuseConfig:
+        pk = self.langfuse_public_key
+        sk = self.langfuse_secret_key
+        return LangfuseConfig(
+            enabled=bool(pk and sk),
+            public_key=pk,
+            secret_key=sk,
+            host=self.langfuse_host,
+        )
 
 
 # Singleton instance — import và dùng trực tiếp ở bất kỳ đâu
