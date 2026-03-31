@@ -7,3 +7,5 @@ langchain-openai>=1.1.12
 python-dotenv>=1.2.2
 pydantic>=2.12.5
 PyYAML>=6.0.3
+langfuse>=4.0.4
+langchain>=1.2.13
