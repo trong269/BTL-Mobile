@@ -16,9 +16,10 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 
-class BookAdapter(
+class TopBookAdapter(
+    private var metaPrefix: String,
     private val onItemClick: (Book) -> Unit
-) : RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
+) : RecyclerView.Adapter<TopBookAdapter.TopBookViewHolder>() {
 
     private val items = mutableListOf<Book>()
 
@@ -28,33 +29,54 @@ class BookAdapter(
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_book, parent, false)
-        return BookViewHolder(view)
+    fun submitList(newItems: List<Book>, newMetaPrefix: String) {
+        metaPrefix = newMetaPrefix
+        submitList(newItems)
     }
 
-    override fun onBindViewHolder(holder: BookViewHolder, position: Int) {
-        holder.bind(items[position])
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopBookViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_top_book, parent, false)
+        return TopBookViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: TopBookViewHolder, position: Int) {
+        holder.bind(items[position], position + 1, metaPrefix)
     }
 
     override fun getItemCount(): Int = items.size
 
-    inner class BookViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val imgBookCover: ImageView = itemView.findViewById(R.id.imgBookCover)
-        private val tvBookCoverFallback: TextView = itemView.findViewById(R.id.tvBookCoverFallback)
-        private val tvTitle: TextView = itemView.findViewById(R.id.tvBookTitle)
-        private val tvAuthor: TextView = itemView.findViewById(R.id.tvBookAuthor)
-        private val tvMeta: TextView = itemView.findViewById(R.id.tvBookMeta)
+    inner class TopBookViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvTopRank: TextView = itemView.findViewById(R.id.tvTopRank)
+        private val imgTopBookCover: ImageView = itemView.findViewById(R.id.imgTopBookCover)
+        private val tvTopBookCoverFallback: TextView = itemView.findViewById(R.id.tvTopBookCoverFallback)
+        private val tvTopBookTitle: TextView = itemView.findViewById(R.id.tvTopBookTitle)
+        private val tvTopBookAuthor: TextView = itemView.findViewById(R.id.tvTopBookAuthor)
+        private val tvTopBookMeta: TextView = itemView.findViewById(R.id.tvTopBookMeta)
 
-        fun bind(book: Book) {
-            bindCover(book.coverImage)
-            tvTitle.text = book.title?.takeIf { it.isNotBlank() } ?: "Chua co tieu de"
-            tvAuthor.text = book.author?.takeIf { it.isNotBlank() } ?: "Khong ro tac gia"
-
+        fun bind(book: Book, rank: Int, metaPrefix: String) {
             val ratingText = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             val viewsText = book.views ?: 0
-            tvMeta.text = "Danh gia: $ratingText | Luot xem: $viewsText"
+
+            bindCover(book.coverImage)
+            tvTopRank.text = "Top #$rank"
+            tvTopBookTitle.text = book.title?.takeIf { it.isNotBlank() } ?: "Chua co tieu de"
+            tvTopBookAuthor.text = book.author?.takeIf { it.isNotBlank() } ?: "Khong ro tac gia"
+
+            val metaParts = mutableListOf<String>()
+            if (viewsText > 0) {
+                metaParts.add("$viewsText xem")
+            }
+            if (ratingText != "N/A") {
+                metaParts.add("$ratingText sao")
+            }
+
+            if (metaParts.isEmpty()) {
+                tvTopBookMeta.visibility = View.GONE
+            } else {
+                tvTopBookMeta.visibility = View.VISIBLE
+                tvTopBookMeta.text = metaParts.joinToString(" | ")
+            }
 
             itemView.setOnClickListener {
                 onItemClick(book)
@@ -64,16 +86,14 @@ class BookAdapter(
         private fun bindCover(coverImage: String?) {
             val imageUrl = normalizeCoverUrl(coverImage)
             if (imageUrl == null) {
-                imgBookCover.setImageDrawable(null)
-                tvBookCoverFallback.visibility = View.VISIBLE
+                imgTopBookCover.setImageDrawable(null)
+                tvTopBookCoverFallback.visibility = View.VISIBLE
                 return
             }
 
-            tvBookCoverFallback.visibility = View.GONE
+            tvTopBookCoverFallback.visibility = View.GONE
             Glide.with(itemView)
                 .load(imageUrl)
-                .placeholder(R.drawable.book_cover_placeholder)
-                .error(R.drawable.book_cover_placeholder)
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
                         e: GlideException?,
@@ -81,7 +101,7 @@ class BookAdapter(
                         target: Target<Drawable>,
                         isFirstResource: Boolean
                     ): Boolean {
-                        tvBookCoverFallback.visibility = View.VISIBLE
+                        tvTopBookCoverFallback.visibility = View.VISIBLE
                         return false
                     }
 
@@ -92,11 +112,11 @@ class BookAdapter(
                         dataSource: DataSource,
                         isFirstResource: Boolean
                     ): Boolean {
-                        tvBookCoverFallback.visibility = View.GONE
+                        tvTopBookCoverFallback.visibility = View.GONE
                         return false
                     }
                 })
-                .into(imgBookCover)
+                .into(imgTopBookCover)
         }
     }
 

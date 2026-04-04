@@ -60,4 +60,14 @@ public class BookController {
     public Book create(@RequestBody Book book) {
         return bookService.save(book);
     }
+    @GetMapping("/top-week")
+    public List<Book> findTopWeekBooks() {
+        return bookService.findTopWeek();
+    }
+
+    @GetMapping("/top-month")
+    public List<Book> findTopMonthBooks() {
+        return bookService.findTopMonth();
+    }
+
 }
