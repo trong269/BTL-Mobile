@@ -277,6 +277,7 @@ public class BookDataSeeder implements CommandLineRunner {
         double avgRating,
         int createdDaysAgo
     ) {
+        LocalDateTime createdAt = LocalDateTime.now().minusDays(createdDaysAgo);
         return new Book(
             null,
             title,
@@ -289,7 +290,10 @@ public class BookDataSeeder implements CommandLineRunner {
             totalPages,
             views,
             avgRating,
-            LocalDateTime.now().minusDays(createdDaysAgo)
+            false,
+            List.of(),
+            createdAt,
+            createdAt
         );
     }
 }

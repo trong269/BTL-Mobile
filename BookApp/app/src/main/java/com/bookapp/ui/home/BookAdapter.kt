@@ -72,6 +72,8 @@ class BookAdapter(
             tvBookCoverFallback.visibility = View.GONE
             Glide.with(itemView)
                 .load(imageUrl)
+                .placeholder(R.drawable.book_cover_placeholder)
+                .error(R.drawable.book_cover_placeholder)
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
                         e: GlideException?,

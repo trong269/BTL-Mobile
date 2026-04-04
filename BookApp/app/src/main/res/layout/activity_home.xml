@@ -76,21 +76,11 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="Danh muc nhanh"
                     android:textColor="#1B1F24"
                     android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/btnSeeAllRecommended"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Xem tat ca"
-                    android:textColor="@color/home_primary"
-                    android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -164,15 +154,46 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="18dp"
-                android:text="Sach cho ban"
-                android:textColor="#1B1F24"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sach cua ban"
+                        android:textColor="#1B1F24"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Goi y dua tren xu huong doc cua ban"
+                        android:textColor="#6A7482"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btnSeeAllRecommended"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xem tat ca"
+                    android:textColor="@color/home_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerBooks"
@@ -307,36 +328,6 @@
                 android:nestedScrollingEnabled="false"
                 android:paddingHorizontal="16dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
-                android:orientation="horizontal">
-
-<!--                <Button-->
-<!--                    android:id="@+id/btnAdminPanel"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="46dp"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:background="@drawable/home_chip_bg"-->
-<!--                    android:text="Quan tri"-->
-<!--                    android:textAllCaps="false"-->
-<!--                    android:textColor="#1D2A52"-->
-<!--                    android:textStyle="bold" />-->
-
-<!--                <Button-->
-<!--                    android:id="@+id/btnLogout"-->
-<!--                    android:layout_width="0dp"-->
-<!--                    android:layout_height="46dp"-->
-<!--                    android:layout_marginStart="10dp"-->
-<!--                    android:layout_weight="1"-->
-<!--                    android:background="@drawable/home_chip_bg"-->
-<!--                    android:text="Dang xuat"-->
-<!--                    android:textAllCaps="false"-->
-<!--                    android:textColor="#1D2A52"-->
-<!--                    android:textStyle="bold" />-->
-            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

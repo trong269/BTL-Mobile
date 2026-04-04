@@ -55,7 +55,22 @@ class LoginActivity : AppCompatActivity() {
                         btnLogin.text = "Dang nhap"
 
                         if (response.isSuccessful) {
-                            val role = response.body()?.role
+                            val body = response.body()
+                            val role = body?.role
+                            val user = body?.user
+
+                            // Lưu thông tin user vào SharedPreferences
+                            if (user != null) {
+                                val prefs = getSharedPreferences("BookAppPrefs", MODE_PRIVATE)
+                                prefs.edit().apply {
+                                    putString("userId", user.id)
+                                    putString("username", user.username)
+                                    putString("email", user.email)
+                                    putString("fullName", user.fullName ?: "")
+                                    putString("role", user.role)
+                                    apply()
+                                }
+                            }
 
                             if (role == "ADMIN") {
                                 startActivity(Intent(this@LoginActivity, AdminActivity::class.java))

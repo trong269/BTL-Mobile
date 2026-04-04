@@ -1,0 +1,28 @@
+app:
+  host: "${APP_HOST:-0.0.0.0}"
+  port: "${APP_PORT:-8000}"
+
+llm:
+  # Chọn 1 trong: gemini | openai | local | ollama
+  provider: "${LLM_PROVIDER:-gemini}"
+  temperature: "${LLM_TEMPERATURE:-0.7}"
+  top_p: "${LLM_TOP_P:-0.9}"
+  max_tokens: "${LLM_MAX_TOKENS:-2048}"
+
+  gemini:
+    api_key: "${GOOGLE_API_KEY:-}"
+    model: "${GEMINI_MODEL:-gemini-2.0-flash}"
+
+  openai:
+    api_key: "${OPENAI_API_KEY:-}"
+    model: "${OPENAI_MODEL:-gpt-4o-mini}"
+
+  local:
+    # Tương thích OpenAI API: LM Studio, vLLM, llama.cpp...
+    base_url: "${LOCAL_BASE_URL:-http://localhost:1234/v1}"
+    model: "${LOCAL_MODEL:-local-model}"
+    api_key: "${LOCAL_API_KEY:-not-needed}"
+
+  ollama:
+    model: "${OLLAMA_MODEL:-llama3.2}"
+    base_url: "${OLLAMA_BASE_URL:-http://localhost:11434}"

@@ -6,11 +6,11 @@
     android:background="@drawable/home_card_bg"
     android:elevation="2dp"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="10dp">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="140dp"
+        android:layout_height="150dp"
         android:background="@drawable/home_cover_placeholder_bg">
 
         <ImageView
@@ -35,28 +35,31 @@
         android:id="@+id/tvBookTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
         android:maxLines="2"
         android:textColor="#1B1F24"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tvBookAuthor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="3dp"
+        android:ellipsize="end"
         android:maxLines="1"
         android:textColor="#68707A"
-        android:textSize="13sp" />
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/tvBookMeta"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
         android:maxLines="2"
         android:textColor="#3F4A57"
-        android:textSize="12sp" />
+        android:textSize="11sp" />
 
 </LinearLayout>
