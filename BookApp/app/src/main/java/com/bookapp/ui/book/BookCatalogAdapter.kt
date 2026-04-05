@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bookapp.R
 import com.bookapp.data.model.Book
@@ -16,6 +17,7 @@ class BookCatalogAdapter(
 ) : RecyclerView.Adapter<BookCatalogAdapter.CatalogViewHolder>() {
 
     private val items = mutableListOf<Book>()
+    private var lastOpenBookDetailMs = 0L
 
     fun submitList(newItems: List<Book>) {
         items.clear()
@@ -68,9 +70,21 @@ class BookCatalogAdapter(
 
             // Click → BookDetailActivity
             itemView.setOnClickListener {
+                val now = System.currentTimeMillis()
+                if (now - lastOpenBookDetailMs < 600L) {
+                    return@setOnClickListener
+                }
+
                 val context = itemView.context
+                val id = book.id?.trim()
+                if (id.isNullOrEmpty()) {
+                    Toast.makeText(context, "Sach nay chua co ID hop le", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                lastOpenBookDetailMs = now
                 val intent = Intent(context, BookDetailActivity::class.java).apply {
-                    putExtra(BookDetailActivity.EXTRA_BOOK_ID, book.id)
+                    putExtra(BookDetailActivity.EXTRA_BOOK_ID, id)
                     putExtra(BookDetailActivity.EXTRA_BOOK_TITLE, book.title)
                 }
                 context.startActivity(intent)

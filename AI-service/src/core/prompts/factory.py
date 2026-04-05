@@ -7,38 +7,18 @@ logger = get_logger(__name__)
 _PROMPTS_DIR = Path(__file__).parent
 
 
-def _parse_system_text(filename: str) -> str:
+def _load_prompt_text(filename: str) -> str:
     """
-    Đọc file .md và trả về nội dung của section ## System.
-    Text người dùng được truyền riêng thành HumanMessage trong node.
+    Đọc file .md và trả về tòan bộ nội dung làm prompt.
     """
     path = _PROMPTS_DIR / filename
     try:
-        content = path.read_text(encoding="utf-8")
+        content = path.read_text(encoding="utf-8").strip()
+        logger.debug("Loaded prompt from '%s' (%d chars)", filename, len(content))
+        return content
     except FileNotFoundError:
         logger.error("Prompt file not found: %s", path)
         raise
-
-    system_lines: list[str] = []
-    in_system = False
-
-    for line in content.splitlines():
-        stripped = line.strip()
-        if stripped == "## System":
-            in_system = True
-            continue
-        elif stripped.startswith("## ") or stripped.startswith("# "):
-            in_system = False
-            continue
-        if in_system:
-            system_lines.append(line)
-
-    system_text = "\n".join(system_lines).strip()
-    if not system_text:
-        logger.warning("Prompt file '%s' has empty ## System section", filename)
-
-    logger.debug("Loaded prompt from '%s' (%d chars)", filename, len(system_text))
-    return system_text
 
 
 class PromptFactory:
@@ -52,8 +32,9 @@ class PromptFactory:
     """
 
     _PROMPT_FILES: dict[str, str] = {
-        "summarize": "summarize.md",
-        "explain":   "explanation.md",
+        "summarize":      "summarize.md",
+        "explain":        "explanation.md",
+        "analyze_image":  "analyze_image.md",
     }
     
     @staticmethod
@@ -65,7 +46,7 @@ class PromptFactory:
             )
         filename = PromptFactory._PROMPT_FILES[prompt_name]
         logger.info("Loading prompt: '%s' from %s", prompt_name, filename)
-        system_text = _parse_system_text(filename)
+        system_text = _load_prompt_text(filename)
         return SystemMessage(content=system_text)
 
     @staticmethod
@@ -75,3 +56,7 @@ class PromptFactory:
     @staticmethod
     def get_explain_prompt() -> SystemMessage:
         return PromptFactory.get("explain")
+
+    @staticmethod
+    def get_analyze_image_prompt() -> SystemMessage:
+        return PromptFactory.get("analyze_image")

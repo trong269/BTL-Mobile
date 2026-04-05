@@ -8,7 +8,7 @@ export interface BookDto {
   status: string;
   cover: string;
   summary: string;
-  language: string;
+  publisher: string;
   publishDate: string;
   categories: string[];
   rating?: number;
