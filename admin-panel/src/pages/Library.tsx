@@ -26,6 +26,7 @@ function getCardColor(status: string) {
 
 function toBookPayload(book: EditableBook | BookDto): BookPayload {
   const fallbackRating = 'rating' in book ? book.rating : undefined;
+  const categoryIds = Array.from(new Set((book.categoryIds || []).filter(Boolean)));
 
   return {
     title: book.title,
@@ -35,9 +36,9 @@ function toBookPayload(book: EditableBook | BookDto): BookPayload {
     description: book.description,
     publisher: book.publisher,
     publishDate: book.publishDate,
-    categories: book.categories || [],
+    categoryIds,
     sourceBookId: book.sourceBookId,
-    categoryId: book.categoryId,
+    categoryId: categoryIds[0] || book.categoryId,
     tags: book.tags || [],
     totalChapters: book.totalChapters,
     totalPages: book.totalPages,
@@ -93,7 +94,7 @@ export default function Library() {
     deleteBookMutation.isPending ||
     addReviewMutation.isPending;
 
-  const availableCategoryTitles = categories.map((c) => c.title);
+  const availableCategories = categories;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -134,7 +135,8 @@ export default function Library() {
       description: '',
       publisher: '',
       publishDate: new Date().toISOString().split('T')[0],
-      categories: [],
+      categoryIds: [],
+      categoryId: undefined,
     });
   };
 
@@ -482,7 +484,13 @@ export default function Library() {
                     <div>
                       <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Thể loại</p>
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {selectedBook.categories.length > 0 ? (
+                        {selectedBook.categoryObjects.length > 0 ? (
+                          selectedBook.categoryObjects.map((cat) => (
+                            <span key={cat.id} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-surface-container-highest text-on-surface">
+                              {cat.name}
+                            </span>
+                          ))
+                        ) : selectedBook.categories.length > 0 ? (
                           selectedBook.categories.map((cat) => (
                             <span key={cat} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-surface-container-highest text-on-surface">
                               {cat}
@@ -658,25 +666,24 @@ export default function Library() {
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Thể loại</label>
                   <div className="flex flex-wrap gap-2 p-3 bg-surface-container-lowest border border-outline-variant/50 rounded-xl">
-                    {availableCategoryTitles.length > 0 ? (
-                      availableCategoryTitles.map((cat) => {
-                        const isSelected = editingBook.categories.includes(cat);
+                    {availableCategories.length > 0 ? (
+                      availableCategories.map((cat) => {
+                        const selectedIds = editingBook.categoryIds || [];
+                        const isSelected = selectedIds.includes(cat.id);
                         return (
                           <button
-                            key={cat}
+                            key={cat.id}
                             type="button"
                             onClick={() => {
-                              if (isSelected) {
-                                setEditingBook({
-                                  ...editingBook,
-                                  categories: editingBook.categories.filter((c) => c !== cat),
-                                });
-                              } else {
-                                setEditingBook({
-                                  ...editingBook,
-                                  categories: [...editingBook.categories, cat],
-                                });
-                              }
+                              const nextCategoryIds = isSelected
+                                ? selectedIds.filter((id) => id !== cat.id)
+                                : [...selectedIds, cat.id];
+
+                              setEditingBook({
+                                ...editingBook,
+                                categoryIds: nextCategoryIds,
+                                categoryId: nextCategoryIds[0],
+                              });
                             }}
                             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                               isSelected
@@ -684,7 +691,7 @@ export default function Library() {
                                 : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-container-highest'
                             }`}
                           >
-                            {cat}
+                            {cat.title}
                           </button>
                         );
                       })

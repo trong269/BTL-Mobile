@@ -32,7 +32,7 @@ function toCategoryPayload(category: EditableCategory | CategoryDto): CategoryPa
 function withCategoryCount(categories: CategoryDto[], books: BookDto[]) {
   return categories.map((category) => ({
     ...category,
-    count: books.filter((book) => book.categories.includes(category.title)).length,
+    count: books.filter((book) => book.categoryIds.includes(category.id)).length,
   }));
 }
 
@@ -95,7 +95,7 @@ export default function Categories() {
 
   const handleManageBooks = (category: CategoryDto) => {
     setManagingCategory(category);
-    const initialSelected = books.filter((book) => book.categories.includes(category.title)).map((book) => book.id);
+    const initialSelected = books.filter((book) => book.categoryIds.includes(category.id)).map((book) => book.id);
     setSelectedBookIds(initialSelected);
     setInitialSelectedBookIds(initialSelected);
     setBookSearchQuery('');
@@ -122,14 +122,14 @@ export default function Categories() {
       await Promise.all(
         changedBooks.map((book) => {
           const shouldIncludeCategory = selectedBookIds.includes(book.id);
-          const hasCategory = book.categories.includes(managingCategory.title);
+          const hasCategory = book.categoryIds.includes(managingCategory.id);
 
-          let nextCategories = book.categories;
+          let nextCategoryIds = book.categoryIds;
           if (shouldIncludeCategory && !hasCategory) {
-            nextCategories = [...book.categories, managingCategory.title];
+            nextCategoryIds = [...book.categoryIds, managingCategory.id];
           }
           if (!shouldIncludeCategory && hasCategory) {
-            nextCategories = book.categories.filter((category) => category !== managingCategory.title);
+            nextCategoryIds = book.categoryIds.filter((categoryId) => categoryId !== managingCategory.id);
           }
 
           return updateBookMutation.mutateAsync({
@@ -142,7 +142,15 @@ export default function Categories() {
               description: book.description,
               publisher: book.publisher,
               publishDate: book.publishDate,
-              categories: nextCategories,
+              categoryIds: nextCategoryIds,
+              categoryId: nextCategoryIds[0],
+              tags: book.tags || [],
+              totalChapters: book.totalChapters,
+              totalPages: book.totalPages,
+              views: book.views,
+              avgRating: book.avgRating,
+              featured: book.featured,
+              sourceBookId: book.sourceBookId,
             },
           });
         }),
@@ -163,34 +171,7 @@ export default function Categories() {
 
     try {
       if (editingCategory.id) {
-        const previousCategory = categoryList.find((category) => category.id === editingCategory.id);
-
         await updateCategoryMutation.mutateAsync({ id: editingCategory.id, payload });
-
-        if (previousCategory && previousCategory.title !== payload.title) {
-          const affectedBooks = books.filter((book) => book.categories.includes(previousCategory.title));
-
-          await Promise.all(
-            affectedBooks.map((book) =>
-              updateBookMutation.mutateAsync({
-                id: book.id,
-                payload: {
-                  title: book.title,
-                  author: book.author,
-                  status: book.status,
-                  cover: book.cover,
-                  description: book.description,
-                  publisher: book.publisher,
-                  publishDate: book.publishDate,
-                  categories: book.categories.map((category) =>
-                    category === previousCategory.title ? payload.title : category,
-                  ),
-                },
-              }),
-            ),
-          );
-        }
-
         toast.success('Đã cập nhật thể loại!');
       } else {
         await createCategoryMutation.mutateAsync(payload);
@@ -206,11 +187,13 @@ export default function Categories() {
     if (!deletingCategory) return;
 
     try {
-      const affectedBooks = books.filter((book) => book.categories.includes(deletingCategory.title));
+      const affectedBooks = books.filter((book) => book.categoryIds.includes(deletingCategory.id));
 
       await Promise.all(
-        affectedBooks.map((book) =>
-          updateBookMutation.mutateAsync({
+        affectedBooks.map((book) => {
+          const nextCategoryIds = book.categoryIds.filter((categoryId) => categoryId !== deletingCategory.id);
+
+          return updateBookMutation.mutateAsync({
             id: book.id,
             payload: {
               title: book.title,
@@ -220,10 +203,18 @@ export default function Categories() {
               description: book.description,
               publisher: book.publisher,
               publishDate: book.publishDate,
-              categories: book.categories.filter((category) => category !== deletingCategory.title),
+              categoryIds: nextCategoryIds,
+              categoryId: nextCategoryIds[0],
+              tags: book.tags || [],
+              totalChapters: book.totalChapters,
+              totalPages: book.totalPages,
+              views: book.views,
+              avgRating: book.avgRating,
+              featured: book.featured,
+              sourceBookId: book.sourceBookId,
             },
-          }),
-        ),
+          });
+        }),
       );
 
       await deleteCategoryMutation.mutateAsync(deletingCategory.id);

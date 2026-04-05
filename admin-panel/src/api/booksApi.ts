@@ -1,6 +1,12 @@
 import { normalizeRichText } from '../lib/utils';
 import { axiosClient } from './axiosClient';
 
+interface BackendBookCategory {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface BackendBook {
   id: string;
   sourceBookId?: string;
@@ -13,6 +19,7 @@ interface BackendBook {
   status?: string;
   categoryId?: string;
   categories?: string[];
+  categoryObjects?: BackendBookCategory[];
   tags?: string[];
   totalChapters?: number;
   totalPages?: number;
@@ -21,6 +28,12 @@ interface BackendBook {
   featured?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface BookCategoryObject {
+  id: string;
+  name: string;
+  description?: string;
 }
 
 export interface BookDto {
@@ -33,6 +46,8 @@ export interface BookDto {
   publisher: string;
   publishDate: string;
   categories: string[];
+  categoryIds: string[];
+  categoryObjects: BookCategoryObject[];
   rating?: number;
   avgRating?: number;
   totalChapters?: number;
@@ -52,7 +67,7 @@ export interface BookPayload {
   description: string;
   publisher: string;
   publishDate: string;
-  categories: string[];
+  categoryIds: string[];
   sourceBookId?: string;
   categoryId?: string;
   tags?: string[];
@@ -63,12 +78,48 @@ export interface BookPayload {
   featured?: boolean;
 }
 
-
 function getFormattedDescription(book: BackendBook): string {
   return normalizeRichText(book.description);
 }
 
+function toCategoryObjects(book: BackendBook): BookCategoryObject[] {
+  return (book.categoryObjects || []).map((category) => ({
+    id: category.id,
+    name: category.name,
+    description: category.description,
+  }));
+}
+
+function toCategoryNames(book: BackendBook, categoryObjects: BookCategoryObject[]): string[] {
+  if (categoryObjects.length > 0) {
+    return categoryObjects.map((category) => category.name);
+  }
+  return book.categories || [];
+}
+
+function toCategoryIds(book: BackendBook, categoryObjects: BookCategoryObject[]): string[] {
+  if (categoryObjects.length > 0) {
+    return categoryObjects.map((category) => category.id);
+  }
+
+  const fallbackIds = [book.categoryId, ...(book.categories || [])]
+    .filter((value): value is string => Boolean(value && value.trim()))
+    .map((value) => value.trim());
+
+  return Array.from(new Set(fallbackIds));
+}
+
+function toPrimaryCategoryId(book: BackendBook, categoryIds: string[]): string | undefined {
+  const explicit = book.categoryId?.trim();
+  return explicit || categoryIds[0];
+}
+
 function mapBook(book: BackendBook): BookDto {
+  const categoryObjects = toCategoryObjects(book);
+  const categories = toCategoryNames(book, categoryObjects);
+  const categoryIds = toCategoryIds(book, categoryObjects);
+  const categoryId = toPrimaryCategoryId(book, categoryIds);
+
   return {
     id: book.id,
     title: book.title,
@@ -78,7 +129,9 @@ function mapBook(book: BackendBook): BookDto {
     description: getFormattedDescription(book),
     publisher: book.publisher || '',
     publishDate: book.publishDate || '',
-    categories: book.categories || [],
+    categories,
+    categoryIds,
+    categoryObjects,
     rating: book.avgRating,
     avgRating: book.avgRating,
     totalChapters: book.totalChapters,
@@ -86,12 +139,22 @@ function mapBook(book: BackendBook): BookDto {
     views: book.views,
     featured: book.featured,
     sourceBookId: book.sourceBookId,
-    categoryId: book.categoryId,
+    categoryId,
     tags: book.tags || [],
   };
 }
 
+function normalizeWriteCategoryIds(payload: BookPayload): string[] {
+  const merged = [payload.categoryId, ...(payload.categoryIds || [])]
+    .filter((value): value is string => Boolean(value && value.trim()))
+    .map((value) => value.trim());
+
+  return Array.from(new Set(merged));
+}
+
 function toBackendPayload(payload: BookPayload): Partial<BackendBook> {
+  const categoryIds = normalizeWriteCategoryIds(payload);
+
   return {
     title: payload.title,
     author: payload.author,
@@ -101,8 +164,8 @@ function toBackendPayload(payload: BookPayload): Partial<BackendBook> {
     publisher: payload.publisher,
     publishDate: payload.publishDate,
     sourceBookId: payload.sourceBookId,
-    categoryId: payload.categoryId,
-    categories: payload.categories || [],
+    categoryId: categoryIds[0],
+    categories: categoryIds,
     tags: payload.tags || [],
     totalChapters: payload.totalChapters ?? 0,
     totalPages: payload.totalPages ?? 0,

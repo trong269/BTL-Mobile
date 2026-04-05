@@ -1,5 +1,6 @@
 package com.bookapp.controller;
 
+import com.bookapp.dto.BookResponseDto;
 import com.bookapp.model.Book;
 import com.bookapp.service.BookService;
 import org.springframework.http.ResponseEntity;
@@ -18,32 +19,32 @@ public class BookController {
     }
 
     @GetMapping
-    public List<Book> findAll() {
+    public List<BookResponseDto> findAll() {
         return bookService.findAll();
     }
 
     @GetMapping("/featured")
-    public List<Book> findFeatured() {
+    public List<BookResponseDto> findFeatured() {
         return bookService.findFeatured();
     }
 
     @GetMapping("/new")
-    public List<Book> findNew() {
+    public List<BookResponseDto> findNew() {
         return bookService.findNewBooks();
     }
 
     @GetMapping("/search")
-    public List<Book> search(@RequestParam(value = "q", defaultValue = "") String keyword) {
+    public List<BookResponseDto> search(@RequestParam(value = "q", defaultValue = "") String keyword) {
         return bookService.search(keyword);
     }
 
     @GetMapping("/category/{categoryId}")
-    public List<Book> findByCategory(@PathVariable String categoryId) {
+    public List<BookResponseDto> findByCategory(@PathVariable String categoryId) {
         return bookService.findByCategory(categoryId);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> findById(@PathVariable String id) {
+    public ResponseEntity<BookResponseDto> findById(@PathVariable String id) {
         return bookService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -66,12 +67,12 @@ public class BookController {
     }
 
     @GetMapping("/top-week")
-    public List<Book> findTopWeekBooks() {
+    public List<BookResponseDto> findTopWeekBooks() {
         return bookService.findTopWeek();
     }
 
     @GetMapping("/top-month")
-    public List<Book> findTopMonthBooks() {
+    public List<BookResponseDto> findTopMonthBooks() {
         return bookService.findTopMonth();
     }
 }
