@@ -54,7 +54,7 @@ class BookCatalogAdapter(
             tvCategory.text = categoryNameResolver(book.categoryId)
             tvRating.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             tvChapters.text = "${book.totalChapters ?: 0} chuong"
-            tvDescription.text = book.description ?: book.summary ?: ""
+            tvDescription.text = book.description ?: ""
 
             // Load ảnh bìa
             if (!book.coverImage.isNullOrBlank()) {

@@ -66,7 +66,6 @@ public class BookService {
         existing.setTitle(payload.getTitle());
         existing.setAuthor(payload.getAuthor());
         existing.setDescription(payload.getDescription());
-        existing.setSummary(payload.getSummary());
         existing.setCoverImage(payload.getCoverImage());
         existing.setPublisher(payload.getPublisher());
         existing.setPublishDate(payload.getPublishDate());
@@ -139,11 +138,8 @@ public class BookService {
         if (book.getPublishDate() == null) {
             book.setPublishDate("");
         }
-        if (book.getSummary() == null) {
-            book.setSummary(book.getDescription() == null ? "" : book.getDescription());
-        }
         if (book.getDescription() == null) {
-            book.setDescription(book.getSummary() == null ? "" : book.getSummary());
+            book.setDescription("");
         }
         if (book.getSourceBookId() == null || book.getSourceBookId().isBlank()) {
             book.setSourceBookId("admin-" + System.nanoTime());

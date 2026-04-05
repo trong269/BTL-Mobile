@@ -43,7 +43,6 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var tvChapters: TextView
     private lateinit var tvPages: TextView
     private lateinit var tvViews: TextView
-    private lateinit var tvSummary: TextView
     private lateinit var tvDescription: TextView
     private lateinit var btnFavorite: Button
     private lateinit var btnReadNow: Button
@@ -110,7 +109,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvChapters = findViewById(R.id.tvDetailChapters)
         tvPages = findViewById(R.id.tvDetailPages)
         tvViews = findViewById(R.id.tvDetailViews)
-        tvSummary = findViewById(R.id.tvDetailSummary)
         tvDescription = findViewById(R.id.tvDetailDescription)
         btnFavorite = findViewById(R.id.btnFavorite)
         btnReadNow = findViewById(R.id.btnReadNow)
@@ -201,7 +199,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvChapters.text = "${book.totalChapters ?: 0}"
         tvPages.text = "${book.totalPages ?: 0}"
         tvViews.text = "${book.views ?: 0}"
-        tvSummary.text = book.summary?.takeIf { it.isNotBlank() } ?: "(Chua co tom tat)"
         tvDescription.text = book.description?.takeIf { it.isNotBlank() } ?: "(Chua co mo ta)"
 
         if (!book.coverImage.isNullOrBlank()) {

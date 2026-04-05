@@ -37,7 +37,7 @@ function mapUser(user: BackendUser): UserDto {
     role: (user.role || 'USER').toLowerCase(),
     plan: user.plan || 'Cơ bản',
     lastActive: user.updatedAt ? new Date(user.updatedAt).toLocaleString('vi-VN') : 'Chưa cập nhật',
-    avatar: user.avatar || 'https://i.pravatar.cc/150?img=32',
+    avatar: user.avatar || 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_35.png',
   };
 }
 

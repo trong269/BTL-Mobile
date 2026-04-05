@@ -16,6 +16,7 @@ import type { BookDto, BookPayload } from '../api/booksApi';
 
 const filters = ['Tất cả', 'Sẵn sàng', 'Đang xử lý AI'];
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400';
+const SUMMARY_PREVIEW_LENGTH = 140;
 
 type EditableBook = BookPayload & { id?: string };
 
@@ -24,15 +25,25 @@ function getCardColor(status: string) {
 }
 
 function toBookPayload(book: EditableBook | BookDto): BookPayload {
+  const fallbackRating = 'rating' in book ? book.rating : undefined;
+
   return {
     title: book.title,
     author: book.author,
     status: book.status,
     cover: book.cover,
-    summary: book.summary,
+    description: book.description,
     publisher: book.publisher,
     publishDate: book.publishDate,
     categories: book.categories || [],
+    sourceBookId: book.sourceBookId,
+    categoryId: book.categoryId,
+    tags: book.tags || [],
+    totalChapters: book.totalChapters,
+    totalPages: book.totalPages,
+    views: book.views,
+    avgRating: book.avgRating ?? fallbackRating,
+    featured: book.featured,
   };
 }
 
@@ -46,6 +57,7 @@ export default function Library() {
   const [activeFilter, setActiveFilter] = useState('Tất cả');
   const [currentPage, setCurrentPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
   const itemsPerPage = 9;
@@ -57,6 +69,11 @@ export default function Library() {
     () => books.find((book) => book.id === selectedBookId) || null,
     [books, selectedBookId],
   );
+  const selectedBookDescription = (selectedBook?.description || '').trim();
+  const isLongSelectedBookDescription = selectedBookDescription.length > SUMMARY_PREVIEW_LENGTH;
+  const selectedBookPreviewDescription = `${selectedBookDescription.slice(0, SUMMARY_PREVIEW_LENGTH).trimEnd()}...`;
+  const displayedSelectedBookDescription =
+    isLongSelectedBookDescription && !isSummaryExpanded ? selectedBookPreviewDescription : selectedBookDescription;
 
   const {
     data: reviews = [],
@@ -114,7 +131,7 @@ export default function Library() {
       author: '',
       status: 'Sẵn sàng',
       cover: DEFAULT_COVER,
-      summary: '',
+      description: '',
       publisher: '',
       publishDate: new Date().toISOString().split('T')[0],
       categories: [],
@@ -127,7 +144,13 @@ export default function Library() {
 
   const closeBookDetails = () => {
     setSelectedBookId(null);
+    setIsSummaryExpanded(false);
     setNewReview({ rating: 5, comment: '' });
+  };
+
+  const openBookDetails = (bookId: string) => {
+    setSelectedBookId(bookId);
+    setIsSummaryExpanded(false);
   };
 
   const saveEdit = async (e: React.FormEvent) => {
@@ -264,100 +287,108 @@ export default function Library() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentBooks.map((book, idx) => (
-          <div
-            key={book.id}
-            onClick={() => setSelectedBookId(book.id)}
-            className={`group relative flex flex-col rounded-[2rem] overflow-hidden border border-outline-variant/20 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${getCardColor(
-              book.status,
-            )} ${idx % 3 === 0 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
-          >
-            <div className="relative h-48 sm:h-56 overflow-hidden">
-              <img src={book.cover} alt={book.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
+        {currentBooks.map((book, idx) => {
+          const description = (book.description || '').trim();
 
-              <div className="absolute top-4 right-4 z-20">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenMenuId(openMenuId === book.id ? null : book.id);
-                  }}
-                  className="w-8 h-8 rounded-full bg-surface/80 backdrop-blur-sm flex items-center justify-center text-on-surface hover:bg-surface transition-colors"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+          return (
+            <div
+              key={book.id}
+              onClick={() => openBookDetails(book.id)}
+              className={`group relative flex flex-col rounded-[2rem] overflow-hidden border border-outline-variant/20 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${getCardColor(
+                book.status,
+              )} ${idx % 3 === 0 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
+            >
+              <div className="relative h-48 sm:h-56 overflow-hidden">
+                <img src={book.cover} alt={book.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
 
-                <AnimatePresence>
-                  {openMenuId === book.id && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      transition={{ duration: 0.15 }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute right-0 top-full mt-2 w-36 bg-surface rounded-xl shadow-lg border border-outline-variant/20 overflow-hidden z-30"
-                    >
-                      <button
-                        onClick={() => {
-                          openEditBookModal(book);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors text-left"
+                <div className="absolute top-4 right-4 z-20">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenMenuId(openMenuId === book.id ? null : book.id);
+                    }}
+                    className="w-8 h-8 rounded-full bg-surface/80 backdrop-blur-sm flex items-center justify-center text-on-surface hover:bg-surface transition-colors"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+
+                  <AnimatePresence>
+                    {openMenuId === book.id && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-full mt-2 w-36 bg-surface rounded-xl shadow-lg border border-outline-variant/20 overflow-hidden z-30"
                       >
-                        <Edit2 className="w-4 h-4" />
-                        Chỉnh sửa
-                      </button>
-                      <button
-                        onClick={() => {
-                          setDeletingBook(book);
-                          setOpenMenuId(null);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-error hover:bg-error-container/50 transition-colors text-left"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Xóa
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <div className="absolute bottom-4 left-4">
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-md border ${
-                    book.status === 'Sẵn sàng'
-                      ? 'bg-emerald-500/80 text-white border-emerald-400/30'
-                      : 'bg-indigo-500/80 text-white border-indigo-400/30'
-                  }`}
-                >
-                  {book.status === 'Sẵn sàng' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  {book.status}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-5 flex-1 flex flex-col">
-              <h3 className="text-lg font-serif font-semibold text-on-surface line-clamp-2 mb-1 group-hover:text-primary transition-colors">{book.title}</h3>
-              <p className="text-sm text-on-surface-variant mb-4">{book.author}</p>
-
-              <div className="mt-auto pt-4 border-t border-outline-variant/20 flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-on-surface-variant">
-                  <div className="flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4" />
-                    <span>{book.totalChapters || 24} chương</span>
-                  </div>
-                  {typeof book.rating === 'number' && (
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <Star className="w-4 h-4 fill-current" />
-                      <span className="font-medium">{book.rating}</span>
-                    </div>
-                  )}
+                        <button
+                          onClick={() => {
+                            openEditBookModal(book);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors text-left"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Chỉnh sửa
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeletingBook(book);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-error hover:bg-error-container/50 transition-colors text-left"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Xóa
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <button className="text-sm font-medium text-primary hover:text-secondary transition-colors">Chi tiết</button>
+
+                <div className="absolute bottom-4 left-4">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-md border ${
+                      book.status === 'Sẵn sàng'
+                        ? 'bg-emerald-500/80 text-white border-emerald-400/30'
+                        : 'bg-indigo-500/80 text-white border-indigo-400/30'
+                    }`}
+                  >
+                    {book.status === 'Sẵn sàng' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {book.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col">
+                <h3 className="text-lg font-serif font-semibold text-on-surface line-clamp-2 mb-1 group-hover:text-primary transition-colors">{book.title}</h3>
+                <p className="text-sm text-on-surface-variant mb-3">{book.author}</p>
+
+                <div className="mb-4">
+                  <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-line break-words line-clamp-3">{description || 'Chưa có mô tả.'}</p>
+                </div>
+
+                <div className="mt-auto pt-4 border-t border-outline-variant/20 flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-xs text-on-surface-variant">
+                    <div className="flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4" />
+                      <span>{book.totalChapters || 24} chương</span>
+                    </div>
+                    {typeof book.rating === 'number' && (
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="w-4 h-4 fill-current" />
+                        <span className="font-medium">{book.rating}</span>
+                      </div>
+                    )}
+                  </div>
+                  <button className="text-sm font-medium text-primary hover:text-secondary transition-colors">Chi tiết</button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {totalPages > 0 ? (
@@ -405,7 +436,7 @@ export default function Library() {
                 </button>
               </div>
 
-              <div className="flex-1 p-6 md:p-8 overflow-y-auto">
+              <div className="flex-1 p-6 pb-24 md:p-8 overflow-y-auto">
                 <div className="hidden md:flex justify-end mb-4">
                   <button onClick={closeBookDetails} className="p-2 rounded-full hover:bg-surface-container-highest transition-colors text-on-surface-variant">
                     <X className="w-5 h-5" />
@@ -469,8 +500,17 @@ export default function Library() {
                   </div>
 
                   <div>
-                    <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-2">Tóm tắt</p>
-                    <p className="text-sm text-on-surface leading-relaxed">{selectedBook.summary || 'Chưa có tóm tắt.'}</p>
+                    <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-2">Mô tả</p>
+                    <p className="text-sm text-on-surface leading-relaxed whitespace-pre-line break-words">{displayedSelectedBookDescription || 'Chưa có mô tả.'}</p>
+                    {isLongSelectedBookDescription && (
+                      <button
+                        type="button"
+                        onClick={() => setIsSummaryExpanded((prev) => !prev)}
+                        className="mt-1 text-sm font-medium text-primary hover:text-secondary hover:underline transition-colors"
+                      >
+                        {isSummaryExpanded ? 'Thu gọn' : 'Xem thêm'}
+                      </button>
+                    )}
                   </div>
 
                   <div className="pt-6 border-t border-outline-variant/20">
@@ -684,11 +724,11 @@ export default function Library() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-on-surface mb-1.5">Tóm tắt</label>
+                <label className="block text-sm font-medium text-on-surface mb-1.5">Mô tả</label>
                 <textarea
                   rows={3}
-                  value={editingBook.summary}
-                  onChange={(e) => setEditingBook({ ...editingBook, summary: e.target.value })}
+                  value={editingBook.description}
+                  onChange={(e) => setEditingBook({ ...editingBook, description: e.target.value })}
                   className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
                 />
               </div>

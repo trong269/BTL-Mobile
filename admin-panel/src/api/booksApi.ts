@@ -1,11 +1,12 @@
+import { normalizeRichText } from '../lib/utils';
 import { axiosClient } from './axiosClient';
 
 interface BackendBook {
   id: string;
+  sourceBookId?: string;
   title: string;
   author: string;
   description?: string;
-  summary?: string;
   coverImage?: string;
   publisher?: string;
   publishDate?: string;
@@ -28,12 +29,19 @@ export interface BookDto {
   author: string;
   status: string;
   cover: string;
-  summary: string;
+  description: string;
   publisher: string;
   publishDate: string;
   categories: string[];
   rating?: number;
+  avgRating?: number;
   totalChapters?: number;
+  totalPages?: number;
+  views?: number;
+  featured?: boolean;
+  sourceBookId?: string;
+  categoryId?: string;
+  tags?: string[];
 }
 
 export interface BookPayload {
@@ -41,10 +49,23 @@ export interface BookPayload {
   author: string;
   status: string;
   cover: string;
-  summary: string;
+  description: string;
   publisher: string;
   publishDate: string;
   categories: string[];
+  sourceBookId?: string;
+  categoryId?: string;
+  tags?: string[];
+  totalChapters?: number;
+  totalPages?: number;
+  views?: number;
+  avgRating?: number;
+  featured?: boolean;
+}
+
+
+function getFormattedDescription(book: BackendBook): string {
+  return normalizeRichText(book.description);
 }
 
 function mapBook(book: BackendBook): BookDto {
@@ -54,12 +75,19 @@ function mapBook(book: BackendBook): BookDto {
     author: book.author,
     status: book.status || 'Sẵn sàng',
     cover: book.coverImage || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400',
-    summary: book.summary || book.description || '',
+    description: getFormattedDescription(book),
     publisher: book.publisher || '',
     publishDate: book.publishDate || '',
     categories: book.categories || [],
     rating: book.avgRating,
+    avgRating: book.avgRating,
     totalChapters: book.totalChapters,
+    totalPages: book.totalPages,
+    views: book.views,
+    featured: book.featured,
+    sourceBookId: book.sourceBookId,
+    categoryId: book.categoryId,
+    tags: book.tags || [],
   };
 }
 
@@ -69,11 +97,18 @@ function toBackendPayload(payload: BookPayload): Partial<BackendBook> {
     author: payload.author,
     status: payload.status,
     coverImage: payload.cover,
-    summary: payload.summary,
-    description: payload.summary,
+    description: payload.description,
     publisher: payload.publisher,
     publishDate: payload.publishDate,
-    categories: payload.categories,
+    sourceBookId: payload.sourceBookId,
+    categoryId: payload.categoryId,
+    categories: payload.categories || [],
+    tags: payload.tags || [],
+    totalChapters: payload.totalChapters ?? 0,
+    totalPages: payload.totalPages ?? 0,
+    views: payload.views ?? 0,
+    avgRating: payload.avgRating ?? 0,
+    featured: payload.featured ?? false,
   };
 }
 
