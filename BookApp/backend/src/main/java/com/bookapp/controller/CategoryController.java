@@ -17,13 +17,11 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    // GET /api/categories
     @GetMapping
     public List<Category> findAll() {
         return categoryService.findAll();
     }
 
-    // GET /api/categories/{id}
     @GetMapping("/{id}")
     public ResponseEntity<Category> findById(@PathVariable String id) {
         return categoryService.findById(id)
@@ -31,9 +29,19 @@ public class CategoryController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST /api/categories  (dùng cho admin seed data)
     @PostMapping
     public Category create(@RequestBody Category category) {
-        return categoryService.save(category);
+        return categoryService.create(category);
+    }
+
+    @PutMapping("/{id}")
+    public Category update(@PathVariable String id, @RequestBody Category category) {
+        return categoryService.update(id, category);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        categoryService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

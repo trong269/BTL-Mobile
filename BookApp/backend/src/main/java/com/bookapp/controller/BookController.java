@@ -17,37 +17,31 @@ public class BookController {
         this.bookService = bookService;
     }
 
-    // GET /api/books
     @GetMapping
     public List<Book> findAll() {
         return bookService.findAll();
     }
 
-    // GET /api/books/featured
     @GetMapping("/featured")
     public List<Book> findFeatured() {
         return bookService.findFeatured();
     }
 
-    // GET /api/books/new
     @GetMapping("/new")
     public List<Book> findNew() {
         return bookService.findNewBooks();
     }
 
-    // GET /api/books/search?q=keyword
     @GetMapping("/search")
     public List<Book> search(@RequestParam(value = "q", defaultValue = "") String keyword) {
         return bookService.search(keyword);
     }
 
-    // GET /api/books/category/{categoryId}
     @GetMapping("/category/{categoryId}")
     public List<Book> findByCategory(@PathVariable String categoryId) {
         return bookService.findByCategory(categoryId);
     }
 
-    // GET /api/books/{id}
     @GetMapping("/{id}")
     public ResponseEntity<Book> findById(@PathVariable String id) {
         return bookService.findById(id)
@@ -55,11 +49,22 @@ public class BookController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // POST /api/books  (dùng cho admin)
     @PostMapping
     public Book create(@RequestBody Book book) {
-        return bookService.save(book);
+        return bookService.create(book);
     }
+
+    @PutMapping("/{id}")
+    public Book update(@PathVariable String id, @RequestBody Book book) {
+        return bookService.update(id, book);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        bookService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/top-week")
     public List<Book> findTopWeekBooks() {
         return bookService.findTopWeek();
@@ -69,5 +74,4 @@ public class BookController {
     public List<Book> findTopMonthBooks() {
         return bookService.findTopMonth();
     }
-
 }

@@ -9,76 +9,99 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserService {
 
-	private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
-	public UserService(UserRepository userRepository) {
-		this.userRepository = userRepository;
-	}
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
-	public User getById(String userId) {
-		return userRepository.findById(userId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-	}
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
 
-	public User updateProfile(String userId, UpdateProfileRequest request) {
-		User user = getById(userId);
+    public User getById(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
 
-		String username = request.getUsername() == null ? "" : request.getUsername().trim();
-		String email = request.getEmail() == null ? "" : request.getEmail().trim();
-		String fullName = request.getFullName() == null ? "" : request.getFullName().trim();
+    public User updateProfile(String userId, UpdateProfileRequest request) {
+        User user = getById(userId);
 
-		if (username.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
-		}
+        String username = valueOrEmpty(request.getUsername());
+        String email = valueOrEmpty(request.getEmail());
 
-		if (email.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
-		}
+        if (username.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+        }
 
-		if (userRepository.existsByUsernameAndIdNot(username, userId)) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
-		}
+        if (email.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
+        }
 
-		if (userRepository.existsByEmailAndIdNot(email, userId)) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
-		}
+        if (userRepository.existsByUsernameAndIdNot(username, userId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+        }
 
-		user.setUsername(username);
-		user.setEmail(email);
-		user.setFullName(fullName);
-		user.setUpdatedAt(LocalDateTime.now());
+        if (userRepository.existsByEmailAndIdNot(email, userId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
 
-		return userRepository.save(user);
-	}
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setFullName(valueOrEmpty(request.getFullName()));
+        user.setAvatar(valueOrEmpty(request.getAvatar()));
+        user.setRole(valueOrDefault(request.getRole(), user.getRole() == null ? "USER" : user.getRole()));
+        user.setPlan(valueOrDefault(request.getPlan(), user.getPlan() == null ? "Cơ bản" : user.getPlan()));
+        user.setUpdatedAt(LocalDateTime.now());
 
-	public void changePassword(String userId, ChangePasswordRequest request) {
-		User user = getById(userId);
+        return userRepository.save(user);
+    }
 
-		String currentPassword = request.getCurrentPassword();
-		String newPassword = request.getNewPassword();
+    public void delete(String userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        userRepository.deleteById(userId);
+    }
 
-		if (currentPassword == null || currentPassword.isBlank()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is required");
-		}
+    public void changePassword(String userId, ChangePasswordRequest request) {
+        User user = getById(userId);
 
-		if (newPassword == null || newPassword.isBlank()) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password is required");
-		}
+        String currentPassword = request.getCurrentPassword();
+        String newPassword = request.getNewPassword();
 
-		if (newPassword.length() < 6) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters");
-		}
+        if (currentPassword == null || currentPassword.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is required");
+        }
 
-		if (!user.getPassword().equals(currentPassword)) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
-		}
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password is required");
+        }
 
-		user.setPassword(newPassword);
-		user.setUpdatedAt(LocalDateTime.now());
-		userRepository.save(user);
-	}
+        if (newPassword.length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters");
+        }
+
+        if (!user.getPassword().equals(currentPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+
+        user.setPassword(newPassword);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String valueOrDefault(String value, String fallback) {
+        String normalized = valueOrEmpty(value);
+        return normalized.isEmpty() ? fallback : normalized;
+    }
 }

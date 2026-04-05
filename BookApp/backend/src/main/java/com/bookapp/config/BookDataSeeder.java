@@ -247,6 +247,9 @@ public class BookDataSeeder implements CommandLineRunner {
         if (isBlank(existing.getCategoryId())) {
             existing.setCategoryId(seed.getCategoryId());
         }
+        if (isBlank(existing.getSourceBookId())) {
+            existing.setSourceBookId(seed.getSourceBookId());
+        }
         if (existing.getTotalChapters() <= 0) {
             existing.setTotalChapters(seed.getTotalChapters());
         }
@@ -278,22 +281,26 @@ public class BookDataSeeder implements CommandLineRunner {
         int createdDaysAgo
     ) {
         LocalDateTime createdAt = LocalDateTime.now().minusDays(createdDaysAgo);
-        return new Book(
-            null,
-            title,
-            author,
-            description,
-            summary,
-            coverImage,
-            categoryId,
-            totalChapters,
-            totalPages,
-            views,
-            avgRating,
-            false,
-            List.of(),
-            createdAt,
-            createdAt
-        );
+        Book book = new Book();
+        book.setSourceBookId("seed-" + title.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", ""));
+        book.setTitle(title);
+        book.setAuthor(author);
+        book.setDescription(description);
+        book.setSummary(summary);
+        book.setCoverImage(coverImage);
+        book.setPublisher("");
+        book.setPublishDate("");
+        book.setStatus("Sẵn sàng");
+        book.setCategoryId(categoryId);
+        book.setCategories(List.of());
+        book.setTags(List.of());
+        book.setTotalChapters(totalChapters);
+        book.setTotalPages(totalPages);
+        book.setViews(views);
+        book.setAvgRating(avgRating);
+        book.setFeatured(false);
+        book.setCreatedAt(createdAt);
+        book.setUpdatedAt(createdAt);
+        return book;
     }
 }
