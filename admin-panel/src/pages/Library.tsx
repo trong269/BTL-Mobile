@@ -142,7 +142,7 @@ export default function Library() {
               status: "Sẵn sàng",
               cover: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400",
               summary: "",
-              language: "Tiếng Việt",
+              publisher: "",
               publishDate: new Date().toISOString().split('T')[0],
               categories: []
             })}
@@ -417,8 +417,8 @@ export default function Library() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Ngôn ngữ</p>
-                      <p className="font-medium text-on-surface">{selectedBook.language}</p>
+                      <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Nhà xuất bản</p>
+                      <p className="font-medium text-on-surface">{selectedBook.publisher}</p>
                     </div>
                   </div>
 
@@ -601,22 +601,13 @@ export default function Library() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-on-surface mb-1.5">Ngôn ngữ</label>
-                  <select
-                    value={editingBook.language}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditingBook({ ...editingBook, language: e.target.value })}
+                  <label className="block text-sm font-medium text-on-surface mb-1.5">Nhà xuất bản</label>
+                  <input
+                    type="text"
+                    value={editingBook.publisher}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditingBook({ ...editingBook, publisher: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  >
-                    <option value="Tiếng Việt">Tiếng Việt</option>
-                    <option value="Tiếng Anh">Tiếng Anh</option>
-                    <option value="Tiếng Pháp">Tiếng Pháp</option>
-                    <option value="Tiếng Trung">Tiếng Trung</option>
-                    <option value="Tiếng Nhật">Tiếng Nhật</option>
-                    <option value="Tiếng Hàn">Tiếng Hàn</option>
-                    <option value="Tiếng Tây Ban Nha">Tiếng Tây Ban Nha</option>
-                    <option value="Tiếng Đức">Tiếng Đức</option>
-                    <option value="Ngôn ngữ khác">Ngôn ngữ khác</option>
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Ngày xuất bản</label>
