@@ -15,10 +15,16 @@
         android:theme="@style/Theme.BookApp"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".ui.book.BookDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.admin.AdminActivity"
             android:exported="false" />
         <activity
             android:name=".ui.feature.FeatureActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.profile.ProfileActivity"
             android:exported="false" />
         <activity
             android:name=".ui.auth.RegisterActivity"
@@ -28,9 +34,6 @@
             android:exported="false" />
         <activity
             android:name=".ui.book.BookCatalogActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.book.BookDetailActivity"
             android:exported="false" />
         <activity
             android:name=".ui.auth.LoginActivity"

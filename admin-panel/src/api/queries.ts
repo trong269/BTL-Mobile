@@ -1,32 +1,183 @@
-import { useQuery } from '@tanstack/react-query';
-import { getBooks } from './booksApi';
-import { getUsers } from './usersApi';
-import { getCategories } from './categoriesApi';
-import type { PaginatedQuery } from './types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createBook, deleteBook, getBooks, updateBook, type BookPayload } from './booksApi';
+import { createCategory, deleteCategory, getCategories, updateCategory, type CategoryPayload } from './categoriesApi';
+import { createChapter, deleteChapter, getBookChapters, updateChapter, type ChapterPayload } from './chaptersApi';
+import { createUser, deleteUser, getUsers, updateUser, type CreateUserPayload, type UserPayload } from './usersApi';
+import { addReview, getBookReviews, type ReviewPayload } from './reviewsApi';
 
 export const queryKeys = {
-  books: (params: PaginatedQuery) => ['books', params] as const,
-  users: (params: PaginatedQuery) => ['users', params] as const,
-  categories: (params: PaginatedQuery) => ['categories', params] as const,
+  books: ['books'] as const,
+  users: ['users'] as const,
+  categories: ['categories'] as const,
+  chapters: (bookId: string) => ['chapters', bookId] as const,
+  reviews: (bookId: string) => ['reviews', bookId] as const,
 };
 
-export function useBooks(params: PaginatedQuery) {
+export function useBooks() {
+  return useQuery({ queryKey: queryKeys.books, queryFn: getBooks });
+}
+
+export function useUsers() {
+  return useQuery({ queryKey: queryKeys.users, queryFn: getUsers });
+}
+
+export function useCategories() {
+  return useQuery({ queryKey: queryKeys.categories, queryFn: getCategories });
+}
+
+export function useBookChapters(bookId?: string) {
   return useQuery({
-    queryKey: queryKeys.books(params),
-    queryFn: () => getBooks(params),
+    queryKey: queryKeys.chapters(bookId || ''),
+    queryFn: () => getBookChapters(bookId as string),
+    enabled: Boolean(bookId),
   });
 }
 
-export function useUsers(params: PaginatedQuery) {
+export function useBookReviews(bookId?: string) {
   return useQuery({
-    queryKey: queryKeys.users(params),
-    queryFn: () => getUsers(params),
+    queryKey: queryKeys.reviews(bookId || ''),
+    queryFn: () => getBookReviews(bookId as string),
+    enabled: Boolean(bookId),
   });
 }
 
-export function useCategories(params: PaginatedQuery) {
-  return useQuery({
-    queryKey: queryKeys.categories(params),
-    queryFn: () => getCategories(params),
+export function useCreateBook() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: BookPayload) => createBook(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useUpdateBook() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: BookPayload }) => updateBook(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+    },
+  });
+}
+
+export function useDeleteBook() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteBook(id),
+    onSuccess: (_, bookId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      queryClient.removeQueries({ queryKey: queryKeys.chapters(bookId) });
+      queryClient.removeQueries({ queryKey: queryKeys.reviews(bookId) });
+    },
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateUserPayload) => createUser(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UserPayload }) => updateUser(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users });
+    },
+  });
+}
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CategoryPayload) => createCategory(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+    },
+  });
+}
+
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: CategoryPayload }) => updateCategory(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useCreateChapter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, payload }: { bookId: string; payload: ChapterPayload }) => createChapter(bookId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters(variables.bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useUpdateChapter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, chapterId, payload }: { bookId: string; chapterId: string; payload: ChapterPayload }) =>
+      updateChapter(bookId, chapterId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters(variables.bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useDeleteChapter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, chapterId }: { bookId: string; chapterId: string }) => deleteChapter(bookId, chapterId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters(variables.bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useAddReview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ payload, bookId }: { payload: ReviewPayload; bookId: string }) => addReview(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reviews(variables.bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
   });
 }

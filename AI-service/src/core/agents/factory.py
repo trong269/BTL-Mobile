@@ -1,6 +1,7 @@
 from src.core.agents.base import BaseBookAgent
 from src.core.agents.sumarize_agent import SummarizeAgent
 from src.core.agents.explain_agent import ExplainAgent
+from src.core.agents.analyze_image_agent import AnalyzeImageAgent
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -13,8 +14,9 @@ class AgentFactory:
     """
 
     _AGENT_MAP: dict[str, type[BaseBookAgent]] = {
-        "summarize": SummarizeAgent,
-        "explain":   ExplainAgent,
+        "summarize":      SummarizeAgent,
+        "explain":        ExplainAgent,
+        "analyze_image":  AnalyzeImageAgent,
     }
     _cache: dict[str, BaseBookAgent] = {}
 
@@ -30,7 +32,7 @@ class AgentFactory:
         Trả về agent instance tương ứng với task_type (lazy init + cache).
 
         Args:
-            task_type: 'summarize' | 'explain'
+            task_type: 'summarize' | 'explain' | 'analyze_image'
         """
         task_type = task_type.lower().strip()
 

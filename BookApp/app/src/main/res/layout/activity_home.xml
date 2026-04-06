@@ -76,21 +76,11 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="Danh muc nhanh"
                     android:textColor="#1B1F24"
                     android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/btnSeeAllRecommended"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Xem tat ca"
-                    android:textColor="@color/home_primary"
-                    android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -164,15 +154,46 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="18dp"
-                android:text="Sach cho ban"
-                android:textColor="#1B1F24"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sach cua ban"
+                        android:textColor="#1B1F24"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Goi y dua tren xu huong doc cua ban"
+                        android:textColor="#6A7482"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btnSeeAllRecommended"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xem tat ca"
+                    android:textColor="@color/home_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerBooks"
@@ -239,32 +260,74 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/btnAdminPanel"
+                <TextView
                     android:layout_width="0dp"
-                    android:layout_height="46dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="@drawable/home_chip_bg"
-                    android:text="Quan tri"
-                    android:textAllCaps="false"
-                    android:textColor="#1D2A52"
+                    android:text="Bang xep hang"
+                    android:textColor="#1B1F24"
+                    android:textSize="17sp"
                     android:textStyle="bold" />
 
-                <Button
-                    android:id="@+id/btnLogout"
-                    android:layout_width="0dp"
-                    android:layout_height="46dp"
-                    android:layout_marginStart="10dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/home_chip_bg"
-                    android:text="Dang xuat"
-                    android:textAllCaps="false"
-                    android:textColor="#1D2A52"
-                    android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/home_card_bg"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
+
+                    <Button
+                        android:id="@+id/btnTopWeekTab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:background="@drawable/home_primary_button_bg"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="14dp"
+                        android:text="Top tuan"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnTopMonthTab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="6dp"
+                        android:background="@drawable/home_chip_bg"
+                        android:minWidth="0dp"
+                        android:paddingHorizontal="14dp"
+                        android:text="Top thang"
+                        android:textAllCaps="false"
+                        android:textColor="#1D2A52"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvTopDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp"
+                android:text="Cap nhat xu huong trong 7 ngay gan nhat"
+                android:textColor="#6A7482"
+                android:textSize="12sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerTopBooks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="16dp" />
+
         </LinearLayout>
     </ScrollView>
 

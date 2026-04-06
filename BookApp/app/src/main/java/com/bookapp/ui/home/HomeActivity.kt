@@ -8,15 +8,18 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bookapp.R
 import com.bookapp.data.api.RetrofitClient
 import com.bookapp.data.model.Book
-import com.bookapp.ui.admin.AdminActivity
-import com.bookapp.ui.auth.LoginActivity
+import com.bookapp.ui.book.BookDetailActivity
 import com.bookapp.ui.book.BookCatalogActivity
 import com.bookapp.ui.feature.FeatureActivity
+import com.bookapp.ui.profile.ProfileActivity
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -28,18 +31,28 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var btnNextPage: Button
     private lateinit var tvPageIndicator: TextView
     private lateinit var tvBooksError: TextView
+    private lateinit var btnTopWeekTab: Button
+    private lateinit var btnTopMonthTab: Button
+    private lateinit var tvTopDescription: TextView
+    private lateinit var topBookAdapter: TopBookAdapter
 
     private val allBooks = mutableListOf<Book>()
     private var currentPage = 1
+    private var selectedTopPeriod = TOP_PERIOD_WEEK
+    private var topBooksWeek: List<Book> = emptyList()
+    private var topBooksMonth: List<Book> = emptyList()
+    private var lastOpenBookDetailMs = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
         bindBookGrid()
+        bindTopRankings()
         bindFeatureButtons()
         bindBottomNavigation()
         loadBooks()
+        loadTopBooksFromDatabase()
     }
 
     private fun bindBookGrid() {
@@ -49,7 +62,9 @@ class HomeActivity : AppCompatActivity() {
         tvPageIndicator = findViewById(R.id.tvPageIndicator)
         tvBooksError = findViewById(R.id.tvBooksError)
 
-        bookAdapter = BookAdapter()
+        bookAdapter = BookAdapter { book ->
+            openBookDetail(book)
+        }
         recyclerBooks.layoutManager = GridLayoutManager(this, 2)
         recyclerBooks.adapter = bookAdapter
 
@@ -67,6 +82,31 @@ class HomeActivity : AppCompatActivity() {
                 renderPage()
             }
         }
+    }
+
+    private fun bindTopRankings() {
+        val recyclerTopBooks = findViewById<RecyclerView>(R.id.recyclerTopBooks)
+        btnTopWeekTab = findViewById(R.id.btnTopWeekTab)
+        btnTopMonthTab = findViewById(R.id.btnTopMonthTab)
+        tvTopDescription = findViewById(R.id.tvTopDescription)
+
+        topBookAdapter = TopBookAdapter("7 ngay") { book ->
+            openBookDetail(book)
+        }
+        recyclerTopBooks.layoutManager = LinearLayoutManager(this)
+        recyclerTopBooks.adapter = topBookAdapter
+
+        btnTopWeekTab.setOnClickListener {
+            selectedTopPeriod = TOP_PERIOD_WEEK
+            renderSelectedTopList()
+        }
+
+        btnTopMonthTab.setOnClickListener {
+            selectedTopPeriod = TOP_PERIOD_MONTH
+            renderSelectedTopList()
+        }
+
+        renderSelectedTopList()
     }
 
     private fun loadBooks() {
@@ -92,6 +132,38 @@ class HomeActivity : AppCompatActivity() {
             })
     }
 
+    private fun loadTopBooksFromDatabase() {
+        RetrofitClient.instance.getTopBooksWeek()
+            .enqueue(object : Callback<List<Book>> {
+                override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
+                    if (response.isSuccessful) {
+                        topBooksWeek = response.body().orEmpty()
+                        renderSelectedTopList()
+                    }
+                }
+
+                override fun onFailure(call: Call<List<Book>>, t: Throwable) {
+                    topBooksWeek = emptyList()
+                    renderSelectedTopList()
+                }
+            })
+
+        RetrofitClient.instance.getTopBooksMonth()
+            .enqueue(object : Callback<List<Book>> {
+                override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
+                    if (response.isSuccessful) {
+                        topBooksMonth = response.body().orEmpty()
+                        renderSelectedTopList()
+                    }
+                }
+
+                override fun onFailure(call: Call<List<Book>>, t: Throwable) {
+                    topBooksMonth = emptyList()
+                    renderSelectedTopList()
+                }
+            })
+    }
+
     private fun renderPage() {
         if (allBooks.isEmpty()) {
             bookAdapter.submitList(emptyList())
@@ -99,6 +171,9 @@ class HomeActivity : AppCompatActivity() {
             btnPrevPage.isEnabled = false
             btnNextPage.isEnabled = false
             showError("Chua co sach trong he thong")
+            topBooksWeek = emptyList()
+            topBooksMonth = emptyList()
+            renderSelectedTopList()
             return
         }
 
@@ -114,6 +189,28 @@ class HomeActivity : AppCompatActivity() {
         tvPageIndicator.text = "Trang $currentPage/$totalPages"
         btnPrevPage.isEnabled = currentPage > 1
         btnNextPage.isEnabled = currentPage < totalPages
+    }
+
+    private fun renderSelectedTopList() {
+        val isWeekSelected = selectedTopPeriod == TOP_PERIOD_WEEK
+
+        val activeBackground = R.drawable.home_primary_button_bg
+        val inactiveBackground = R.drawable.home_chip_bg
+        val activeTextColor = ContextCompat.getColor(this, android.R.color.white)
+        val inactiveTextColor = ContextCompat.getColor(this, R.color.home_primary_dark)
+
+        btnTopWeekTab.setBackgroundResource(if (isWeekSelected) activeBackground else inactiveBackground)
+        btnTopMonthTab.setBackgroundResource(if (isWeekSelected) inactiveBackground else activeBackground)
+        btnTopWeekTab.setTextColor(if (isWeekSelected) activeTextColor else inactiveTextColor)
+        btnTopMonthTab.setTextColor(if (isWeekSelected) inactiveTextColor else activeTextColor)
+
+        if (isWeekSelected) {
+            tvTopDescription.text = "Cap nhat xu huong trong 7 ngay gan nhat"
+            topBookAdapter.submitList(topBooksWeek, "7 ngay")
+        } else {
+            tvTopDescription.text = "Nhung dau sach noi bat nhat trong 30 ngay"
+            topBookAdapter.submitList(topBooksMonth, "30 ngay")
+        }
     }
 
     private fun getTotalPages(): Int {
@@ -191,7 +288,7 @@ class HomeActivity : AppCompatActivity() {
             openFeature("Thu vien", "Truy cap thu vien ca nhan cua ban.")
         }
         findViewById<Button>(R.id.navProfile).setOnClickListener {
-            openFeature("Tai khoan", "Quan ly thong tin tai khoan, goi cuoc va cai dat.")
+            startActivity(Intent(this, ProfileActivity::class.java))
         }
     }
 
@@ -203,7 +300,27 @@ class HomeActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    private fun openBookDetail(book: Book) {
+        val now = System.currentTimeMillis()
+        if (now - lastOpenBookDetailMs < 600L) return
+
+        val id = book.id?.trim()
+        if (id.isNullOrEmpty()) {
+            Toast.makeText(this, "Sach nay chua co ID hop le", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lastOpenBookDetailMs = now
+        val intent = Intent(this, BookDetailActivity::class.java).apply {
+            putExtra(BookDetailActivity.EXTRA_BOOK_ID, id)
+            putExtra(BookDetailActivity.EXTRA_BOOK_TITLE, book.title ?: "Chi tiet sach")
+        }
+        startActivity(intent)
+    }
+
     companion object {
         private const val BOOKS_PER_PAGE = 10
+        private const val TOP_PERIOD_WEEK = "WEEK"
+        private const val TOP_PERIOD_MONTH = "MONTH"
     }
 }

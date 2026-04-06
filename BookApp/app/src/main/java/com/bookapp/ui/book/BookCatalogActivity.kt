@@ -83,7 +83,7 @@ class BookCatalogActivity : AppCompatActivity() {
         recyclerCatalog.adapter = catalogAdapter
 
         // Back button
-        findViewById<TextView>(R.id.btnCatalogBack).setOnClickListener { finish() }
+        findViewById<View>(R.id.btnCatalogBack).setOnClickListener { finish() }
 
         // Pagination
         btnPrev.setOnClickListener {

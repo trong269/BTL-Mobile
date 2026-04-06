@@ -43,7 +43,6 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var tvChapters: TextView
     private lateinit var tvPages: TextView
     private lateinit var tvViews: TextView
-    private lateinit var tvSummary: TextView
     private lateinit var tvDescription: TextView
     private lateinit var btnFavorite: Button
     private lateinit var btnReadNow: Button
@@ -78,9 +77,25 @@ class BookDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_book_detail)
 
-        bookId = intent.getStringExtra(EXTRA_BOOK_ID)
+        bookId = intent.getStringExtra(EXTRA_BOOK_ID)?.trim()?.takeIf { it.isNotEmpty() }
 
-        bindViews()
+        if (bookId == null) {
+            Toast.makeText(this, "Khong the mo chi tiet sach do thieu ID", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        val bindViewsSuccess = runCatching {
+            bindViews()
+        }.onFailure {
+            Toast.makeText(this, "Khong the tai giao dien chi tiet sach", Toast.LENGTH_SHORT).show()
+            finish()
+        }.isSuccess
+
+        if (!bindViewsSuccess) {
+            return
+        }
+
         loadBookDetail()
         checkFavoriteStatus()
     }
@@ -94,7 +109,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvChapters = findViewById(R.id.tvDetailChapters)
         tvPages = findViewById(R.id.tvDetailPages)
         tvViews = findViewById(R.id.tvDetailViews)
-        tvSummary = findViewById(R.id.tvDetailSummary)
         tvDescription = findViewById(R.id.tvDetailDescription)
         btnFavorite = findViewById(R.id.btnFavorite)
         btnReadNow = findViewById(R.id.btnReadNow)
@@ -128,7 +142,7 @@ class BookDetailActivity : AppCompatActivity() {
         tvNoComments = findViewById(R.id.tvNoComments)
 
         // Back
-        findViewById<TextView>(R.id.btnDetailBack).setOnClickListener { finish() }
+            findViewById<View>(R.id.btnDetailBack).setOnClickListener { finish() }
 
         // Tabs
         tabIntro.setOnClickListener { showTab("intro") }
@@ -158,19 +172,23 @@ class BookDetailActivity : AppCompatActivity() {
 
     private fun loadBookDetail() {
         val id = bookId ?: return
-        RetrofitClient.instance.getBookById(id)
-            .enqueue(object : Callback<Book> {
-                override fun onResponse(call: Call<Book>, response: Response<Book>) {
-                    if (response.isSuccessful) {
-                        response.body()?.let { bindBook(it) }
-                    } else {
-                        Toast.makeText(this@BookDetailActivity, "Khong tai duoc thong tin sach", Toast.LENGTH_SHORT).show()
+        runCatching {
+            RetrofitClient.instance.getBookById(id)
+                .enqueue(object : Callback<Book> {
+                    override fun onResponse(call: Call<Book>, response: Response<Book>) {
+                        if (response.isSuccessful) {
+                            response.body()?.let { bindBook(it) }
+                        } else {
+                            Toast.makeText(this@BookDetailActivity, "Khong tai duoc thong tin sach", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
-                override fun onFailure(call: Call<Book>, t: Throwable) {
-                    Toast.makeText(this@BookDetailActivity, "Loi ket noi: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+                    override fun onFailure(call: Call<Book>, t: Throwable) {
+                        Toast.makeText(this@BookDetailActivity, "Loi ket noi: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }.onFailure {
+            Toast.makeText(this, "Khong the tai chi tiet sach", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun bindBook(book: Book) {
@@ -181,7 +199,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvChapters.text = "${book.totalChapters ?: 0}"
         tvPages.text = "${book.totalPages ?: 0}"
         tvViews.text = "${book.views ?: 0}"
-        tvSummary.text = book.summary?.takeIf { it.isNotBlank() } ?: "(Chua co tom tat)"
         tvDescription.text = book.description?.takeIf { it.isNotBlank() } ?: "(Chua co mo ta)"
 
         if (!book.coverImage.isNullOrBlank()) {
@@ -197,16 +214,18 @@ class BookDetailActivity : AppCompatActivity() {
     private fun checkFavoriteStatus() {
         val userId = getUserId() ?: return
         val id = bookId ?: return
-        RetrofitClient.instance.checkFavorite(userId, id)
-            .enqueue(object : Callback<FavoriteStatusResponse> {
-                override fun onResponse(call: Call<FavoriteStatusResponse>, response: Response<FavoriteStatusResponse>) {
-                    if (response.isSuccessful) {
-                        isFavorited = response.body()?.favorited ?: false
-                        updateFavoriteButton()
+        runCatching {
+            RetrofitClient.instance.checkFavorite(userId, id)
+                .enqueue(object : Callback<FavoriteStatusResponse> {
+                    override fun onResponse(call: Call<FavoriteStatusResponse>, response: Response<FavoriteStatusResponse>) {
+                        if (response.isSuccessful) {
+                            isFavorited = response.body()?.favorited ?: false
+                            updateFavoriteButton()
+                        }
                     }
-                }
-                override fun onFailure(call: Call<FavoriteStatusResponse>, t: Throwable) {}
-            })
+                    override fun onFailure(call: Call<FavoriteStatusResponse>, t: Throwable) {}
+                })
+        }
     }
 
     private fun toggleFavorite() {
@@ -216,62 +235,72 @@ class BookDetailActivity : AppCompatActivity() {
             return
         }
         val id = bookId ?: return
-        RetrofitClient.instance.toggleFavorite(ToggleFavoriteRequest(userId, id))
-            .enqueue(object : Callback<ToggleFavoriteResponse> {
-                override fun onResponse(call: Call<ToggleFavoriteResponse>, response: Response<ToggleFavoriteResponse>) {
-                    if (response.isSuccessful) {
-                        isFavorited = response.body()?.favorited ?: !isFavorited
-                        updateFavoriteButton()
-                        val msg = if (isFavorited) "Da them vao yeu thich ♥" else "Da xoa khoi yeu thich"
-                        Toast.makeText(this@BookDetailActivity, msg, Toast.LENGTH_SHORT).show()
+        runCatching {
+            RetrofitClient.instance.toggleFavorite(ToggleFavoriteRequest(userId, id))
+                .enqueue(object : Callback<ToggleFavoriteResponse> {
+                    override fun onResponse(call: Call<ToggleFavoriteResponse>, response: Response<ToggleFavoriteResponse>) {
+                        if (response.isSuccessful) {
+                            isFavorited = response.body()?.favorited ?: !isFavorited
+                            updateFavoriteButton()
+                            val msg = if (isFavorited) "Da them vao yeu thich" else "Da xoa khoi yeu thich"
+                            Toast.makeText(this@BookDetailActivity, msg, Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
-                override fun onFailure(call: Call<ToggleFavoriteResponse>, t: Throwable) {
-                    Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+                    override fun onFailure(call: Call<ToggleFavoriteResponse>, t: Throwable) {
+                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }.onFailure {
+            Toast.makeText(this, "Khong the cap nhat yeu thich", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun updateFavoriteButton() {
         if (isFavorited) {
-            btnFavorite.text = "♥ Yeu thich"
+            btnFavorite.text = getString(R.string.favorite_active)
             btnFavorite.setBackgroundResource(R.drawable.btn_favorited_bg)
             btnFavorite.setTextColor(0xFFE53935.toInt())
+            btnFavorite.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
         } else {
-            btnFavorite.text = "♡ Thich"
+            btnFavorite.text = getString(R.string.favorite_inactive)
             btnFavorite.setBackgroundResource(R.drawable.btn_outline_bg)
             btnFavorite.setTextColor(0xFF23408E.toInt())
+            btnFavorite.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
         }
     }
 
     private fun loadReviews() {
         val id = bookId ?: return
-        RetrofitClient.instance.getReviewsByBook(id)
-            .enqueue(object : Callback<List<Review>> {
-                override fun onResponse(call: Call<List<Review>>, response: Response<List<Review>>) {
-                    if (response.isSuccessful) {
-                        val reviews = response.body().orEmpty()
-                        reviewAdapter.submitList(reviews)
-                        tvNoReviews.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
+        runCatching {
+            RetrofitClient.instance.getReviewsByBook(id)
+                .enqueue(object : Callback<List<Review>> {
+                    override fun onResponse(call: Call<List<Review>>, response: Response<List<Review>>) {
+                        if (response.isSuccessful) {
+                            val reviews = response.body().orEmpty()
+                            reviewAdapter.submitList(reviews)
+                            tvNoReviews.visibility = if (reviews.isEmpty()) View.VISIBLE else View.GONE
+                        }
                     }
-                }
-                override fun onFailure(call: Call<List<Review>>, t: Throwable) {}
-            })
+                    override fun onFailure(call: Call<List<Review>>, t: Throwable) {}
+                })
+        }
     }
 
     private fun loadComments() {
         val id = bookId ?: return
-        RetrofitClient.instance.getCommentsByBook(id)
-            .enqueue(object : Callback<List<Comment>> {
-                override fun onResponse(call: Call<List<Comment>>, response: Response<List<Comment>>) {
-                    if (response.isSuccessful) {
-                        val comments = response.body().orEmpty()
-                        commentAdapter.submitList(comments)
-                        tvNoComments.visibility = if (comments.isEmpty()) View.VISIBLE else View.GONE
+        runCatching {
+            RetrofitClient.instance.getCommentsByBook(id)
+                .enqueue(object : Callback<List<Comment>> {
+                    override fun onResponse(call: Call<List<Comment>>, response: Response<List<Comment>>) {
+                        if (response.isSuccessful) {
+                            val comments = response.body().orEmpty()
+                            commentAdapter.submitList(comments)
+                            tvNoComments.visibility = if (comments.isEmpty()) View.VISIBLE else View.GONE
+                        }
                     }
-                }
-                override fun onFailure(call: Call<List<Comment>>, t: Throwable) {}
-            })
+                    override fun onFailure(call: Call<List<Comment>>, t: Throwable) {}
+                })
+        }
     }
 
     private fun submitReview() {
@@ -290,24 +319,29 @@ class BookDetailActivity : AppCompatActivity() {
         }
 
         btnSubmitReview.isEnabled = false
-        RetrofitClient.instance.addReview(AddReviewRequest(id, userId, rating, text))
-            .enqueue(object : Callback<Review> {
-                override fun onResponse(call: Call<Review>, response: Response<Review>) {
-                    btnSubmitReview.isEnabled = true
-                    if (response.isSuccessful) {
-                        edtReviewInput.setText("")
-                        ratingBarInput.rating = 5f
-                        Toast.makeText(this@BookDetailActivity, "Da gui danh gia!", Toast.LENGTH_SHORT).show()
-                        loadReviews()
-                    } else {
-                        Toast.makeText(this@BookDetailActivity, "Loi gui danh gia (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+        runCatching {
+            RetrofitClient.instance.addReview(AddReviewRequest(id, userId, rating, text))
+                .enqueue(object : Callback<Review> {
+                    override fun onResponse(call: Call<Review>, response: Response<Review>) {
+                        btnSubmitReview.isEnabled = true
+                        if (response.isSuccessful) {
+                            edtReviewInput.setText("")
+                            ratingBarInput.rating = 5f
+                            Toast.makeText(this@BookDetailActivity, "Da gui danh gia!", Toast.LENGTH_SHORT).show()
+                            loadReviews()
+                        } else {
+                            Toast.makeText(this@BookDetailActivity, "Loi gui danh gia (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
-                override fun onFailure(call: Call<Review>, t: Throwable) {
-                    btnSubmitReview.isEnabled = true
-                    Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+                    override fun onFailure(call: Call<Review>, t: Throwable) {
+                        btnSubmitReview.isEnabled = true
+                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }.onFailure {
+            btnSubmitReview.isEnabled = true
+            Toast.makeText(this, "Khong the gui danh gia", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun submitComment() {
@@ -324,23 +358,28 @@ class BookDetailActivity : AppCompatActivity() {
         }
 
         btnSubmitComment.isEnabled = false
-        RetrofitClient.instance.addComment(AddCommentRequest(id, userId, content))
-            .enqueue(object : Callback<Comment> {
-                override fun onResponse(call: Call<Comment>, response: Response<Comment>) {
-                    btnSubmitComment.isEnabled = true
-                    if (response.isSuccessful) {
-                        edtCommentInput.setText("")
-                        Toast.makeText(this@BookDetailActivity, "Da gui binh luan!", Toast.LENGTH_SHORT).show()
-                        loadComments()
-                    } else {
-                        Toast.makeText(this@BookDetailActivity, "Loi gui binh luan (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+        runCatching {
+            RetrofitClient.instance.addComment(AddCommentRequest(id, userId, content))
+                .enqueue(object : Callback<Comment> {
+                    override fun onResponse(call: Call<Comment>, response: Response<Comment>) {
+                        btnSubmitComment.isEnabled = true
+                        if (response.isSuccessful) {
+                            edtCommentInput.setText("")
+                            Toast.makeText(this@BookDetailActivity, "Da gui binh luan!", Toast.LENGTH_SHORT).show()
+                            loadComments()
+                        } else {
+                            Toast.makeText(this@BookDetailActivity, "Loi gui binh luan (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
-                override fun onFailure(call: Call<Comment>, t: Throwable) {
-                    btnSubmitComment.isEnabled = true
-                    Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+                    override fun onFailure(call: Call<Comment>, t: Throwable) {
+                        btnSubmitComment.isEnabled = true
+                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }.onFailure {
+            btnSubmitComment.isEnabled = true
+            Toast.makeText(this, "Khong the gui binh luan", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showTab(tab: String) {

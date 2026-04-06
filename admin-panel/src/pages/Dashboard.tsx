@@ -1,7 +1,7 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, BookOpen, MessageSquare, TrendingUp, Activity, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAppContext } from '../context/AppContext';
+import { useBooks, useUsers } from '../api/queries';
 
 const data = [
   { name: 'T2', users: 4000, sessions: 2400 },
@@ -14,12 +14,14 @@ const data = [
 ];
 
 export default function Dashboard() {
-  const { users, books, activities } = useAppContext();
   const navigate = useNavigate();
+  const { data: users = [] } = useUsers();
+  const { data: books = [] } = useBooks();
 
   const totalUsers = users.length;
   const totalBooks = books.length;
-  const totalReviews = books.reduce((acc, book) => acc + (book.reviews?.length || 0), 0);
+  const totalReviews = books.filter((book) => typeof book.rating === 'number').length;
+  const activities: Array<{ id: string; user: string; action: string; category: string; time: string }> = [];
 
   const stats = [
     { title: "Tổng người dùng", value: totalUsers.toLocaleString(), icon: Users, trend: "+12%", color: "bg-primary-container text-on-primary" },

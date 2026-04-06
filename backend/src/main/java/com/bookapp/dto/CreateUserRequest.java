@@ -1,0 +1,14 @@
+package com.bookapp.dto;
+
+import lombok.Data;
+
+@Data
+public class CreateUserRequest {
+    private String username;
+    private String email;
+    private String password;
+    private String fullName;
+    private String avatar;
+    private String role;
+    private String plan;
+}

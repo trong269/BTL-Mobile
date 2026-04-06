@@ -37,36 +37,33 @@
                     android:alpha="0.55" />
 
                 <!-- Back button -->
-                <TextView
+                <ImageView
                     android:id="@+id/btnDetailBack"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
                     android:layout_margin="12dp"
-                    android:background="@drawable/home_card_bg"
-                    android:gravity="center"
-                    android:text="&#8592;"
-                    android:textColor="#23408E"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:background="@drawable/back_round_bg"
+                    android:contentDescription="Quay lai"
+                    android:padding="5dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_back_arrow" />
 
                 <!-- Rating badge -->
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="34dp"
                     android:layout_gravity="top|end"
                     android:layout_margin="12dp"
                     android:background="@drawable/home_card_bg"
-                    android:gravity="center_vertical"
+                    android:gravity="center"
                     android:orientation="horizontal"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="6dp">
+                    android:paddingHorizontal="10dp">
 
-                    <TextView
+                    <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="★"
-                        android:textColor="#F9A825"
-                        android:textSize="14sp" />
+                        android:contentDescription="Danh gia"
+                        android:src="@drawable/ic_star_badge" />
 
                     <TextView
                         android:id="@+id/tvDetailRatingBadge"
@@ -235,7 +232,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
                         android:background="@drawable/btn_outline_bg"
-                        android:text="&#9825; Thich"
+                        android:text="@string/favorite_inactive"
                         android:textAllCaps="false"
                         android:textColor="#23408E"
                         android:textSize="14sp"
@@ -303,24 +300,6 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tom tat"
-                    android:textColor="#23408E"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvDetailSummary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingExtra="4dp"
-                    android:textColor="#3F4A57"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
                     android:text="Mo ta"
                     android:textColor="#23408E"
                     android:textSize="15sp"

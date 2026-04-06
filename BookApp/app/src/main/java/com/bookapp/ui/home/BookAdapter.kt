@@ -1,18 +1,24 @@
 package com.bookapp.ui.home
 
-import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bookapp.BuildConfig
 import com.bookapp.R
 import com.bookapp.data.model.Book
-import com.bookapp.ui.book.BookDetailActivity
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 
-class BookAdapter : RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
+class BookAdapter(
+    private val onItemClick: (Book) -> Unit
+) : RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
 
     private val items = mutableListOf<Book>()
 
@@ -34,41 +40,74 @@ class BookAdapter : RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
 
     override fun getItemCount(): Int = items.size
 
-    class BookViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val ivCover: ImageView = itemView.findViewById(R.id.ivBookCover)
+    inner class BookViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val imgBookCover: ImageView = itemView.findViewById(R.id.imgBookCover)
+        private val tvBookCoverFallback: TextView = itemView.findViewById(R.id.tvBookCoverFallback)
         private val tvTitle: TextView = itemView.findViewById(R.id.tvBookTitle)
         private val tvAuthor: TextView = itemView.findViewById(R.id.tvBookAuthor)
         private val tvMeta: TextView = itemView.findViewById(R.id.tvBookMeta)
 
         fun bind(book: Book) {
+            bindCover(book.coverImage)
             tvTitle.text = book.title?.takeIf { it.isNotBlank() } ?: "Chua co tieu de"
             tvAuthor.text = book.author?.takeIf { it.isNotBlank() } ?: "Khong ro tac gia"
 
             val ratingText = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             val viewsText = book.views ?: 0
-            tvMeta.text = "★ $ratingText  |  ${viewsText} luot xem"
+            tvMeta.text = "Danh gia: $ratingText | Luot xem: $viewsText"
 
-            // Load ảnh bìa với Glide
-            if (!book.coverImage.isNullOrBlank()) {
-                Glide.with(itemView.context)
-                    .load(book.coverImage)
-                    .placeholder(R.drawable.book_cover_placeholder)
-                    .error(R.drawable.book_cover_placeholder)
-                    .centerCrop()
-                    .into(ivCover)
-            } else {
-                ivCover.setImageResource(R.drawable.book_cover_placeholder)
-            }
-
-            // Click → BookDetailActivity
             itemView.setOnClickListener {
-                val context = itemView.context
-                val intent = Intent(context, BookDetailActivity::class.java).apply {
-                    putExtra(BookDetailActivity.EXTRA_BOOK_ID, book.id)
-                    putExtra(BookDetailActivity.EXTRA_BOOK_TITLE, book.title)
-                }
-                context.startActivity(intent)
+                onItemClick(book)
             }
+        }
+
+        private fun bindCover(coverImage: String?) {
+            val imageUrl = normalizeCoverUrl(coverImage)
+            if (imageUrl == null) {
+                imgBookCover.setImageDrawable(null)
+                tvBookCoverFallback.visibility = View.VISIBLE
+                return
+            }
+
+            tvBookCoverFallback.visibility = View.GONE
+            Glide.with(itemView)
+                .load(imageUrl)
+                .placeholder(R.drawable.book_cover_placeholder)
+                .error(R.drawable.book_cover_placeholder)
+                .listener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        tvBookCoverFallback.visibility = View.VISIBLE
+                        return false
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        model: Any,
+                        target: Target<Drawable>?,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        tvBookCoverFallback.visibility = View.GONE
+                        return false
+                    }
+                })
+                .into(imgBookCover)
+        }
+    }
+
+    private fun normalizeCoverUrl(raw: String?): String? {
+        val value = raw?.trim().orEmpty()
+        if (value.isEmpty()) return null
+
+        return if (value.startsWith("http://") || value.startsWith("https://")) {
+            value
+        } else {
+            BuildConfig.BASE_URL.trimEnd('/') + "/" + value.trimStart('/')
         }
     }
 }

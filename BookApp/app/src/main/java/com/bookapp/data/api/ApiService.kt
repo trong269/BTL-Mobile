@@ -10,6 +10,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -56,6 +57,21 @@ data class ToggleFavoriteResponse(
     val message: String
 )
 
+data class UpdateProfileRequest(
+    val username: String,
+    val email: String,
+    val fullName: String
+)
+
+data class ChangePasswordRequest(
+    val currentPassword: String,
+    val newPassword: String
+)
+
+data class MessageResponse(
+    val message: String
+)
+
 interface ApiService {
 
     // ========== AUTH ==========
@@ -64,6 +80,21 @@ interface ApiService {
 
     @POST("api/auth/register")
     fun register(@Body request: RegisterRequest): Call<User>
+
+    @GET("api/users/{userId}")
+    fun getUserProfile(@Path("userId") userId: String): Call<User>
+
+    @PUT("api/users/{userId}")
+    fun updateUserProfile(
+        @Path("userId") userId: String,
+        @Body request: UpdateProfileRequest
+    ): Call<User>
+
+    @PUT("api/users/{userId}/password")
+    fun changePassword(
+        @Path("userId") userId: String,
+        @Body request: ChangePasswordRequest
+    ): Call<MessageResponse>
 
     // ========== BOOKS ==========
     @GET("api/books")
@@ -111,4 +142,10 @@ interface ApiService {
         @Query("userId") userId: String,
         @Query("bookId") bookId: String
     ): Call<FavoriteStatusResponse>
+
+    @GET("api/books/top-week")
+    fun getTopBooksWeek(): Call<List<Book>>
+
+    @GET("api/books/top-month")
+    fun getTopBooksMonth(): Call<List<Book>>
 }
