@@ -8,6 +8,7 @@ import com.bookapp.model.Category;
 import com.bookapp.repository.BookCategoryRepository;
 import com.bookapp.repository.BookRepository;
 import com.bookapp.repository.CategoryRepository;
+import com.bookapp.repository.ChapterRepository;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -33,16 +34,19 @@ public class BookService {
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
     private final BookCategoryRepository bookCategoryRepository;
+    private final ChapterRepository chapterRepository;
     private static final int TOP_LIMIT = 5;
 
     public BookService(
             BookRepository bookRepository,
             CategoryRepository categoryRepository,
-            BookCategoryRepository bookCategoryRepository
+            BookCategoryRepository bookCategoryRepository,
+            ChapterRepository chapterRepository
     ) {
         this.bookRepository = bookRepository;
         this.categoryRepository = categoryRepository;
         this.bookCategoryRepository = bookCategoryRepository;
+        this.chapterRepository = chapterRepository;
     }
 
     public List<BookResponseDto> findAll() {
@@ -102,6 +106,7 @@ public class BookService {
         book.setCategories(new ArrayList<>());
         book.setCreatedAt(LocalDateTime.now());
         book.setUpdatedAt(LocalDateTime.now());
+        book.setTotalChapters(0);
 
         Book saved = bookRepository.save(book);
         syncBookCategories(saved.getId(), resolvedCategoryIds);
@@ -142,7 +147,24 @@ public class BookService {
         if (!bookRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found");
         }
+
+        toObjectId(id).ifPresent(chapterRepository::deleteByBookId);
+
+        toObjectId(id)
+                .map(bookCategoryRepository::findByBookId)
+                .filter(mappings -> !mappings.isEmpty())
+                .ifPresent(bookCategoryRepository::deleteAll);
+
         bookRepository.deleteById(id);
+    }
+
+    public void syncTotalChapters(String bookId) {
+        Book book = getById(bookId);
+        ObjectId bookObjectId = toObjectId(bookId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid book id"));
+        book.setTotalChapters((int) chapterRepository.countByBookId(bookObjectId));
+        book.setUpdatedAt(LocalDateTime.now());
+        bookRepository.save(book);
     }
 
     public void updateAvgRating(String bookId, double newAvg) {

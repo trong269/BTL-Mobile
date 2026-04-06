@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createBook, deleteBook, getBooks, updateBook, type BookPayload } from './booksApi';
 import { createCategory, deleteCategory, getCategories, updateCategory, type CategoryPayload } from './categoriesApi';
+import { createChapter, deleteChapter, getBookChapters, updateChapter, type ChapterPayload } from './chaptersApi';
 import { deleteUser, getUsers, updateUser, type UserPayload } from './usersApi';
 import { addReview, getBookReviews, type ReviewPayload } from './reviewsApi';
 
@@ -8,6 +9,7 @@ export const queryKeys = {
   books: ['books'] as const,
   users: ['users'] as const,
   categories: ['categories'] as const,
+  chapters: (bookId: string) => ['chapters', bookId] as const,
   reviews: (bookId: string) => ['reviews', bookId] as const,
 };
 
@@ -21,6 +23,14 @@ export function useUsers() {
 
 export function useCategories() {
   return useQuery({ queryKey: queryKeys.categories, queryFn: getCategories });
+}
+
+export function useBookChapters(bookId?: string) {
+  return useQuery({
+    queryKey: queryKeys.chapters(bookId || ''),
+    queryFn: () => getBookChapters(bookId as string),
+    enabled: Boolean(bookId),
+  });
 }
 
 export function useBookReviews(bookId?: string) {
@@ -56,8 +66,11 @@ export function useDeleteBook() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteBook(id),
-    onSuccess: () => {
+    onSuccess: (_, bookId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.books });
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      queryClient.removeQueries({ queryKey: queryKeys.chapters(bookId) });
+      queryClient.removeQueries({ queryKey: queryKeys.reviews(bookId) });
     },
   });
 }
@@ -109,6 +122,40 @@ export function useDeleteCategory() {
     mutationFn: (id: string) => deleteCategory(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useCreateChapter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, payload }: { bookId: string; payload: ChapterPayload }) => createChapter(bookId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters(variables.bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useUpdateChapter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, chapterId, payload }: { bookId: string; chapterId: string; payload: ChapterPayload }) =>
+      updateChapter(bookId, chapterId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters(variables.bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.books });
+    },
+  });
+}
+
+export function useDeleteChapter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, chapterId }: { bookId: string; chapterId: string }) => deleteChapter(bookId, chapterId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chapters(variables.bookId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.books });
     },
   });

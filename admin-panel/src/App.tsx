@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Library from "./pages/Library";
+import BookChapters from "./pages/BookChapters";
 import Categories from "./pages/Categories";
 import AIConfig from "./pages/AIConfig";
 import Users from "./pages/Users";
@@ -33,6 +34,7 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="library" element={<Library />} />
+            <Route path="library/:bookId/chapters" element={<BookChapters />} />
             <Route path="categories" element={<Categories />} />
             <Route path="ai-config" element={<AIConfig />} />
             <Route path="users" element={<Users />} />

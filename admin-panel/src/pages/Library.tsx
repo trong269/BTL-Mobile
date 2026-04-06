@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, MoreVertical, Plus, BookOpen, X, Edit2, Trash2, Camera, CheckCircle2, Sparkles, Star, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, MoreVertical, Plus, BookOpen, X, Edit2, Trash2, Camera, CheckCircle2, Sparkles, Star, MessageSquare, ListOrdered } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { useAppContext } from '../context/AppContext';
@@ -50,6 +51,7 @@ function toBookPayload(book: EditableBook | BookDto): BookPayload {
 
 export default function Library() {
   const { userProfile } = useAppContext();
+  const navigate = useNavigate();
 
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [editingBook, setEditingBook] = useState<EditableBook | null>(null);
@@ -153,6 +155,11 @@ export default function Library() {
   const openBookDetails = (bookId: string) => {
     setSelectedBookId(bookId);
     setIsSummaryExpanded(false);
+  };
+
+  const openBookChapters = (bookId: string) => {
+    setOpenMenuId(null);
+    navigate(`/library/${bookId}/chapters`);
   };
 
   const saveEdit = async (e: React.FormEvent) => {
@@ -334,6 +341,13 @@ export default function Library() {
                         >
                           <Edit2 className="w-4 h-4" />
                           Chỉnh sửa
+                        </button>
+                        <button
+                          onClick={() => openBookChapters(book.id)}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors text-left"
+                        >
+                          <ListOrdered className="w-4 h-4" />
+                          Chương
                         </button>
                         <button
                           onClick={() => {
@@ -590,7 +604,13 @@ export default function Library() {
                   </div>
 
                   <div className="pt-4 flex items-center gap-3 border-t border-outline-variant/20">
-                    <button className="flex-1 bg-primary text-on-primary py-3 rounded-xl font-medium hover:bg-secondary transition-colors shadow-sm">Đọc sách</button>
+                    <button
+                      type="button"
+                      onClick={() => openBookChapters(selectedBook.id)}
+                      className="flex-1 bg-primary text-on-primary py-3 rounded-xl font-medium hover:bg-secondary transition-colors shadow-sm"
+                    >
+                      Quản lý chương
+                    </button>
                     <button
                       onClick={() => openEditBookModal(selectedBook)}
                       disabled={isMutating}
