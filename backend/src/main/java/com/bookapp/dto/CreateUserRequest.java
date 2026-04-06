@@ -3,7 +3,7 @@ package com.bookapp.dto;
 import lombok.Data;
 
 @Data
-public class UpdateProfileRequest {
+public class CreateUserRequest {
     private String username;
     private String email;
     private String password;

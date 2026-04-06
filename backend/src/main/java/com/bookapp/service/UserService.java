@@ -1,6 +1,7 @@
 package com.bookapp.service;
 
 import com.bookapp.dto.ChangePasswordRequest;
+import com.bookapp.dto.CreateUserRequest;
 import com.bookapp.dto.UpdateProfileRequest;
 import com.bookapp.model.User;
 import com.bookapp.repository.UserRepository;
@@ -29,19 +30,50 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
+    public User create(CreateUserRequest request) {
+        String username = valueOrEmpty(request.getUsername());
+        String email = valueOrEmpty(request.getEmail());
+        String password = valueOrEmpty(request.getPassword());
+
+        validateRequiredFields(username, email);
+
+        if (password.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
+        }
+
+        if (password.length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters");
+        }
+
+        if (userRepository.existsByUsername(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
+        user.setFullName(valueOrEmpty(request.getFullName()));
+        user.setAvatar(valueOrEmpty(request.getAvatar()));
+        user.setRole(valueOrDefault(request.getRole(), "USER"));
+        user.setPlan(valueOrDefault(request.getPlan(), "Cơ bản"));
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        return userRepository.save(user);
+    }
+
     public User updateProfile(String userId, UpdateProfileRequest request) {
         User user = getById(userId);
 
         String username = valueOrEmpty(request.getUsername());
         String email = valueOrEmpty(request.getEmail());
 
-        if (username.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
-        }
-
-        if (email.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
-        }
+        validateRequiredFields(username, email);
 
         if (userRepository.existsByUsernameAndIdNot(username, userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
@@ -51,8 +83,16 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
         }
 
+        String password = valueOrEmpty(request.getPassword());
+        if (!password.isEmpty() && password.length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters");
+        }
+
         user.setUsername(username);
         user.setEmail(email);
+        if (!password.isEmpty()) {
+            user.setPassword(password);
+        }
         user.setFullName(valueOrEmpty(request.getFullName()));
         user.setAvatar(valueOrEmpty(request.getAvatar()));
         user.setRole(valueOrDefault(request.getRole(), user.getRole() == null ? "USER" : user.getRole()));
@@ -60,6 +100,16 @@ public class UserService {
         user.setUpdatedAt(LocalDateTime.now());
 
         return userRepository.save(user);
+    }
+
+    private void validateRequiredFields(String username, String email) {
+        if (username.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+        }
+
+        if (email.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
+        }
     }
 
     public void delete(String userId) {

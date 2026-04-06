@@ -13,6 +13,7 @@ interface BackendUser {
 
 export interface UserDto {
   id: string;
+  username?: string;
   name: string;
   email: string;
   role: string;
@@ -22,8 +23,20 @@ export interface UserDto {
 }
 
 export interface UserPayload {
+  username: string;
   name: string;
   email: string;
+  password?: string;
+  role: string;
+  plan: string;
+  avatar?: string;
+}
+
+export interface CreateUserPayload {
+  username: string;
+  name: string;
+  email: string;
+  password: string;
   role: string;
   plan: string;
   avatar?: string;
@@ -32,6 +45,7 @@ export interface UserPayload {
 function mapUser(user: BackendUser): UserDto {
   return {
     id: user.id,
+    username: user.username,
     name: user.fullName || user.username,
     email: user.email,
     role: (user.role || 'USER').toLowerCase(),
@@ -43,9 +57,22 @@ function mapUser(user: BackendUser): UserDto {
 
 function toBackendPayload(payload: UserPayload) {
   return {
-    username: payload.email.split('@')[0],
+    username: payload.username,
     fullName: payload.name,
     email: payload.email,
+    password: payload.password || '',
+    role: payload.role.toUpperCase(),
+    plan: payload.plan,
+    avatar: payload.avatar || '',
+  };
+}
+
+function toBackendCreatePayload(payload: CreateUserPayload) {
+  return {
+    username: payload.username,
+    fullName: payload.name,
+    email: payload.email,
+    password: payload.password,
     role: payload.role.toUpperCase(),
     plan: payload.plan,
     avatar: payload.avatar || '',
@@ -55,6 +82,11 @@ function toBackendPayload(payload: UserPayload) {
 export async function getUsers() {
   const response = await axiosClient.get<BackendUser[]>('/users');
   return response.data.map(mapUser);
+}
+
+export async function createUser(payload: CreateUserPayload) {
+  const response = await axiosClient.post<BackendUser>('/users', toBackendCreatePayload(payload));
+  return mapUser(response.data);
 }
 
 export async function updateUser(id: string, payload: UserPayload) {

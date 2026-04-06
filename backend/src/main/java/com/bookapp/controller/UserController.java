@@ -1,6 +1,7 @@
 package com.bookapp.controller;
 
 import com.bookapp.dto.ChangePasswordRequest;
+import com.bookapp.dto.CreateUserRequest;
 import com.bookapp.dto.UpdateProfileRequest;
 import com.bookapp.model.User;
 import com.bookapp.service.UserService;
@@ -28,6 +29,11 @@ public class UserController {
     @GetMapping("/{userId}")
     public User getProfile(@PathVariable String userId) {
         return userService.getById(userId);
+    }
+
+    @PostMapping
+    public User create(@RequestBody CreateUserRequest request) {
+        return userService.create(request);
     }
 
     @PutMapping("/{userId}")

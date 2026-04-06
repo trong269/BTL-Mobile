@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createBook, deleteBook, getBooks, updateBook, type BookPayload } from './booksApi';
 import { createCategory, deleteCategory, getCategories, updateCategory, type CategoryPayload } from './categoriesApi';
 import { createChapter, deleteChapter, getBookChapters, updateChapter, type ChapterPayload } from './chaptersApi';
-import { deleteUser, getUsers, updateUser, type UserPayload } from './usersApi';
+import { createUser, deleteUser, getUsers, updateUser, type CreateUserPayload, type UserPayload } from './usersApi';
 import { addReview, getBookReviews, type ReviewPayload } from './reviewsApi';
 
 export const queryKeys = {
@@ -71,6 +71,16 @@ export function useDeleteBook() {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories });
       queryClient.removeQueries({ queryKey: queryKeys.chapters(bookId) });
       queryClient.removeQueries({ queryKey: queryKeys.reviews(bookId) });
+    },
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateUserPayload) => createUser(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users });
     },
   });
 }

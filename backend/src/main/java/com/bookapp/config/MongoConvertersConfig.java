@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
@@ -29,9 +30,13 @@ public class MongoConvertersConfig {
 
             try {
                 return LocalDateTime.parse(source);
-            } catch (DateTimeParseException ex) {
-                // Fallback for legacy values stored as date-only: yyyy-MM-dd
-                return LocalDate.parse(source).atStartOfDay();
+            } catch (DateTimeParseException ignored) {
+                try {
+                    return OffsetDateTime.parse(source).toLocalDateTime();
+                } catch (DateTimeParseException ignoredAgain) {
+                    // Fallback for legacy values stored as date-only: yyyy-MM-dd
+                    return LocalDate.parse(source).atStartOfDay();
+                }
             }
         }
     }
