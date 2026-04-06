@@ -4,7 +4,9 @@ import com.bookapp.dto.AuthRequest;
 import com.bookapp.dto.RegisterRequest;
 import com.bookapp.model.User;
 import com.bookapp.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 
@@ -34,10 +36,10 @@ public class AuthService {
     public User login(AuthRequest request) {
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu"));
 
         if (!user.getPassword().equals(request.getPassword())) {
-            throw new RuntimeException("Sai mật khẩu");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
         }
 
         return user;

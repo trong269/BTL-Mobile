@@ -1,4 +1,5 @@
 import React from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
@@ -41,7 +42,28 @@ export default function Login() {
       toast.success('Đăng nhập thành công!');
       navigate("/");
     } catch (error) {
-      toast.error('Đăng nhập thất bại. Vui lòng kiểm tra lại.');
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const backendMessage =
+          (typeof error.response?.data?.message === "string" && error.response.data.message) ||
+          (typeof error.response?.data?.error === "string" && error.response.data.error) ||
+          "";
+
+        if (status === 401) {
+          toast.error("Sai tài khoản hoặc mật khẩu.");
+          return;
+        }
+
+        if (!error.response) {
+          toast.error("Không thể kết nối tới máy chủ. Vui lòng thử lại sau.");
+          return;
+        }
+
+        toast.error(backendMessage || "Đăng nhập thất bại. Vui lòng thử lại.");
+        return;
+      }
+
+      toast.error("Đăng nhập thất bại. Vui lòng thử lại.");
     }
   };
 
