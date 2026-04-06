@@ -6,6 +6,7 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   const apiProxyTarget = env.VITE_API_PROXY_TARGET;
+  console.log('API Proxy Target:', apiProxyTarget);
 
   return {
     plugins: [react(), tailwindcss()],
