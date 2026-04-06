@@ -270,7 +270,7 @@ export default function Categories() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary-container/20 rounded-full blur-3xl -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-tertiary-container/20 rounded-full blur-2xl -ml-10 -mb-10" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-xl">
             <h1 className="text-4xl font-serif font-semibold text-on-surface mb-4">Quản lý Thể loại</h1>
             <p className="text-on-surface-variant text-lg leading-relaxed">
@@ -280,7 +280,7 @@ export default function Categories() {
           <button
             onClick={openCreateCategoryModal}
             disabled={isMutating}
-            className="self-start md:self-auto flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-medium shadow-md hover:bg-secondary transition-all hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-full font-medium shadow-sm hover:bg-secondary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
             <span>Thêm thể loại</span>
