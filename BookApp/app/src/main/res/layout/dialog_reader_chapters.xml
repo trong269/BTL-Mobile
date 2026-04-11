@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#FFFFFFFF"
+    android:orientation="vertical"
+    android:paddingTop="10dp"
+    android:paddingBottom="18dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="10dp"
+        android:text="Danh sach chuong"
+        android:textColor="#121212"
+        android:textSize="21sp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerReaderChapters"
+        android:layout_width="match_parent"
+        android:layout_height="420dp"
+        android:clipToPadding="false"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp" />
+
+</LinearLayout>

@@ -15,6 +15,9 @@
         android:theme="@style/Theme.BookApp"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".ui.book.ReaderActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.book.BookDetailActivity"
             android:exported="false" />
         <activity

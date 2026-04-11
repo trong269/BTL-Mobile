@@ -19,7 +19,7 @@ public class ReadingProgress {
     private String bookId;
     private String chapterId;
 
-    private int lastPosition; // vị trí đọc
+    private int chapterProgressPercent; 
 
     private LocalDateTime updatedAt;
 }

@@ -1,5 +1,6 @@
 package com.bookapp.ui.book
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -160,7 +161,12 @@ class BookDetailActivity : AppCompatActivity() {
 
         // Read now
         btnReadNow.setOnClickListener {
-            Toast.makeText(this, "Tinh nang doc sach dang duoc phat trien!", Toast.LENGTH_SHORT).show()
+            val id = bookId ?: return@setOnClickListener
+            val intent = Intent(this, ReaderActivity::class.java).apply {
+                putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
+                putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
+            }
+            startActivity(intent)
         }
 
         // Submit review

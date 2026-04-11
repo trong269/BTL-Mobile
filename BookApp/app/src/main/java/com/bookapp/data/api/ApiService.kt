@@ -2,7 +2,9 @@ package com.bookapp.data.api
 
 import com.bookapp.data.model.Book
 import com.bookapp.data.model.Category
+import com.bookapp.data.model.Chapter
 import com.bookapp.data.model.Comment
+import com.bookapp.data.model.ReadingProgress
 import com.bookapp.data.model.Review
 import com.bookapp.data.model.User
 import retrofit2.Call
@@ -28,6 +30,18 @@ data class RegisterRequest(
     val username: String,
     val email: String,
     val password: String
+)
+
+data class EnsureReadingProgressRequest(
+    val userId: String,
+    val bookId: String
+)
+
+data class UpdateReadingProgressRequest(
+    val userId: String,
+    val bookId: String,
+    val chapterId: String,
+    val chapterProgressPercent: Int
 )
 
 data class ToggleFavoriteRequest(
@@ -115,6 +129,9 @@ interface ApiService {
     @GET("api/books/{id}")
     fun getBookById(@Path("id") id: String): Call<Book>
 
+    @GET("api/books/{bookId}/chapters")
+    fun getChaptersByBook(@Path("bookId") bookId: String): Call<List<Chapter>>
+
     // ========== CATEGORIES ==========
     @GET("api/categories")
     fun getAllCategories(): Call<List<Category>>
@@ -148,4 +165,10 @@ interface ApiService {
 
     @GET("api/books/top-month")
     fun getTopBooksMonth(): Call<List<Book>>
+
+    @POST("api/reading-progress/ensure")
+    fun ensureReadingProgress(@Body request: EnsureReadingProgressRequest): Call<ReadingProgress>
+
+    @PUT("api/reading-progress")
+    fun updateReadingProgress(@Body request: UpdateReadingProgressRequest): Call<ReadingProgress>
 }
