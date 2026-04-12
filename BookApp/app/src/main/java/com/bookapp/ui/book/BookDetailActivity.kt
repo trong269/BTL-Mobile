@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
@@ -21,9 +22,13 @@ import com.bookapp.data.api.ToggleFavoriteRequest
 import com.bookapp.data.api.ToggleFavoriteResponse
 import com.bookapp.data.api.FavoriteStatusResponse
 import com.bookapp.data.model.Book
+import com.bookapp.data.model.Chapter
 import com.bookapp.data.model.Comment
 import com.bookapp.data.model.Review
 import com.bumptech.glide.Glide
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.R as MaterialR
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -47,6 +52,7 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var tvDescription: TextView
     private lateinit var btnFavorite: Button
     private lateinit var btnReadNow: Button
+    private lateinit var btnChapterList: Button
 
     // Tabs
     private lateinit var tabIntro: Button
@@ -113,6 +119,7 @@ class BookDetailActivity : AppCompatActivity() {
         tvDescription = findViewById(R.id.tvDetailDescription)
         btnFavorite = findViewById(R.id.btnFavorite)
         btnReadNow = findViewById(R.id.btnReadNow)
+        btnChapterList = findViewById(R.id.btnChapterList)
 
         tabIntro = findViewById(R.id.tabIntro)
         tabReviews = findViewById(R.id.tabReviews)
@@ -167,6 +174,10 @@ class BookDetailActivity : AppCompatActivity() {
                 putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
             }
             startActivity(intent)
+        }
+
+        btnChapterList.setOnClickListener {
+            showChapterListDialog()
         }
 
         // Submit review
@@ -420,5 +431,124 @@ class BookDetailActivity : AppCompatActivity() {
     private fun getUserId(): String? {
         val prefs = getSharedPreferences("BookAppPrefs", MODE_PRIVATE)
         return prefs.getString("userId", null)
+    }
+
+    private fun showChapterListDialog() {
+        val id = bookId ?: return
+
+        RetrofitClient.instance.getChaptersByBook(id)
+            .enqueue(object : Callback<List<Chapter>> {
+                override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
+                    if (!response.isSuccessful) {
+                        Toast.makeText(this@BookDetailActivity, "Khong tai duoc danh sach chuong", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+
+                    val chapters = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
+                    if (chapters.isEmpty()) {
+                        Toast.makeText(this@BookDetailActivity, "Sach chua co chuong", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+
+                    val dialog = BottomSheetDialog(this@BookDetailActivity)
+                    val content = layoutInflater.inflate(R.layout.dialog_reader_chapters, null)
+                    dialog.setContentView(content)
+
+                    val pageSize = 15
+                    content.findViewById<TextView>(R.id.tvDialogChapterTitle)?.text = tvTitle.text
+                    content.findViewById<ImageButton>(R.id.btnDialogChapterClose)?.setOnClickListener {
+                        dialog.dismiss()
+                    }
+
+                    val recycler = content.findViewById<RecyclerView>(R.id.recyclerReaderChapters)
+                    val tvPageIndicator = content.findViewById<TextView>(R.id.tvPageIndicator)
+                    val btnPageFirst = content.findViewById<ImageButton>(R.id.btnPageFirst)
+                    val btnPagePrev = content.findViewById<ImageButton>(R.id.btnPagePrev)
+                    val btnPageNext = content.findViewById<ImageButton>(R.id.btnPageNext)
+                    val btnPageLast = content.findViewById<ImageButton>(R.id.btnPageLast)
+
+                    val adapter = ReaderChapterAdapter { selectedChapter ->
+                        dialog.dismiss()
+                        val chapterId = selectedChapter.id ?: return@ReaderChapterAdapter
+                        val intent = Intent(this@BookDetailActivity, ReaderActivity::class.java).apply {
+                            putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
+                            putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
+                            putExtra(ReaderActivity.EXTRA_TARGET_CHAPTER_ID, chapterId)
+                        }
+                        startActivity(intent)
+                    }
+
+                    recycler.layoutManager = LinearLayoutManager(this@BookDetailActivity)
+                    recycler.adapter = adapter
+
+                    val totalPages = ((chapters.size + pageSize - 1) / pageSize).coerceAtLeast(1)
+                    var currentPage = 0
+
+                    fun updatePagerButtons() {
+                        val canGoPrev = currentPage > 0
+                        val canGoNext = currentPage < totalPages - 1
+
+                        btnPageFirst.isEnabled = canGoPrev
+                        btnPagePrev.isEnabled = canGoPrev
+                        btnPageNext.isEnabled = canGoNext
+                        btnPageLast.isEnabled = canGoNext
+
+                        btnPageFirst.alpha = if (canGoPrev) 1f else 0.35f
+                        btnPagePrev.alpha = if (canGoPrev) 1f else 0.35f
+                        btnPageNext.alpha = if (canGoNext) 1f else 0.35f
+                        btnPageLast.alpha = if (canGoNext) 1f else 0.35f
+                    }
+
+                    fun renderPage() {
+                        val start = currentPage * pageSize
+                        val end = (start + pageSize).coerceAtMost(chapters.size)
+                        val pageItems = chapters.subList(start, end)
+
+                        adapter.submitList(pageItems, null)
+                        tvPageIndicator.text = "${currentPage + 1}/$totalPages"
+                        updatePagerButtons()
+                    }
+
+                    btnPageFirst.setOnClickListener {
+                        if (currentPage != 0) {
+                            currentPage = 0
+                            renderPage()
+                        }
+                    }
+
+                    btnPagePrev.setOnClickListener {
+                        if (currentPage > 0) {
+                            currentPage -= 1
+                            renderPage()
+                        }
+                    }
+
+                    btnPageNext.setOnClickListener {
+                        if (currentPage < totalPages - 1) {
+                            currentPage += 1
+                            renderPage()
+                        }
+                    }
+
+                    btnPageLast.setOnClickListener {
+                        if (currentPage != totalPages - 1) {
+                            currentPage = totalPages - 1
+                            renderPage()
+                        }
+                    }
+
+                    renderPage()
+
+                    dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                    dialog.behavior.skipCollapsed = true
+                    dialog.show()
+                    dialog.findViewById<View>(MaterialR.id.design_bottom_sheet)
+                        ?.setBackgroundResource(android.R.color.transparent)
+                }
+
+                override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
+                    Toast.makeText(this@BookDetailActivity, "Loi tai chuong: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
     }
 }

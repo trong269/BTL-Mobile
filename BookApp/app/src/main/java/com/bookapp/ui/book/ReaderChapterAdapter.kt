@@ -9,16 +9,16 @@ import com.bookapp.R
 import com.bookapp.data.model.Chapter
 
 class ReaderChapterAdapter(
-    private val onChapterClick: (Int) -> Unit
+    private val onChapterClick: (Chapter) -> Unit
 ) : RecyclerView.Adapter<ReaderChapterAdapter.ViewHolder>() {
 
     private val items = mutableListOf<Chapter>()
-    private var currentIndex: Int = -1
+    private var selectedChapterId: String? = null
 
-    fun submitList(chapters: List<Chapter>, selectedIndex: Int) {
+    fun submitList(chapters: List<Chapter>, selectedChapterId: String?) {
         items.clear()
         items.addAll(chapters)
-        currentIndex = selectedIndex
+        this.selectedChapterId = selectedChapterId
         notifyDataSetChanged()
     }
 
@@ -29,7 +29,8 @@ class ReaderChapterAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position], position, position == currentIndex)
+        val chapter = items[position]
+        holder.bind(chapter, chapter.id != null && chapter.id == selectedChapterId)
     }
 
     override fun getItemCount(): Int = items.size
@@ -38,13 +39,13 @@ class ReaderChapterAdapter(
         private val tvTitle: TextView = itemView.findViewById(R.id.tvChapterItemTitle)
         private val tvMeta: TextView = itemView.findViewById(R.id.tvChapterItemMeta)
 
-        fun bind(chapter: Chapter, index: Int, isSelected: Boolean) {
+        fun bind(chapter: Chapter, isSelected: Boolean) {
             val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Khong co tieu de)"
             tvTitle.text = chapterTitle
-            tvMeta.text = ""
+            tvMeta.text = if (isSelected) "Dang doc" else ""
 
             if (isSelected) {
-                itemView.setBackgroundResource(R.drawable.reader_chapter_selected_bg)
+                itemView.setBackgroundResource(android.R.color.transparent)
                 tvTitle.setTextColor(0xFF1F6FB2.toInt())
                 tvMeta.setTextColor(0xFF1F6FB2.toInt())
             } else {
@@ -54,7 +55,7 @@ class ReaderChapterAdapter(
             }
 
             itemView.setOnClickListener {
-                onChapterClick(index)
+                onChapterClick(chapter)
             }
         }
     }

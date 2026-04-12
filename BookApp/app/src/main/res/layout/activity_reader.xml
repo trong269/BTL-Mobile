@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/readerRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#FFFDFD">
 
     <androidx.core.widget.NestedScrollView
@@ -44,7 +46,7 @@
             android:contentDescription="Dong"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="#1F6FB2" />
+            app:tint="#0041F7" />
 
         <TextView
             android:id="@+id/tvReaderBookTitle"
@@ -57,15 +59,10 @@
             android:textSize="21sp"
             android:textStyle="bold" />
 
-        <ImageButton
-            android:id="@+id/btnReaderRefresh"
+        <View
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="Hien thong tin"
-            android:padding="8dp"
-            android:src="@android:drawable/ic_popup_sync"
-            android:tint="#1F6FB2" />
+            android:visibility="invisible" />
     </LinearLayout>
 
     <LinearLayout
@@ -154,7 +151,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Chuong truoc"
                 android:src="@android:drawable/ic_media_previous"
-                android:tint="#2A79B9" />
+                app:tint="#2A79B9" />
 
             <ImageButton
                 android:id="@+id/btnReaderSettings"
@@ -164,7 +161,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Setting"
                 android:src="@android:drawable/ic_menu_manage"
-                android:tint="#2A79B9" />
+                app:tint="#0041F7" />
 
             <ImageButton
                 android:id="@+id/btnReaderPlay"
@@ -174,7 +171,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Play"
                 android:src="@android:drawable/ic_media_play"
-                android:tint="#2A79B9" />
+                app:tint="#2A79B9" />
 
             <ImageButton
                 android:id="@+id/btnReaderList"
@@ -184,7 +181,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Danh sach chuong"
                 android:src="@android:drawable/ic_menu_sort_by_size"
-                android:tint="#2A79B9" />
+                app:tint="#0041F7" />
 
             <ImageButton
                 android:id="@+id/btnReaderNext"
@@ -194,7 +191,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Chuong tiep"
                 android:src="@android:drawable/ic_media_next"
-                android:tint="#2A79B9" />
+                app:tint="#2A79B9" />
         </LinearLayout>
     </LinearLayout>
 
