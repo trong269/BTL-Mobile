@@ -238,6 +238,18 @@
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnChapterList"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/btn_outline_bg"
+                    android:text="Danh Sach Chuong"
+                    android:textAllCaps="false"
+                    android:textColor="#23408E"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <!-- Tab: Giới thiệu / Đánh giá / Bình luận -->

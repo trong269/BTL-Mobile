@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_reader_chapters_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp">
+
+            <ImageButton
+                android:id="@+id/btnSettingClose"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Đóng cài đặt"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:tint="#1F6FB2" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Thiết Lập Giao Diện"
+                android:textColor="#222222"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:visibility="invisible" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MÀU NỀN"
+                android:textColor="#8A8F96"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/colorAuto"
+                    android:layout_width="58dp"
+                    android:layout_height="42dp"
+                    android:gravity="center"
+                    android:text="Auto"
+                    android:textStyle="bold" />
+
+                <View
+                    android:id="@+id/colorWhite"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="10dp" />
+
+                <View
+                    android:id="@+id/colorBlack"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="10dp" />
+
+                <View
+                    android:id="@+id/colorCream"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="10dp" />
+
+                <View
+                    android:id="@+id/colorGray"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="10dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="KÍCH THƯỚC CHỮ"
+                android:textColor="#8A8F96"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Kích Thước"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvSettingFontSizeValue"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="18"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:layout_width="128dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/reader_stepper_bg"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp">
+
+                    <ImageButton
+                        android:id="@+id/btnSettingFontMinus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Giảm cỡ chữ"
+                        android:src="@drawable/ic_step_minus"
+                        android:tint="#1E2227" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="22dp"
+                        android:background="#D6D9DE" />
+
+                    <ImageButton
+                        android:id="@+id/btnSettingFontPlus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Tăng cỡ chữ"
+                        android:src="@drawable/ic_step_plus"
+                        android:tint="#1E2227" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="KÍCH THƯỚC DÒNG"
+                android:textColor="#8A8F96"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Kích Thước"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvSettingLineSpacingValue"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="1.5"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:layout_width="128dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/reader_stepper_bg"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp">
+
+                    <ImageButton
+                        android:id="@+id/btnSettingLineMinus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Giảm giãn dòng"
+                        android:src="@drawable/ic_step_minus"
+                        android:tint="#1E2227" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="22dp"
+                        android:background="#D6D9DE" />
+
+                    <ImageButton
+                        android:id="@+id/btnSettingLinePlus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Tăng giãn dòng"
+                        android:src="@drawable/ic_step_plus"
+                        android:tint="#1E2227" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="KIỂU ĐỌC"
+                android:textColor="#8A8F96"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnModeScroll"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Cuộn Đọc"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="10dp"
+                    android:layout_height="1dp" />
+
+                <TextView
+                    android:id="@+id/btnModePage"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Lật Trang"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="TỰ ĐỘNG CUỘN (NÚT PLAY)"
+                android:textColor="#8A8F96"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Tốc Độ"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvSettingAutoSpeedValue"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="20"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:layout_width="128dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/reader_stepper_bg"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp">
+
+                    <ImageButton
+                        android:id="@+id/btnSettingSpeedMinus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Giảm tốc độ tự động"
+                        android:src="@drawable/ic_step_minus"
+                        android:tint="#1E2227" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="22dp"
+                        android:background="#D6D9DE" />
+
+                    <ImageButton
+                        android:id="@+id/btnSettingSpeedPlus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Tăng tốc độ tự động"
+                        android:src="@drawable/ic_step_plus"
+                        android:tint="#1E2227" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Thời Gian Lật Trang (giây)"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvSettingPageTurnValue"
+                    android:layout_width="48dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="20"
+                    android:textColor="#23272D"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:layout_width="128dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/reader_stepper_bg"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp">
+
+                    <ImageButton
+                        android:id="@+id/btnSettingPageTurnMinus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Giảm thời gian lật trang"
+                        android:src="@drawable/ic_step_minus"
+                        android:tint="#1E2227" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="22dp"
+                        android:background="#D6D9DE" />
+
+                    <ImageButton
+                        android:id="@+id/btnSettingPageTurnPlus"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="Tăng thời gian lật trang"
+                        android:src="@drawable/ic_step_plus"
+                        android:tint="#1E2227" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="KIỂU CHỮ"
+                android:textColor="#8A8F96"
+                android:textSize="15sp" />
+
+            <Spinner
+                android:id="@+id/spinnerSettingFont"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/reader_stepper_bg"
+                android:paddingHorizontal="12dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
