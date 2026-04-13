@@ -41,19 +41,41 @@
                     android:textColor="#E6FFFFFF"
                     android:textSize="14sp" />
 
-                <EditText
-                    android:id="@+id/edtSearch"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/home_card_bg"
-                    android:drawableStart="@android:drawable/ic_menu_search"
-                    android:drawablePadding="10dp"
-                    android:hint="Tim sach, tac gia, the loai..."
-                    android:inputType="text"
-                    android:paddingHorizontal="14dp"
-                    android:textColor="#212121"
-                    android:textColorHint="#6D6D6D" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <EditText
+                        android:id="@+id/edtSearch"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/home_card_bg"
+                        android:drawableStart="@android:drawable/ic_menu_search"
+                        android:drawablePadding="10dp"
+                        android:hint="Tim sach, tac gia, the loai..."
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:paddingHorizontal="14dp"
+                        android:singleLine="true"
+                        android:textColor="#212121"
+                        android:textColorHint="#6D6D6D" />
+
+                    <ImageButton
+                        android:id="@+id/btnSearchIcon"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/home_primary_button_bg"
+                        android:contentDescription="Nut tim kiem"
+                        android:src="@android:drawable/ic_menu_search"
+                        android:scaleType="centerInside"
+                        android:tint="@android:color/white" />
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/btnContinueRead"
