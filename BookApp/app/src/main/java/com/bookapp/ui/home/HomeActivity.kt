@@ -2,6 +2,7 @@ package com.bookapp.ui.home
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -228,19 +229,36 @@ class HomeActivity : AppCompatActivity() {
 
     private fun bindFeatureButtons() {
         val edtSearch = findViewById<EditText>(R.id.edtSearch)
-        edtSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                val query = edtSearch.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    val intent = Intent(this, BookCatalogActivity::class.java).apply {
-                        putExtra(BookCatalogActivity.EXTRA_QUERY, query)
-                    }
-                    startActivity(intent)
+        val btnSearchIcon = findViewById<android.widget.ImageButton>(R.id.btnSearchIcon)
+
+        val performSearch = {
+            val query = edtSearch.text.toString().trim()
+            if (query.isNotEmpty()) {
+                val intent = Intent(this, BookCatalogActivity::class.java).apply {
+                    putExtra(BookCatalogActivity.EXTRA_QUERY, query)
                 }
+                startActivity(intent)
+            }
+        }
+
+        // Search via keyboard
+        edtSearch.setOnEditorActionListener { _, actionId, event ->
+            val isKeyboardSearch = actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE
+            val isEnterKey = actionId == EditorInfo.IME_NULL &&
+                event?.keyCode == KeyEvent.KEYCODE_ENTER &&
+                event.action == KeyEvent.ACTION_DOWN
+
+            if (isKeyboardSearch || isEnterKey) {
+                performSearch()
                 true
             } else {
                 false
             }
+        }
+
+        // Search via button click
+        btnSearchIcon.setOnClickListener {
+            performSearch()
         }
 
         findViewById<Button>(R.id.btnContinueRead).setOnClickListener {
