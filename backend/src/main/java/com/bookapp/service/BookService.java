@@ -94,7 +94,43 @@ public class BookService {
         if (keyword == null || keyword.trim().isEmpty()) {
             return findAll();
         }
-        return toResponseList(bookRepository.searchByKeyword(keyword.trim()));
+
+        String trimmedKeyword = keyword.trim();
+        
+        // Search by title, author, and tags
+        Set<String> bookIds = new LinkedHashSet<>();
+        List<Book> searchResults = bookRepository.searchByKeyword(trimmedKeyword);
+        searchResults.forEach(book -> {
+            if (book.getId() != null) {
+                bookIds.add(book.getId());
+            }
+        });
+
+        // Also search by category name and add matching books
+        List<Category> matchingCategories = categoryRepository.findByNameContainingIgnoreCase(trimmedKeyword);
+        if (!matchingCategories.isEmpty()) {
+            List<String> categoryIds = matchingCategories.stream()
+                    .map(Category::getId)
+                    .filter(id -> id != null && !id.isBlank())
+                    .toList();
+
+            for (String categoryId : categoryIds) {
+                List<BookCategory> bookCategoryMappings = bookCategoryRepository.findByCategoryId(categoryId);
+                bookCategoryMappings.forEach(mapping -> {
+                    if (mapping.getBookId() != null) {
+                        bookIds.add(mapping.getBookId().toHexString());
+                    }
+                });
+            }
+        }
+
+        if (bookIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Fetch all matching books and return as DTOs
+        List<Book> allMatchingBooks = bookRepository.findAllById(bookIds);
+        return toResponseList(allMatchingBooks);
     }
 
     public Book create(Book book) {

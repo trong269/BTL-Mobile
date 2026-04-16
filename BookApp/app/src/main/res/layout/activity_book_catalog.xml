@@ -72,6 +72,23 @@
             android:paddingHorizontal="12dp" />
     </HorizontalScrollView>
 
+    <!-- Filter options -->
+    <!-- Removed - now using Dialog -->
+
+    <!-- Filter toggle button -->
+    <Button
+        android:id="@+id/btnToggleFilter"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/home_chip_bg"
+        android:text="Bộ lọc"
+        android:textAllCaps="false"
+        android:textColor="#23408E"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
     <!-- Kết quả + Loading -->
     <TextView
         android:id="@+id/tvCatalogStatus"
