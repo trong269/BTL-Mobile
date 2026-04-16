@@ -15,7 +15,7 @@ public interface BookRepository extends MongoRepository<Book, String> {
 
 	Optional<Book> findFirstByTitleIgnoreCase(String title);
 
-	List<Book> findByCreatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(LocalDateTime createdAt, Pageable pageable);
+    List<Book> findByUpdatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(LocalDateTime updatedAt, Pageable pageable);
 
 	List<Book> findAllByOrderByViewsDescAvgRatingDesc(Pageable pageable);
 

@@ -20,6 +20,9 @@ import com.bookapp.data.model.Book
 import com.bookapp.ui.book.BookDetailActivity
 import com.bookapp.ui.book.BookCatalogActivity
 import com.bookapp.ui.feature.FeatureActivity
+import com.bookapp.ui.feature.FavoriteListActivity
+import com.bookapp.ui.feature.LibraryActivity
+import com.bookapp.ui.feature.ReadingHistoryActivity
 import com.bookapp.ui.profile.ProfileActivity
 import retrofit2.Call
 import retrofit2.Callback
@@ -53,6 +56,11 @@ class HomeActivity : AppCompatActivity() {
         bindFeatureButtons()
         bindBottomNavigation()
         loadBooks()
+        loadTopBooksFromDatabase()
+    }
+
+    override fun onResume() {
+        super.onResume()
         loadTopBooksFromDatabase()
     }
 
@@ -262,20 +270,20 @@ class HomeActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnContinueRead).setOnClickListener {
-            openFeature("Tiep tuc doc", "Mo lai sach dang doc va tiep tuc hanh trinh cua ban.")
+            openLibrary(LibraryActivity.TAB_RECENTS)
         }
         findViewById<Button>(R.id.btnLibrary).setOnClickListener {
-            openFeature("Thu vien", "Quan ly tat ca sach ban da mua, dang doc va da doc.")
+            openLibrary(null)
         }
         findViewById<Button>(R.id.btnCategories).setOnClickListener {
             val intent = Intent(this, BookCatalogActivity::class.java)
             startActivity(intent)
         }
         findViewById<Button>(R.id.btnFavorites).setOnClickListener {
-            openFeature("Yeu thich", "Xem danh sach sach ban da danh dau yeu thich.")
+            startActivity(Intent(this, FavoriteListActivity::class.java))
         }
         findViewById<Button>(R.id.btnHistory).setOnClickListener {
-            openFeature("Lich su doc", "Theo doi tien trinh va lich su doc gan day.")
+            startActivity(Intent(this, ReadingHistoryActivity::class.java))
         }
         findViewById<TextView>(R.id.btnSeeAllRecommended).setOnClickListener {
             val intent = Intent(this, BookCatalogActivity::class.java).apply {
@@ -303,7 +311,7 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
         findViewById<Button>(R.id.navLibrary).setOnClickListener {
-            openFeature("Thu vien", "Truy cap thu vien ca nhan cua ban.")
+            openLibrary(null)
         }
         findViewById<Button>(R.id.navProfile).setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
@@ -314,6 +322,14 @@ class HomeActivity : AppCompatActivity() {
         val intent = Intent(this, FeatureActivity::class.java).apply {
             putExtra(FeatureActivity.EXTRA_TITLE, title)
             putExtra(FeatureActivity.EXTRA_DESCRIPTION, description)
+        }
+        startActivity(intent)
+    }
+
+    private fun openLibrary(initialTab: String?) {
+        val intent = Intent(this, LibraryActivity::class.java)
+        if (!initialTab.isNullOrBlank()) {
+            intent.putExtra(LibraryActivity.EXTRA_INITIAL_TAB, initialTab)
         }
         startActivity(intent)
     }

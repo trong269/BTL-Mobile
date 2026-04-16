@@ -27,6 +27,15 @@
             android:name=".ui.feature.FeatureActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.feature.LibraryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.feature.FavoriteListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.feature.ReadingHistoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.profile.ProfileActivity"
             android:exported="false" />
         <activity

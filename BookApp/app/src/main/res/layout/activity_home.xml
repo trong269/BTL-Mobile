@@ -16,100 +16,147 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="20dp">
+            android:paddingBottom="16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/home_header_bg"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingTop="16dp"
+                android:paddingRight="16dp"
+                android:paddingBottom="10dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="BookApp"
-                    android:textColor="@android:color/white"
-                    android:textSize="24sp"
+                    android:text="||"
+                    android:textColor="#7A4A1A"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:fontFamily="serif"
+                    android:text="Khám phá"
+                    android:textColor="#6D3B0B"
+                    android:textSize="30sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Doc sach moi ngay, mo rong tri thuc"
-                    android:textColor="#E6FFFFFF"
-                    android:textSize="14sp" />
+                    android:text="o"
+                    android:textColor="#7A4A1A"
+                    android:textSize="18sp" />
+            </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginRight="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/edtSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/home_card_bg"
+                    android:hint="Tìm theo tên sách hoặc tác giả"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:paddingHorizontal="14dp"
+                    android:singleLine="true"
+                    android:textColor="#4A2D12"
+                    android:textColorHint="#9A7D60" />
+
+                <ImageButton
+                    android:id="@+id/btnSearchIcon"
+                    android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/home_primary_button_bg"
+                    android:contentDescription="Search"
+                    android:padding="12dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    android:tint="@android:color/white" />
+            </LinearLayout>
 
-                    <EditText
-                        android:id="@+id/edtSearch"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@drawable/home_card_bg"
-                        android:drawableStart="@android:drawable/ic_menu_search"
-                        android:drawablePadding="10dp"
-                        android:hint="Tim sach, tac gia, the loai..."
-                        android:imeOptions="actionSearch"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:paddingHorizontal="14dp"
-                        android:singleLine="true"
-                        android:textColor="#212121"
-                        android:textColorHint="#6D6D6D" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginRight="16dp"
+                android:background="@drawable/home_card_bg"
+                android:orientation="vertical"
+                android:padding="18dp">
 
-                    <ImageButton
-                        android:id="@+id/btnSearchIcon"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/home_primary_button_bg"
-                        android:contentDescription="Nut tim kiem"
-                        android:src="@android:drawable/ic_menu_search"
-                        android:scaleType="centerInside"
-                        android:tint="@android:color/white" />
-                </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="serif"
+                    android:text="Nổi bật tháng này"
+                    android:textAllCaps="true"
+                    android:textColor="#8A6A48"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="serif"
+                    android:text="Thánh đường tĩnh lặng"
+                    android:textColor="#24190F"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Tuyển tập giàu chiều sâu cho những phiên đọc tập trung và thư thái."
+                    android:textColor="#816140"
+                    android:textSize="14sp" />
 
                 <Button
                     android:id="@+id/btnContinueRead"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="14dp"
+                    android:layout_width="150dp"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="12dp"
                     android:background="@drawable/home_primary_button_bg"
-                    android:text="Tiep tuc doc"
+                    android:text="Bắt đầu đọc"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="15sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
                 android:layout_marginTop="16dp"
-                android:layout_marginHorizontal="16dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Danh muc nhanh"
-                    android:textColor="#1B1F24"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                android:layout_marginRight="16dp"
+                android:fontFamily="serif"
+                android:text="Danh mục chọn lọc"
+                android:textColor="#25190F"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -122,98 +169,83 @@
                     <Button
                         android:id="@+id/btnLibrary"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
+                        android:layout_height="38dp"
                         android:background="@drawable/home_chip_bg"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="16dp"
-                        android:text="Thu vien"
+                        android:paddingHorizontal="14dp"
+                        android:text="Thư viện"
                         android:textAllCaps="false"
-                        android:textColor="#1D2A52"
+                        android:textColor="#6B3C10"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <Button
                         android:id="@+id/btnCategories"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:layout_marginStart="10dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
                         android:background="@drawable/home_chip_bg"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="16dp"
-                        android:text="The loai"
+                        android:paddingHorizontal="14dp"
+                        android:text="Thể loại"
                         android:textAllCaps="false"
-                        android:textColor="#1D2A52"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textColor="#6B3C10"
+                        android:textSize="13sp" />
 
                     <Button
                         android:id="@+id/btnFavorites"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:layout_marginStart="10dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
                         android:background="@drawable/home_chip_bg"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="16dp"
-                        android:text="Yeu thich"
+                        android:paddingHorizontal="14dp"
+                        android:text="Yêu thích"
                         android:textAllCaps="false"
-                        android:textColor="#1D2A52"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textColor="#6B3C10"
+                        android:textSize="13sp" />
 
                     <Button
                         android:id="@+id/btnHistory"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
-                        android:layout_marginStart="10dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
                         android:background="@drawable/home_chip_bg"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="16dp"
-                        android:text="Lich su"
+                        android:paddingHorizontal="14dp"
+                        android:text="Lịch sử"
                         android:textAllCaps="false"
-                        android:textColor="#1D2A52"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                        android:textColor="#6B3C10"
+                        android:textSize="13sp" />
                 </LinearLayout>
             </HorizontalScrollView>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginLeft="16dp"
                 android:layout_marginTop="18dp"
+                android:layout_marginRight="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sach cua ban"
-                        android:textColor="#1B1F24"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Goi y dua tren xu huong doc cua ban"
-                        android:textColor="#6A7482"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                    android:fontFamily="serif"
+                    android:text="Sách mới"
+                    android:textColor="#25190F"
+                    android:textSize="34sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/btnSeeAllRecommended"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Xem tat ca"
-                    android:textColor="@color/home_primary"
-                    android:textSize="13sp"
+                    android:text="Xem tất cả"
+                    android:textColor="#7A4715"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -229,29 +261,31 @@
                 android:id="@+id/tvBooksError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginLeft="16dp"
                 android:layout_marginTop="8dp"
-                android:textColor="#D32F2F"
+                android:layout_marginRight="16dp"
+                android:textColor="#B43A2D"
                 android:textSize="13sp"
                 android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginLeft="16dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginRight="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btnPrevPage"
                     android:layout_width="0dp"
-                    android:layout_height="40dp"
+                    android:layout_height="38dp"
                     android:layout_weight="1"
                     android:background="@drawable/home_chip_bg"
-                    android:text="Trang truoc"
+                    android:text="Trước"
                     android:textAllCaps="false"
-                    android:textColor="#1D2A52"
+                    android:textColor="#6B3C10"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -259,21 +293,21 @@
                     android:id="@+id/tvPageIndicator"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="12dp"
+                    android:layout_marginHorizontal="10dp"
                     android:text="Trang 1/1"
-                    android:textColor="#3F4A57"
-                    android:textSize="13sp"
+                    android:textColor="#6C4C2A"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/btnNextPage"
                     android:layout_width="0dp"
-                    android:layout_height="40dp"
+                    android:layout_height="38dp"
                     android:layout_weight="1"
                     android:background="@drawable/home_chip_bg"
-                    android:text="Trang sau"
+                    android:text="Sau"
                     android:textAllCaps="false"
-                    android:textColor="#1D2A52"
+                    android:textColor="#6B3C10"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -281,8 +315,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginLeft="16dp"
                 android:layout_marginTop="20dp"
+                android:layout_marginRight="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -290,16 +325,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Bang xep hang"
-                    android:textColor="#1B1F24"
-                    android:textSize="17sp"
+                    android:fontFamily="serif"
+                    android:text="Bảng xếp hạng"
+                    android:textColor="#25190F"
+                    android:textSize="30sp"
                     android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/home_card_bg"
-                    android:gravity="center"
                     android:orientation="horizontal"
                     android:padding="4dp">
 
@@ -309,8 +344,8 @@
                         android:layout_height="34dp"
                         android:background="@drawable/home_primary_button_bg"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="14dp"
-                        android:text="Top tuan"
+                        android:paddingHorizontal="12dp"
+                        android:text="Tuần"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         android:textSize="12sp"
@@ -323,10 +358,10 @@
                         android:layout_marginStart="6dp"
                         android:background="@drawable/home_chip_bg"
                         android:minWidth="0dp"
-                        android:paddingHorizontal="14dp"
-                        android:text="Top thang"
+                        android:paddingHorizontal="12dp"
+                        android:text="Tháng"
                         android:textAllCaps="false"
-                        android:textColor="#1D2A52"
+                        android:textColor="#6B3C10"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -336,10 +371,11 @@
                 android:id="@+id/tvTopDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
+                android:layout_marginLeft="16dp"
                 android:layout_marginTop="6dp"
-                android:text="Cap nhat xu huong trong 7 ngay gan nhat"
-                android:textColor="#6A7482"
+                android:layout_marginRight="16dp"
+                android:text="Top sách được cập nhật từ dữ liệu đọc thực tế"
+                android:textColor="#886B4B"
                 android:textSize="12sp" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -355,12 +391,13 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="@android:color/white"
+        android:layout_height="74dp"
+        android:background="#FFF9F1E6"
         android:elevation="8dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="8dp">
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="10dp">
 
         <Button
             android:id="@+id/navHome"
@@ -368,7 +405,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@drawable/home_chip_bg"
-            android:text="Home"
+            android:text="Trang chủ"
             android:textAllCaps="false"
             android:textColor="@color/home_primary"
             android:textSize="12sp"
@@ -381,9 +418,9 @@
             android:layout_marginStart="6dp"
             android:layout_weight="1"
             android:background="@drawable/home_card_bg"
-            android:text="Kham pha"
+            android:text="Khám phá"
             android:textAllCaps="false"
-            android:textColor="#4E5762"
+            android:textColor="#7A5A38"
             android:textSize="12sp" />
 
         <Button
@@ -393,9 +430,9 @@
             android:layout_marginStart="6dp"
             android:layout_weight="1"
             android:background="@drawable/home_card_bg"
-            android:text="Thu vien"
+            android:text="Thư viện"
             android:textAllCaps="false"
-            android:textColor="#4E5762"
+            android:textColor="#7A5A38"
             android:textSize="12sp" />
 
         <Button
@@ -405,9 +442,9 @@
             android:layout_marginStart="6dp"
             android:layout_weight="1"
             android:background="@drawable/home_card_bg"
-            android:text="Tai khoan"
+            android:text="Tài khoản"
             android:textAllCaps="false"
-            android:textColor="#4E5762"
+            android:textColor="#7A5A38"
             android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>
