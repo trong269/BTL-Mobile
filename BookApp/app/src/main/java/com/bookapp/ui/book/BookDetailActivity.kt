@@ -25,6 +25,7 @@ import com.bookapp.data.model.Book
 import com.bookapp.data.model.Chapter
 import com.bookapp.data.model.Comment
 import com.bookapp.data.model.Review
+import com.bookapp.ui.feature.LibraryStorage
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -79,6 +80,7 @@ class BookDetailActivity : AppCompatActivity() {
 
     private var bookId: String? = null
     private var isFavorited = false
+    private var currentBook: Book? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -169,6 +171,7 @@ class BookDetailActivity : AppCompatActivity() {
         // Read now
         btnReadNow.setOnClickListener {
             val id = bookId ?: return@setOnClickListener
+            addToRecentLibrary(id)
             val intent = Intent(this, ReaderActivity::class.java).apply {
                 putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
                 putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
@@ -209,6 +212,7 @@ class BookDetailActivity : AppCompatActivity() {
     }
 
     private fun bindBook(book: Book) {
+        currentBook = book
         tvTitle.text = book.title ?: "Chua co tieu de"
         tvAuthor.text = "Tac gia: ${book.author ?: "Khong ro"}"
         tvCategory.text = book.categoryId?.take(8) ?: "Chua phan loai"
@@ -259,6 +263,14 @@ class BookDetailActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             isFavorited = response.body()?.favorited ?: !isFavorited
                             updateFavoriteButton()
+                            val libItem = buildLibraryItem(id)
+                            if (libItem != null) {
+                                if (isFavorited) {
+                                    LibraryStorage.addFavorite(this@BookDetailActivity, libItem)
+                                } else {
+                                    LibraryStorage.removeFavorite(this@BookDetailActivity, id)
+                                }
+                            }
                             val msg = if (isFavorited) "Da them vao yeu thich" else "Da xoa khoi yeu thich"
                             Toast.makeText(this@BookDetailActivity, msg, Toast.LENGTH_SHORT).show()
                         }
@@ -470,6 +482,7 @@ class BookDetailActivity : AppCompatActivity() {
                     val adapter = ReaderChapterAdapter { selectedChapter ->
                         dialog.dismiss()
                         val chapterId = selectedChapter.id ?: return@ReaderChapterAdapter
+                        addToRecentLibrary(id)
                         val intent = Intent(this@BookDetailActivity, ReaderActivity::class.java).apply {
                             putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
                             putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
@@ -550,5 +563,21 @@ class BookDetailActivity : AppCompatActivity() {
                     Toast.makeText(this@BookDetailActivity, "Loi tai chuong: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
+    }
+
+    private fun addToRecentLibrary(bookId: String) {
+        val item = buildLibraryItem(bookId)
+        if (item != null) {
+            LibraryStorage.addRecent(this, item)
+        }
+    }
+
+    private fun buildLibraryItem(bookId: String): LibraryStorage.LibraryBookItem? {
+        val book = currentBook
+        return if (book != null) {
+            LibraryStorage.fromBook(book, fallbackBookId = bookId, fallbackTitle = tvTitle.text.toString())
+        } else {
+            LibraryStorage.basicItem(bookId, tvTitle.text.toString())
+        }
     }
 }

@@ -212,7 +212,7 @@ public class BookService {
 
     public List<BookResponseDto> findTopWeek() {
         LocalDateTime fromDate = LocalDateTime.now().minusDays(7);
-        List<Book> topWeek = bookRepository.findByCreatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(
+        List<Book> topWeek = bookRepository.findByUpdatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(
                 fromDate,
                 PageRequest.of(0, TOP_LIMIT)
         );
@@ -225,7 +225,7 @@ public class BookService {
 
     public List<BookResponseDto> findTopMonth() {
         LocalDateTime fromDate = LocalDateTime.now().minusDays(30);
-        List<Book> topMonth = bookRepository.findByCreatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(
+        List<Book> topMonth = bookRepository.findByUpdatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(
                 fromDate,
                 PageRequest.of(0, TOP_LIMIT)
         );
@@ -234,6 +234,13 @@ public class BookService {
             return toResponseList(bookRepository.findAllByOrderByViewsDescAvgRatingDesc(PageRequest.of(0, TOP_LIMIT)));
         }
         return toResponseList(topMonth);
+    }
+
+    public void incrementViews(String bookId) {
+        Book book = getById(bookId);
+        book.setViews(Math.max(0, book.getViews()) + 1);
+        book.setUpdatedAt(LocalDateTime.now());
+        bookRepository.save(book);
     }
 
     private List<BookResponseDto> toResponseList(List<Book> books) {

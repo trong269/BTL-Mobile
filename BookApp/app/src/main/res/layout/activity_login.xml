@@ -2,105 +2,128 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/auth_gradient_bg"
+    android:background="@color/home_background"
     android:fillViewport="true"
     android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:orientation="vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="28dp">
+        android:paddingLeft="26dp"
+        android:paddingTop="34dp"
+        android:paddingRight="26dp"
+        android:paddingBottom="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="BookApp"
-            android:textColor="@android:color/white"
+            android:fontFamily="serif"
+            android:text="Sunlit Library"
+            android:textColor="#8E4E12"
             android:textSize="34sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:fontFamily="serif"
+            android:lineSpacingExtra="2dp"
+            android:text="Chao mung ban tro lai"
+            android:textColor="#1F1710"
+            android:textSize="54sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Nen tang doc sach cho nguoi yeu tri thuc"
-            android:textColor="#D8FFFFFF"
-            android:textSize="14sp" />
+            android:layout_marginTop="12dp"
+            android:text="Tien vao khong gian doc sach cua ban"
+            android:textColor="#6E4A2D"
+            android:textSize="21sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="34dp"
+            android:text="TEN TAI KHOAN"
+            android:textColor="#5F3B1F"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/edtUsername"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/auth_input_bg"
+            android:hint="Nhap ten tai khoan"
+            android:inputType="text"
+            android:paddingHorizontal="14dp"
+            android:textColor="#4A2D12"
+            android:textColorHint="#9A8A78"
+            android:textSize="18sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:background="@drawable/auth_card_bg"
-            android:elevation="6dp"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_marginTop="18dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Dang nhap"
-                android:textColor="#1B1F24"
-                android:textSize="24sp"
+                android:layout_weight="1"
+                android:text="MAT KHAU"
+                android:textColor="#5F3B1F"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Dang nhap de tiep tuc doc sach cua ban"
-                android:textColor="#6C7380"
-                android:textSize="13sp" />
-
-            <EditText
-                android:id="@+id/edtUsername"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/auth_input_bg"
-                android:hint="Username"
-                android:inputType="text"
-                android:paddingHorizontal="14dp"
-                android:textColor="#1B1F24"
-                android:textColorHint="#8A909A" />
-
-            <EditText
-                android:id="@+id/edtPassword"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/auth_input_bg"
-                android:hint="Password"
-                android:inputType="textPassword"
-                android:paddingHorizontal="14dp"
-                android:textColor="#1B1F24"
-                android:textColorHint="#8A909A" />
-
-            <Button
-                android:id="@+id/btnLogin"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/auth_primary_button_bg"
-                android:text="Dang nhap"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvGoToRegister"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:text="Chua co tai khoan? Dang ky ngay"
-                android:textColor="@color/auth_primary"
+                android:text="QUEN MAT KHAU?"
+                android:textColor="#8E4E12"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <EditText
+            android:id="@+id/edtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/auth_input_bg"
+            android:hint="..............."
+            android:inputType="textPassword"
+            android:paddingHorizontal="14dp"
+            android:textColor="#4A2D12"
+            android:textColorHint="#9A8A78"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="26dp"
+            android:background="@drawable/auth_primary_button_bg"
+            android:text="Dang nhap"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvGoToRegister"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="26dp"
+            android:text="Chua co tai khoan? Dang ky ngay"
+            android:textColor="#7A4311"
+            android:textSize="19sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </ScrollView>

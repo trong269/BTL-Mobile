@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/home_background">
+    android:background="@color/home_background"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,26 +14,44 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/library_header_bg"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="14dp">
 
             <ImageButton
                 android:id="@+id/btnProfileBack"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/home_chip_bg"
-                android:contentDescription="Back"
+                android:background="@android:color/transparent"
+                android:contentDescription="Quay lai"
                 android:padding="8dp"
-                android:src="@android:drawable/ic_media_previous" />
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="@android:color/white" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="Tai khoan"
-                android:textColor="#1B1F24"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="serif"
+                    android:text="Tai khoan"
+                    android:textColor="@android:color/white"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thong tin ca nhan va bao mat"
+                    android:textColor="#FFEBD3B5"
+                    android:textSize="12sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -46,75 +65,79 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Thong tin ca nhan"
-                android:textColor="#1B1F24"
-                android:textSize="16sp"
+                android:fontFamily="serif"
+                android:text="Ho so ca nhan"
+                android:textColor="#4A2D12"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Ho va ten"
-                android:textColor="#4E5762"
-                android:textSize="13sp" />
+                android:text="HO VA TEN"
+                android:textColor="#7E6142"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtProfileFullName"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/home_chip_bg"
+                android:background="@drawable/auth_input_bg"
                 android:hint="Nhap ho va ten"
                 android:inputType="textPersonName"
                 android:paddingHorizontal="12dp"
-                android:textColor="#212121"
-                android:textColorHint="#6D6D6D" />
+                android:textColor="#4A2D12"
+                android:textColorHint="#9A7D60" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Ten dang nhap"
-                android:textColor="#4E5762"
-                android:textSize="13sp" />
+                android:text="TEN TAI KHOAN"
+                android:textColor="#7E6142"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtProfileUsername"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/home_chip_bg"
-                android:hint="Nhap ten dang nhap"
+                android:background="@drawable/auth_input_bg"
+                android:hint="Nhap ten tai khoan"
                 android:inputType="textPersonName"
                 android:paddingHorizontal="12dp"
-                android:textColor="#212121"
-                android:textColorHint="#6D6D6D" />
+                android:textColor="#4A2D12"
+                android:textColorHint="#9A7D60" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Email"
-                android:textColor="#4E5762"
-                android:textSize="13sp" />
+                android:text="EMAIL"
+                android:textColor="#7E6142"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtProfileEmail"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/home_chip_bg"
+                android:background="@drawable/auth_input_bg"
                 android:hint="Nhap email"
                 android:inputType="textEmailAddress"
                 android:paddingHorizontal="12dp"
-                android:textColor="#212121"
-                android:textColorHint="#6D6D6D" />
+                android:textColor="#4A2D12"
+                android:textColorHint="#9A7D60" />
 
             <Button
                 android:id="@+id/btnSaveProfile"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/home_primary_button_bg"
                 android:text="Luu thong tin"
@@ -134,78 +157,82 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Doi mat khau"
-                android:textColor="#1B1F24"
-                android:textSize="16sp"
+                android:fontFamily="serif"
+                android:text="Bao mat"
+                android:textColor="#4A2D12"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Mat khau hien tai"
-                android:textColor="#4E5762"
-                android:textSize="13sp" />
+                android:text="MAT KHAU HIEN TAI"
+                android:textColor="#7E6142"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtCurrentPassword"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/home_chip_bg"
+                android:background="@drawable/auth_input_bg"
                 android:hint="Nhap mat khau hien tai"
                 android:inputType="textPassword"
                 android:paddingHorizontal="12dp"
-                android:textColor="#212121"
-                android:textColorHint="#6D6D6D" />
+                android:textColor="#4A2D12"
+                android:textColorHint="#9A7D60" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Mat khau moi"
-                android:textColor="#4E5762"
-                android:textSize="13sp" />
+                android:text="MAT KHAU MOI"
+                android:textColor="#7E6142"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtNewPassword"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/home_chip_bg"
+                android:background="@drawable/auth_input_bg"
                 android:hint="Nhap mat khau moi"
                 android:inputType="textPassword"
                 android:paddingHorizontal="12dp"
-                android:textColor="#212121"
-                android:textColorHint="#6D6D6D" />
+                android:textColor="#4A2D12"
+                android:textColorHint="#9A7D60" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Xac nhan mat khau moi"
-                android:textColor="#4E5762"
-                android:textSize="13sp" />
+                android:text="XAC NHAN MAT KHAU"
+                android:textColor="#7E6142"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edtConfirmNewPassword"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/home_chip_bg"
+                android:background="@drawable/auth_input_bg"
                 android:hint="Nhap lai mat khau moi"
                 android:inputType="textPassword"
                 android:paddingHorizontal="12dp"
-                android:textColor="#212121"
-                android:textColorHint="#6D6D6D" />
+                android:textColor="#4A2D12"
+                android:textColorHint="#9A7D60" />
 
             <Button
                 android:id="@+id/btnChangePassword"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/home_primary_button_bg"
-                android:text="Doi mat khau"
+                android:text="Cap nhat mat khau"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textStyle="bold" />
@@ -216,11 +243,11 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="14dp"
-            android:layout_marginBottom="18dp"
-            android:background="@drawable/home_chip_bg"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/btn_outline_bg"
             android:text="Dang xuat"
             android:textAllCaps="false"
-            android:textColor="#B3261E"
+            android:textColor="#8D4312"
             android:textStyle="bold" />
 
     </LinearLayout>

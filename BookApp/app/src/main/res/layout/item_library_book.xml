@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="184dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="10dp"
+    android:background="@drawable/library_item_card_bg"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@drawable/home_cover_placeholder_bg">
+
+        <ImageView
+            android:id="@+id/ivLibraryCover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="Book cover"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:id="@+id/tvLibraryCoverFallback"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Khong co anh"
+            android:textColor="#8A6C4A"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvLibraryBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="@drawable/library_badge_bg"
+            android:paddingLeft="8dp"
+            android:paddingTop="3dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="3dp"
+            android:text="Yeu thich"
+            android:textColor="@android:color/white"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvLibraryTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="#4A2D12"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvLibraryAuthor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="#886B4B"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvLibraryMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="#7E5A37"
+        android:textSize="11sp" />
+
+</LinearLayout>
