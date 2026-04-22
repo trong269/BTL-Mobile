@@ -1,6 +1,8 @@
 package com.bookapp.ui.book
 
 import android.content.Intent
+import android.os.Build
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -54,7 +56,15 @@ class BookCatalogAdapter(
             tvCategory.text = categoryNameResolver(book.categoryId)
             tvRating.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             tvChapters.text = "${book.totalChapters ?: 0} chuong"
-            tvDescription.text = book.description ?: ""
+            
+            // Decode HTML entities in description
+            val description = book.description ?: ""
+            tvDescription.text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY)
+            } else {
+                @Suppress("DEPRECATION")
+                Html.fromHtml(description)
+            }
 
             // Load ảnh bìa
             if (!book.coverImage.isNullOrBlank()) {
