@@ -1,0 +1,11 @@
+# Copy this file to local.properties and configure your environment URLs
+# local.properties is ignored by git for security
+
+# Development environment (local backend or emulator)
+dev.base.url=http://10.0.2.2:8080/
+
+# Staging environment
+staging.base.url=
+
+# Production environment
+prod.base.url=

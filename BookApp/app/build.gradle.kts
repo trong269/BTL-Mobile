@@ -3,6 +3,16 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Load local.properties
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 android {
     namespace = "com.bookapp"
     compileSdk {
@@ -15,13 +25,37 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "BASE_URL", "\"http://192.168.1.104:8080/\"")
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            val devUrl = localProperties.getProperty("dev.base.url") ?: "http://10.0.2.2:8080/"
+            buildConfigField("String", "BASE_URL", "\"$devUrl\"")
+        }
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            val stagingUrl = localProperties.getProperty("staging.base.url") ?: "https://btl-mobile-staging.up.railway.app/"
+            buildConfigField("String", "BASE_URL", "\"$stagingUrl\"")
+        }
+        create("prod") {
+            dimension = "environment"
+            val prodUrl = localProperties.getProperty("prod.base.url") ?: "https://btl-mobile-production.up.railway.app/"
+            buildConfigField("String", "BASE_URL", "\"$prodUrl\"")
+        }
+    }
+
     buildTypes {
+        debug {
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
