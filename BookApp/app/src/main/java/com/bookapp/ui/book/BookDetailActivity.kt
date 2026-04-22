@@ -1,7 +1,9 @@
 package com.bookapp.ui.book
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.text.Html
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -220,7 +222,7 @@ class BookDetailActivity : AppCompatActivity() {
         tvChapters.text = "${book.totalChapters ?: 0}"
         tvPages.text = "${book.totalPages ?: 0}"
         tvViews.text = "${book.views ?: 0}"
-        tvDescription.text = book.description?.takeIf { it.isNotBlank() } ?: "(Chua co mo ta)"
+        tvDescription.text = book.description?.takeIf { it.isNotBlank() }?.let { decodeHtmlDescription(it) } ?: "(Chua co mo ta)"
 
         if (!book.coverImage.isNullOrBlank()) {
             Glide.with(this)
@@ -579,5 +581,23 @@ class BookDetailActivity : AppCompatActivity() {
         } else {
             LibraryStorage.basicItem(bookId, tvTitle.text.toString())
         }
+    }
+
+    private fun decodeHtmlDescription(html: String): CharSequence {
+        // Decode HTML entities first
+        val decoded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
+        } else {
+            @Suppress("DEPRECATION")
+            Html.fromHtml(html)
+        }
+        
+        // Strip HTML tags (if any remain)
+        val text = decoded.toString()
+        return text.replace("<[^>]*>".toRegex(), "")  // Remove HTML tags
+            .replace("&[a-zA-Z]+;".toRegex(), "")     // Remove remaining HTML entities
+            .replace("&#\\d+;".toRegex(), "")         // Remove numeric entities
+            .replace("&#x[0-9a-fA-F]+;".toRegex(), "")  // Remove hex entities
+            .trim()
     }
 }

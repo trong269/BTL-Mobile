@@ -57,14 +57,9 @@ class BookCatalogAdapter(
             tvRating.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             tvChapters.text = "${book.totalChapters ?: 0} chuong"
             
-            // Decode HTML entities in description
+            // Decode HTML entities and strip HTML tags from description
             val description = book.description ?: ""
-            tvDescription.text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY)
-            } else {
-                @Suppress("DEPRECATION")
-                Html.fromHtml(description)
-            }
+            tvDescription.text = decodeHtmlDescription(description)
 
             // Load ảnh bìa
             if (!book.coverImage.isNullOrBlank()) {
@@ -99,6 +94,24 @@ class BookCatalogAdapter(
                 }
                 context.startActivity(intent)
             }
+        }
+
+        private fun decodeHtmlDescription(html: String): CharSequence {
+            // Decode HTML entities first
+            val decoded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
+            } else {
+                @Suppress("DEPRECATION")
+                Html.fromHtml(html)
+            }
+            
+            // Strip HTML tags (if any remain)
+            val text = decoded.toString()
+            return text.replace("<[^>]*>".toRegex(), "")  // Remove HTML tags
+                .replace("&[a-zA-Z]+;".toRegex(), "")     // Remove remaining HTML entities
+                .replace("&#\\d+;".toRegex(), "")         // Remove numeric entities
+                .replace("&#x[0-9a-fA-F]+;".toRegex(), "")  // Remove hex entities
+                .trim()
         }
     }
 }
