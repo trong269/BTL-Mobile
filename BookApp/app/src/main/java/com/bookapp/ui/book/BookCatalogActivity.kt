@@ -235,7 +235,7 @@ class BookCatalogActivity : AppCompatActivity() {
     }
 
     private fun loadBooksByMode(mode: String) {
-        setStatus("Dang tai...")
+        setStatus("Đang tải...")
         val requestId = ++currentRequestId
         val call: Call<List<Book>> = when (mode) {
             "featured" -> RetrofitClient.instance.getFeaturedBooks()
@@ -248,20 +248,20 @@ class BookCatalogActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         updateBooks(response.body().orEmpty())
                     } else {
-                        setStatus("Loi tai sach (HTTP ${response.code()})")
+                        setStatus("Lỗi tải sách (HTTP ${response.code()})")
                     }
                 }
             }
             override fun onFailure(call: Call<List<Book>>, t: Throwable) {
                 if (requestId == currentRequestId) {
-                    setStatus("Loi ket noi: ${t.message}")
+                    setStatus("Lỗi kết nối: ${t.message}")
                 }
             }
         })
     }
 
     private fun loadBooksByCategory(categoryId: String) {
-        setStatus("Dang tai...")
+        setStatus("Đang tải...")
         val requestId = ++currentRequestId
         RetrofitClient.instance.getBooksByCategory(categoryId)
             .enqueue(object : Callback<List<Book>> {
@@ -270,20 +270,20 @@ class BookCatalogActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             updateBooks(response.body().orEmpty())
                         } else {
-                            setStatus("Loi tai sach (HTTP ${response.code()})")
+                            setStatus("Lỗi tải sách (HTTP ${response.code()})")
                         }
                     }
                 }
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
                     if (requestId == currentRequestId) {
-                        setStatus("Loi ket noi: ${t.message}")
+                        setStatus("Lỗi kếtt nối: ${t.message}")
                     }
                 }
             })
     }
 
     private fun loadSearchResults(keyword: String) {
-        setStatus("Dang tim kiem \"$keyword\"...")
+        setStatus("Đang tìm kiếm \"$keyword\"...")
         val requestId = ++currentRequestId
         RetrofitClient.instance.searchBooks(keyword)
             .enqueue(object : Callback<List<Book>> {
@@ -292,15 +292,15 @@ class BookCatalogActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             val results = response.body().orEmpty()
                             updateBooks(results)
-                            if (results.isEmpty()) setStatus("Khong tim thay ket qua cho \"$keyword\"")
+                            if (results.isEmpty()) setStatus("Không tìm thấy kết quả cho \"$keyword\"")
                         } else {
-                            setStatus("Loi tim kiem (HTTP ${response.code()})")
+                            setStatus("Lỗi tìm kiếm (HTTP ${response.code()})")
                         }
                     }
                 }
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
                     if (requestId == currentRequestId) {
-                        setStatus("Loi ket noi: ${t.message}")
+                        setStatus("Lỗi kết nối: ${t.message}")
                     }
                 }
             })

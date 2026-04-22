@@ -16,15 +16,6 @@
         android:paddingBottom="24dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="serif"
-            android:text="Sunlit Library"
-            android:textColor="#8E4E12"
-            android:textSize="34sp"
-            android:textStyle="bold" />
-
-        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
@@ -61,8 +52,8 @@
             android:hint="Nhập tên tài khoản"
             android:inputType="text"
             android:paddingHorizontal="14dp"
-            android:textColor="#4A2D12"
-            android:textColorHint="#9A8A78"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
             android:textSize="18sp" />
 
         <LinearLayout
@@ -99,8 +90,8 @@
             android:hint="..............."
             android:inputType="textPassword"
             android:paddingHorizontal="14dp"
-            android:textColor="#4A2D12"
-            android:textColorHint="#9A8A78"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
             android:textSize="18sp" />
 
         <Button

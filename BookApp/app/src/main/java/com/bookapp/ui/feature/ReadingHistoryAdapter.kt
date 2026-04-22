@@ -155,8 +155,8 @@ class ReadingHistoryAdapter : RecyclerView.Adapter<ReadingHistoryAdapter.History
     }
 
     private fun formatTimestamp(timestamp: Long): String {
-        if (timestamp <= 0L) return "Khong ro thoi gian"
+        if (timestamp <= 0L) return "Không rõ thời gian"
         val sdf = SimpleDateFormat("HH:mm - dd/MM/yyyy", Locale.getDefault())
-        return "Doc luc ${sdf.format(Date(timestamp))}"
+        return "Đọc lúc ${sdf.format(Date(timestamp))}"
     }
 }

@@ -1,5 +1,1 @@
-<resources>
-    <string name="app_name">BookApp</string>
-    <string name="favorite_inactive">Thich</string>
-    <string name="favorite_active">Yeu thich</string>
-</resources>
+<resources><string name='app_name'>BookApp</string><string name='favorite_inactive'>Thích</string><string name='favorite_active'>Yêu thích</string></resources>

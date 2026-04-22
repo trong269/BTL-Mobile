@@ -19,13 +19,13 @@
 
             <ImageButton
                 android:id="@+id/btnLibraryBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Quay lai"
-                android:padding="8dp"
-                android:src="@android:drawable/ic_media_previous"
-                android:tint="#6E3D0D" />
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/back_round_bg"
+                android:contentDescription="Quay lại"
+                android:padding="5dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_back_arrow" />
 
             <TextView
                 android:layout_width="0dp"
@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="o"
-                android:textColor="#6E3D0D"
+                android:textColor="@color/text_accent"
                 android:textSize="18sp" />
         </LinearLayout>
 
@@ -81,7 +81,7 @@
             android:layout_width="60dp"
             android:layout_height="2dp"
             android:layout_marginTop="6dp"
-            android:background="#8A4E14" />
+            android:background="@color/text_accent" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -111,7 +111,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="0"
-                    android:textColor="#6B3C10"
+                    android:textColor="@color/text_accent"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -120,7 +120,7 @@
                     android:layout_height="wrap_content"
                     android:text="TUYỂN CHỌN"
                     android:textAllCaps="true"
-                    android:textColor="#6E4C2E"
+                    android:textColor="@color/text_muted"
                     android:textSize="11sp" />
             </LinearLayout>
 
@@ -169,7 +169,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="serif"
-                android:text="Dọc gần đây"
+                android:text="Đọc gần đây"
                 android:textColor="#24190F"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -195,7 +195,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="0"
-            android:textColor="#6B3C10"
+            android:textColor="@color/text_accent"
             android:textSize="16sp"
             android:textStyle="bold" />
 

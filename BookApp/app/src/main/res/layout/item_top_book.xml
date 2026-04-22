@@ -20,7 +20,7 @@
             android:id="@+id/imgTopBookCover"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Top book cover"
+            android:contentDescription="Ảnh bìa sách nổi bật"
             android:scaleType="centerCrop" />
 
         <TextView

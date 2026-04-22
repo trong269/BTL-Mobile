@@ -1,12 +1,14 @@
 package com.bookapp.ui.profile
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.bookapp.R
@@ -14,6 +16,7 @@ import com.bookapp.data.api.ChangePasswordRequest
 import com.bookapp.data.api.RetrofitClient
 import com.bookapp.data.api.UpdateProfileRequest
 import com.bookapp.data.model.User
+import com.bookapp.theme.ThemePreferenceManager
 import com.bookapp.ui.auth.LoginActivity
 import org.json.JSONObject
 import retrofit2.Call
@@ -57,6 +60,7 @@ class ProfileActivity : AppCompatActivity() {
         btnChangePassword = findViewById(R.id.btnChangePassword)
         btnLogout = findViewById(R.id.btnLogout)
         val btnBack = findViewById<ImageButton>(R.id.btnProfileBack)
+        val switchThemeMode = findViewById<SwitchCompat>(R.id.switchThemeMode)
 
         edtFullName.setText(prefs.getString(KEY_FULL_NAME, ""))
         edtUsername.setText(prefs.getString(KEY_USERNAME, ""))
@@ -66,6 +70,27 @@ class ProfileActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener {
             finish()
+        }
+
+        val savedMode = ThemePreferenceManager.getSavedThemeMode(this)
+        val isDarkThemeEnabled = when (savedMode) {
+            ThemePreferenceManager.THEME_DARK -> true
+            ThemePreferenceManager.THEME_LIGHT -> false
+            else -> {
+                val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                currentNightMode == Configuration.UI_MODE_NIGHT_YES
+            }
+        }
+        switchThemeMode.isChecked = isDarkThemeEnabled
+        switchThemeMode.setOnCheckedChangeListener { _, isChecked ->
+            val nextMode = if (isChecked) {
+                ThemePreferenceManager.THEME_DARK
+            } else {
+                ThemePreferenceManager.THEME_LIGHT
+            }
+            if (ThemePreferenceManager.getSavedThemeMode(this) != nextMode) {
+                ThemePreferenceManager.saveThemeMode(this, nextMode)
+            }
         }
 
         btnSave.setOnClickListener {
@@ -78,10 +103,10 @@ class ProfileActivity : AppCompatActivity() {
 
         btnLogout.setOnClickListener {
             AlertDialog.Builder(this)
-                .setTitle("Dang xuat")
-                .setMessage("Ban co chac muon dang xuat khoi tai khoan?")
-                .setNegativeButton("Huy", null)
-                .setPositiveButton("Dang xuat") { _, _ ->
+                .setTitle("Đăng xuất")
+                .setMessage("Bạn có chắc muốn đăng xuất khỏi tài khoản?")
+                .setNegativeButton("Hủy", null)
+                .setPositiveButton("Đăng xuất") { _, _ ->
                     prefs.edit().clear().apply()
                     navigateToLoginAndClearBackStack()
                 }
@@ -113,13 +138,13 @@ class ProfileActivity : AppCompatActivity() {
         val email = edtEmail.text.toString().trim()
 
         if (username.isEmpty()) {
-            edtUsername.error = "Vui long nhap ten dang nhap"
+            edtUsername.error = "Vui lòng nhập tên đăng nhập"
             edtUsername.requestFocus()
             return
         }
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            edtEmail.error = "Email khong hop le"
+            edtEmail.error = "Email không hợp lệ"
             edtEmail.requestFocus()
             return
         }
@@ -147,13 +172,13 @@ class ProfileActivity : AppCompatActivity() {
                         }
                         Toast.makeText(
                             this@ProfileActivity,
-                            "Da cap nhat thong tin tai khoan",
+                            "Đã cập nhật thông tin tài khoản",
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
                         Toast.makeText(
                             this@ProfileActivity,
-                            getErrorMessage(response, "Cap nhat thong tin that bai"),
+                            getErrorMessage(response, "Cập nhật thông tin thất bại"),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -163,7 +188,7 @@ class ProfileActivity : AppCompatActivity() {
                     btnSave.isEnabled = true
                     Toast.makeText(
                         this@ProfileActivity,
-                        "Khong the ket noi may chu",
+                        "Không thể kết nối máy chủ",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -176,19 +201,19 @@ class ProfileActivity : AppCompatActivity() {
         val confirmNewPassword = edtConfirmNewPassword.text.toString()
 
         if (currentPassword.isBlank()) {
-            edtCurrentPassword.error = "Vui long nhap mat khau hien tai"
+            edtCurrentPassword.error = "Vui lòng nhập mật khẩu hiện tại"
             edtCurrentPassword.requestFocus()
             return
         }
 
         if (newPassword.length < 6) {
-            edtNewPassword.error = "Mat khau moi toi thieu 6 ky tu"
+            edtNewPassword.error = "Mật khẩu mới tối thiểu 6 ký tự"
             edtNewPassword.requestFocus()
             return
         }
 
         if (newPassword != confirmNewPassword) {
-            edtConfirmNewPassword.error = "Mat khau xac nhan khong khop"
+            edtConfirmNewPassword.error = "Mật khẩu xác nhận không khớp"
             edtConfirmNewPassword.requestFocus()
             return
         }
@@ -212,13 +237,13 @@ class ProfileActivity : AppCompatActivity() {
                         edtConfirmNewPassword.text?.clear()
                         Toast.makeText(
                             this@ProfileActivity,
-                            "Doi mat khau thanh cong",
+                            "Đổi mật khẩu thành công",
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
                         Toast.makeText(
                             this@ProfileActivity,
-                            getErrorMessage(response, "Doi mat khau that bai"),
+                            getErrorMessage(response, "Đổi mật khẩu thất bại"),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -228,7 +253,7 @@ class ProfileActivity : AppCompatActivity() {
                     btnChangePassword.isEnabled = true
                     Toast.makeText(
                         this@ProfileActivity,
-                        "Khong the ket noi may chu",
+                        "Không thể kết nối máy chủ",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -253,11 +278,11 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun getErrorMessage(response: Response<*>, fallback: String): String {
         if (response.code() == 404) {
-            return "Server chua ho tro API tai khoan. Vui long cap nhat va khoi dong lai backend"
+            return "Server chưa hỗ trợ API tài khoản. Vui lòng cập nhật và khởi động lại backend"
         }
 
         if (response.code() == 409) {
-            return "Email hoac ten dang nhap da ton tai"
+            return "Email hoặc tên đăng nhập đã tồn tại"
         }
 
         val body = response.errorBody()?.string()?.trim()

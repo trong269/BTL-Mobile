@@ -14,6 +14,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookapp.R
@@ -91,7 +92,7 @@ class BookDetailActivity : AppCompatActivity() {
         bookId = intent.getStringExtra(EXTRA_BOOK_ID)?.trim()?.takeIf { it.isNotEmpty() }
 
         if (bookId == null) {
-            Toast.makeText(this, "Khong the mo chi tiet sach do thieu ID", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể mở chi tiết sách do thiếu ID", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -99,7 +100,7 @@ class BookDetailActivity : AppCompatActivity() {
         val bindViewsSuccess = runCatching {
             bindViews()
         }.onFailure {
-            Toast.makeText(this, "Khong the tai giao dien chi tiet sach", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể tải giao diện chi tiết sách", Toast.LENGTH_SHORT).show()
             finish()
         }.isSuccess
 
@@ -201,28 +202,28 @@ class BookDetailActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             response.body()?.let { bindBook(it) }
                         } else {
-                            Toast.makeText(this@BookDetailActivity, "Khong tai duoc thong tin sach", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Không tải được thông tin sách", Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<Book>, t: Throwable) {
-                        Toast.makeText(this@BookDetailActivity, "Loi ket noi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Lỗi kết nối: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
         }.onFailure {
-            Toast.makeText(this, "Khong the tai chi tiet sach", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể tải chi tiết sách", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun bindBook(book: Book) {
         currentBook = book
-        tvTitle.text = book.title ?: "Chua co tieu de"
-        tvAuthor.text = "Tac gia: ${book.author ?: "Khong ro"}"
-        tvCategory.text = book.categoryId?.take(8) ?: "Chua phan loai"
+        tvTitle.text = book.title ?: "Chưa có tiêu đề"
+        tvAuthor.text = "Tác giả: ${book.author ?: "Không rõ"}"
+        tvCategory.text = book.categoryId?.take(8) ?: "Chưa phân loại"
         tvRatingBadge.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
         tvChapters.text = "${book.totalChapters ?: 0}"
         tvPages.text = "${book.totalPages ?: 0}"
         tvViews.text = "${book.views ?: 0}"
-        tvDescription.text = book.description?.takeIf { it.isNotBlank() }?.let { decodeHtmlDescription(it) } ?: "(Chua co mo ta)"
+        tvDescription.text = book.description?.takeIf { it.isNotBlank() }?.let { decodeHtmlDescription(it) } ?: "(Chưa có mô tả)"
 
         if (!book.coverImage.isNullOrBlank()) {
             Glide.with(this)
@@ -254,7 +255,7 @@ class BookDetailActivity : AppCompatActivity() {
     private fun toggleFavorite() {
         val userId = getUserId()
         if (userId == null) {
-            Toast.makeText(this, "Vui long dang nhap de su dung tinh nang nay", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng đăng nhập để sử dụng tính năng này", Toast.LENGTH_SHORT).show()
             return
         }
         val id = bookId ?: return
@@ -273,16 +274,16 @@ class BookDetailActivity : AppCompatActivity() {
                                     LibraryStorage.removeFavorite(this@BookDetailActivity, id)
                                 }
                             }
-                            val msg = if (isFavorited) "Da them vao yeu thich" else "Da xoa khoi yeu thich"
+                            val msg = if (isFavorited) "Đã thêm vào yêu thích" else "Đã xóa khỏi yêu thích"
                             Toast.makeText(this@BookDetailActivity, msg, Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<ToggleFavoriteResponse>, t: Throwable) {
-                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Lỗi: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
         }.onFailure {
-            Toast.makeText(this, "Khong the cap nhat yeu thich", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể cập nhật yêu thích", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -295,7 +296,7 @@ class BookDetailActivity : AppCompatActivity() {
         } else {
             btnFavorite.text = getString(R.string.favorite_inactive)
             btnFavorite.setBackgroundResource(R.drawable.btn_outline_bg)
-            btnFavorite.setTextColor(0xFF23408E.toInt())
+            btnFavorite.setTextColor(ContextCompat.getColor(this, R.color.text_accent))
             btnFavorite.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
         }
     }
@@ -337,7 +338,7 @@ class BookDetailActivity : AppCompatActivity() {
     private fun submitReview() {
         val userId = getUserId()
         if (userId == null) {
-            Toast.makeText(this, "Vui long dang nhap de danh gia", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng đăng nhập để đánh giá", Toast.LENGTH_SHORT).show()
             return
         }
         val id = bookId ?: return
@@ -345,7 +346,7 @@ class BookDetailActivity : AppCompatActivity() {
         val text = edtReviewInput.text.toString().trim()
 
         if (rating == 0) {
-            Toast.makeText(this, "Vui long chon so sao", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng chọn số sao", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -358,33 +359,33 @@ class BookDetailActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             edtReviewInput.setText("")
                             ratingBarInput.rating = 5f
-                            Toast.makeText(this@BookDetailActivity, "Da gui danh gia!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Đã gửi đánh giá!", Toast.LENGTH_SHORT).show()
                             loadReviews()
                         } else {
-                            Toast.makeText(this@BookDetailActivity, "Loi gui danh gia (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Lỗi gửi đánh giá (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<Review>, t: Throwable) {
                         btnSubmitReview.isEnabled = true
-                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Lỗi: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
         }.onFailure {
             btnSubmitReview.isEnabled = true
-            Toast.makeText(this, "Khong the gui danh gia", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể gửi đánh giá", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun submitComment() {
         val userId = getUserId()
         if (userId == null) {
-            Toast.makeText(this, "Vui long dang nhap de binh luan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng đăng nhập để bình luận", Toast.LENGTH_SHORT).show()
             return
         }
         val id = bookId ?: return
         val content = edtCommentInput.text.toString().trim()
         if (content.isEmpty()) {
-            Toast.makeText(this, "Noi dung binh luan khong the trong", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Nội dung bình luận không thể trống", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -396,28 +397,31 @@ class BookDetailActivity : AppCompatActivity() {
                         btnSubmitComment.isEnabled = true
                         if (response.isSuccessful) {
                             edtCommentInput.setText("")
-                            Toast.makeText(this@BookDetailActivity, "Da gui binh luan!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Đã gửi bình luận!", Toast.LENGTH_SHORT).show()
                             loadComments()
                         } else {
-                            Toast.makeText(this@BookDetailActivity, "Loi gui binh luan (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Lỗi gửi bình luận (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<Comment>, t: Throwable) {
                         btnSubmitComment.isEnabled = true
-                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Lỗi: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
         }.onFailure {
             btnSubmitComment.isEnabled = true
-            Toast.makeText(this, "Khong the gui binh luan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể gửi bình luận", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun showTab(tab: String) {
+        val inactiveTabColor = ContextCompat.getColor(this, R.color.text_secondary)
+        val activeTabColor = ContextCompat.getColor(this, android.R.color.white)
+
         // Reset all tabs
         listOf(tabIntro, tabReviews, tabComments).forEach {
             it.setBackgroundResource(android.R.color.transparent)
-            it.setTextColor(0xFF68707A.toInt())
+            it.setTextColor(inactiveTabColor)
         }
         panelIntro.visibility = View.GONE
         panelReviews.visibility = View.GONE
@@ -426,17 +430,17 @@ class BookDetailActivity : AppCompatActivity() {
         when (tab) {
             "intro" -> {
                 tabIntro.setBackgroundResource(R.drawable.btn_primary_bg)
-                tabIntro.setTextColor(0xFFFFFFFF.toInt())
+                tabIntro.setTextColor(activeTabColor)
                 panelIntro.visibility = View.VISIBLE
             }
             "reviews" -> {
                 tabReviews.setBackgroundResource(R.drawable.btn_primary_bg)
-                tabReviews.setTextColor(0xFFFFFFFF.toInt())
+                tabReviews.setTextColor(activeTabColor)
                 panelReviews.visibility = View.VISIBLE
             }
             "comments" -> {
                 tabComments.setBackgroundResource(R.drawable.btn_primary_bg)
-                tabComments.setTextColor(0xFFFFFFFF.toInt())
+                tabComments.setTextColor(activeTabColor)
                 panelComments.visibility = View.VISIBLE
             }
         }
@@ -454,13 +458,13 @@ class BookDetailActivity : AppCompatActivity() {
             .enqueue(object : Callback<List<Chapter>> {
                 override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
                     if (!response.isSuccessful) {
-                        Toast.makeText(this@BookDetailActivity, "Khong tai duoc danh sach chuong", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
                         return
                     }
 
                     val chapters = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
                     if (chapters.isEmpty()) {
-                        Toast.makeText(this@BookDetailActivity, "Sach chua co chuong", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
                         return
                     }
 
@@ -562,7 +566,7 @@ class BookDetailActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
-                    Toast.makeText(this@BookDetailActivity, "Loi tai chuong: ${t.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@BookDetailActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
     }

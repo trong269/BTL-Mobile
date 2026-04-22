@@ -51,8 +51,8 @@ class BookCatalogAdapter(
         private val tvDescription: TextView = itemView.findViewById(R.id.tvCatalogDescription)
 
         fun bind(book: Book) {
-            tvTitle.text = book.title ?: "Chua co tieu de"
-            tvAuthor.text = "Tac gia: ${book.author ?: "Khong ro"}"
+            tvTitle.text = book.title ?: "Chưa có tiêu đề"
+            tvAuthor.text = "Tác giả: ${book.author ?: "Không rõ"}"
             tvCategory.text = categoryNameResolver(book.categoryId)
             tvRating.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             tvChapters.text = "${book.totalChapters ?: 0} chuong"
@@ -83,7 +83,7 @@ class BookCatalogAdapter(
                 val context = itemView.context
                 val id = book.id?.trim()
                 if (id.isNullOrEmpty()) {
-                    Toast.makeText(context, "Sach nay chua co ID hop le", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Sách này chưa có ID hợp lệ", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 

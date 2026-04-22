@@ -43,7 +43,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
-            android:contentDescription="Dong"
+            android:contentDescription="Đóng"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             app:tint="#0041F7" />
@@ -149,7 +149,7 @@
                 android:layout_height="42dp"
                 android:layout_marginHorizontal="8dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="Chuong truoc"
+                android:contentDescription="Chương trước"
                 android:src="@android:drawable/ic_media_previous"
                 app:tint="#2A79B9" />
 
@@ -179,7 +179,7 @@
                 android:layout_height="42dp"
                 android:layout_marginHorizontal="8dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="Danh sach chuong"
+                android:contentDescription="Danh sách chương"
                 android:src="@android:drawable/ic_menu_sort_by_size"
                 app:tint="#0041F7" />
 
@@ -189,7 +189,7 @@
                 android:layout_height="42dp"
                 android:layout_marginHorizontal="8dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="Chuong tiep"
+                android:contentDescription="Chương tiếp"
                 android:src="@android:drawable/ic_media_next"
                 app:tint="#2A79B9" />
         </LinearLayout>

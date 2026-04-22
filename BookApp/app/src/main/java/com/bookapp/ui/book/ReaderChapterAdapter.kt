@@ -40,9 +40,9 @@ class ReaderChapterAdapter(
         private val tvMeta: TextView = itemView.findViewById(R.id.tvChapterItemMeta)
 
         fun bind(chapter: Chapter, isSelected: Boolean) {
-            val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Khong co tieu de)"
+            val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Không có tiêu đề)"
             tvTitle.text = chapterTitle
-            tvMeta.text = if (isSelected) "Dang doc" else ""
+            tvMeta.text = if (isSelected) "Đang đọc" else ""
 
             if (isSelected) {
                 itemView.setBackgroundResource(android.R.color.transparent)

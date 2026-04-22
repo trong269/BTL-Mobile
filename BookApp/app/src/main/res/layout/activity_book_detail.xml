@@ -70,7 +70,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="3dp"
-                        android:textColor="#1B1F24"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -91,7 +91,7 @@
                     android:id="@+id/tvDetailTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#1B1F24"
+                    android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -100,7 +100,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textColor="#68707A"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <TextView
@@ -111,7 +111,7 @@
                     android:background="@drawable/chip_unselected_bg"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="4dp"
-                    android:textColor="#23408E"
+                    android:textColor="@color/text_accent"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -135,7 +135,7 @@
                             android:id="@+id/tvDetailChapters"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#1B1F24"
+                            android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -164,7 +164,7 @@
                             android:id="@+id/tvDetailPages"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#1B1F24"
+                            android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -172,7 +172,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Trang"
-                            android:textColor="#9099A4"
+                            android:textColor="@color/text_muted"
                             android:textSize="11sp" />
                     </LinearLayout>
 
@@ -193,7 +193,7 @@
                             android:id="@+id/tvDetailViews"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#1B1F24"
+                            android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -234,7 +234,7 @@
                         android:background="@drawable/btn_outline_bg"
                         android:text="Thích"
                         android:textAllCaps="false"
-                        android:textColor="#23408E"
+                        android:textColor="@color/text_accent"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -247,7 +247,7 @@
                     android:background="@drawable/btn_outline_bg"
                     android:text="Danh Sách Chương"
                     android:textAllCaps="false"
-                    android:textColor="#23408E"
+                    android:textColor="@color/text_accent"
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -282,7 +282,7 @@
                     android:background="@android:color/transparent"
                     android:text="Đánh giá"
                     android:textAllCaps="false"
-                    android:textColor="#68707A"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
                 <Button
@@ -293,7 +293,7 @@
                     android:background="@android:color/transparent"
                     android:text="Bình luận"
                     android:textAllCaps="false"
-                    android:textColor="#68707A"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -323,7 +323,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:lineSpacingExtra="4dp"
-                    android:textColor="#3F4A57"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -375,8 +375,8 @@
                         android:inputType="textMultiLine"
                         android:minLines="2"
                         android:padding="10dp"
-                        android:textColor="#212121"
-                        android:textColorHint="#9099A4"
+                        android:textColor="@color/text_input"
+                        android:textColorHint="@color/text_muted"
                         android:textSize="13sp" />
 
                     <Button
@@ -449,8 +449,8 @@
                         android:hint="Viết bình luận..."
                         android:inputType="text"
                         android:padding="10dp"
-                        android:textColor="#212121"
-                        android:textColorHint="#9099A4"
+                        android:textColor="@color/text_input"
+                        android:textColorHint="@color/text_muted"
                         android:textSize="13sp" />
 
                     <Button

@@ -17,7 +17,7 @@
             android:id="@+id/imgBookCover"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Book cover"
+            android:contentDescription="Ảnh bìa sách"
             android:scaleType="centerCrop" />
 
         <TextView
