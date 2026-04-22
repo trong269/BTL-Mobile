@@ -48,7 +48,7 @@
             android:background="@drawable/home_card_bg"
             android:drawableStart="@android:drawable/ic_menu_search"
             android:drawablePadding="10dp"
-            android:hint="Tìm kiếm sách, tác giả, thể loại..."
+            android:hint="Tìm kiếm sách, tác giả, thể loại, ..."
             android:inputType="text"
             android:imeOptions="actionSearch"
             android:paddingHorizontal="14dp"

@@ -27,7 +27,7 @@
                     android:layout_height="match_parent"
                     android:background="@drawable/home_header_bg"
                     android:scaleType="centerCrop"
-                    android:contentDescription="Ảnh bìa sách" />
+                    android:contentDescription="Ảnh Bìa Sách" />
 
                 <!-- Gradient overlay -->
                 <View
@@ -143,7 +143,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Chương"
-                            android:textColor="@color/text_muted"
+                            android:textColor="#9099A4"
                             android:textSize="11sp" />
                     </LinearLayout>
 
@@ -201,7 +201,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Lượt xem"
-                            android:textColor="@color/text_muted"
+                            android:textColor="#9099A4"
                             android:textSize="11sp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -232,7 +232,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
                         android:background="@drawable/btn_outline_bg"
-                        android:text="@string/favorite_inactive"
+                        android:text="Thích"
                         android:textAllCaps="false"
                         android:textColor="@color/text_accent"
                         android:textSize="14sp"
@@ -245,7 +245,7 @@
                     android:layout_height="48dp"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/btn_outline_bg"
-                    android:text="Danh sách chương"
+                    android:text="Danh Sách Chương"
                     android:textAllCaps="false"
                     android:textColor="@color/text_accent"
                     android:textSize="14sp"
@@ -313,7 +313,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Mô tả"
-                    android:textColor="@color/text_accent"
+                    android:textColor="#23408E"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -350,7 +350,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Đánh giá của bạn"
-                        android:textColor="@color/text_accent"
+                        android:textColor="#23408E"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -371,7 +371,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/input_bg"
-                        android:hint="Viết nhận xét của bạn..."
+                        android:hint="Viết đánh giá của bạn..."
                         android:inputType="textMultiLine"
                         android:minLines="2"
                         android:padding="10dp"
@@ -399,7 +399,7 @@
                     android:layout_marginTop="14dp"
                     android:layout_marginBottom="6dp"
                     android:text="Nhận xét từ người đọc"
-                    android:textColor="@color/text_primary"
+                    android:textColor="#1B1F24"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -415,8 +415,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:gravity="center"
-                    android:text="Chưa có đánh giá nào. Hãy là người đầu tiên!"
-                    android:textColor="@color/text_muted"
+                    android:text="Chưa có đánh giá nào. Hãy là người đánh giá đầu tiên!"
+                    android:textColor="#9099A4"
                     android:textSize="13sp"
                     android:visibility="gone" />
             </LinearLayout>
@@ -474,7 +474,7 @@
                     android:layout_marginTop="14dp"
                     android:layout_marginBottom="6dp"
                     android:text="Bình luận"
-                    android:textColor="@color/text_primary"
+                    android:textColor="#1B1F24"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -491,7 +491,7 @@
                     android:layout_marginTop="16dp"
                     android:gravity="center"
                     android:text="Chưa có bình luận nào. Hãy là người đầu tiên!"
-                    android:textColor="@color/text_muted"
+                    android:textColor="#9099A4"
                     android:textSize="13sp"
                     android:visibility="gone" />
             </LinearLayout>

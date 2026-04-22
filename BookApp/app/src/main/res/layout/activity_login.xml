@@ -22,7 +22,7 @@
             android:fontFamily="serif"
             android:lineSpacingExtra="2dp"
             android:text="Chào mừng bạn trở lại"
-            android:textColor="@color/text_primary"
+            android:textColor="#1F1710"
             android:textSize="54sp"
             android:textStyle="bold" />
 
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Tiến vào không gian đọc sách của bạn"
-            android:textColor="@color/text_secondary"
+            android:textColor="#6E4A2D"
             android:textSize="21sp" />
 
         <TextView
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="34dp"
             android:text="TÊN TÀI KHOẢN"
-            android:textColor="@color/text_secondary"
+            android:textColor="#5F3B1F"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -68,7 +68,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="MẬT KHẨU"
-                android:textColor="@color/text_secondary"
+                android:textColor="#5F3B1F"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -76,7 +76,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="QUÊN MẬT KHẨU?"
-                android:textColor="@color/text_accent"
+                android:textColor="#8E4E12"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -113,7 +113,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="26dp"
             android:text="Chưa có tài khoản? Đăng ký ngay"
-            android:textColor="@color/text_accent"
+            android:textColor="#7A4311"
             android:textSize="19sp"
             android:textStyle="bold" />
     </LinearLayout>

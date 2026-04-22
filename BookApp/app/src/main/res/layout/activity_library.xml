@@ -34,7 +34,7 @@
                 android:layout_weight="1"
                 android:fontFamily="serif"
                 android:text="Thư viện của bạn"
-                android:textColor="@color/text_primary"
+                android:textColor="#6E3D0D"
                 android:textSize="34sp"
                 android:textStyle="bold" />
 
@@ -44,6 +44,37 @@
                 android:text="o"
                 android:textColor="@color/text_accent"
                 android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yêu thích"
+                android:textColor="#24190F"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:text="Đã đọc"
+                android:textColor="#6A5A47"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:text="Lịch sử"
+                android:textColor="#6A5A47"
+                android:textSize="16sp" />
         </LinearLayout>
 
         <View
@@ -70,7 +101,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="serif"
                     android:text="Sách yêu thích"
-                    android:textColor="@color/text_primary"
+                    android:textColor="#24190F"
                     android:textSize="40sp"
                     android:textStyle="bold" />
 
@@ -87,7 +118,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TUYEN CHON"
+                    android:text="TUYỂN CHỌN"
                     android:textAllCaps="true"
                     android:textColor="@color/text_muted"
                     android:textSize="11sp" />
@@ -104,7 +135,7 @@
                 android:paddingRight="12dp"
                 android:paddingBottom="6dp"
                 android:text="Xem tất cả"
-                android:textColor="@color/text_accent"
+                android:textColor="#6B3C10"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -121,8 +152,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Chưa có sách yêu thích. Hãy bấm Yêu thích trong chi tiết sách để thêm vào đây."
-            android:textColor="@color/text_secondary"
+            android:text="Chưa có sách yêu thích. Hãy bấm yêu thích trong chi tiết sách để thêm vào đây."
+            android:textColor="#886B4B"
             android:textSize="13sp" />
 
         <LinearLayout
@@ -139,7 +170,7 @@
                 android:layout_weight="1"
                 android:fontFamily="serif"
                 android:text="Đọc gần đây"
-                android:textColor="@color/text_primary"
+                android:textColor="#24190F"
                 android:textSize="36sp"
                 android:textStyle="bold" />
 
@@ -153,7 +184,7 @@
                 android:paddingRight="12dp"
                 android:paddingBottom="6dp"
                 android:text="Xem tất cả"
-                android:textColor="@color/text_accent"
+                android:textColor="#6B3C10"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -180,8 +211,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Chưa có lịch sử đọc. Hãy mở một chương để bắt đầu."
-            android:textColor="@color/text_secondary"
+            android:text="Chưa có lịch sử đọc. Hay mở một chương để bắt đầu."
+            android:textColor="#886B4B"
             android:textSize="13sp" />
 
     </LinearLayout>

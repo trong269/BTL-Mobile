@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Chọn mục cần xóa bằng checkbox giống lịch sử Google"
-                android:textColor="@color/text_secondary"
+                android:textColor="#FFEED9C0"
                 android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
@@ -153,7 +153,7 @@
         android:layout_marginTop="10dp"
         android:gravity="center"
         android:text="Lịch sử đọc đang trống. Bạn hãy mở một cuốn sách để bắt đầu."
-        android:textColor="@color/text_secondary"
+        android:textColor="#886B4B"
         android:textSize="13sp"
         android:visibility="gone" />
 

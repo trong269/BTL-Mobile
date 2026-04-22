@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="serif"
             android:text="Tạo tài khoản"
-            android:textColor="@color/text_accent"
+            android:textColor="#8E4E12"
             android:textSize="34sp"
             android:textStyle="bold" />
 
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="Tạo tài khoản cá nhân để bắt đầu hành trình đọc sách."
-            android:textColor="@color/text_secondary"
+            android:textColor="#6E4A2D"
             android:textSize="20sp" />
 
         <TextView
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="TÊN TÀI KHOẢN"
-            android:textColor="@color/text_secondary"
+            android:textColor="#5F3B1F"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -81,7 +81,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="MẬT KHẨU"
-            android:textColor="@color/text_secondary"
+            android:textColor="#5F3B1F"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -129,8 +129,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="22dp"
-            android:text="Đã có tài khoản? Đăng nhập"
-            android:textColor="@color/text_accent"
+            android:text="Đã có tài khoản? Đăng nhập ngay"
+            android:textColor="#7A4311"
             android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
