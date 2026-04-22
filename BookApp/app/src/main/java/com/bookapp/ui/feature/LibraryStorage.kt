@@ -75,12 +75,12 @@ object LibraryStorage {
 
         val title = book.title?.takeIf { it.isNotBlank() }
             ?: fallbackTitle?.takeIf { it.isNotBlank() }
-            ?: "Chua co tieu de"
+            ?: "Chưa có tiêu đề"
 
         return LibraryBookItem(
             bookId = id,
             title = title,
-            author = book.author?.takeIf { it.isNotBlank() } ?: "Khong ro tac gia",
+            author = book.author?.takeIf { it.isNotBlank() } ?: "Không rõ tác giả",
             coverImage = book.coverImage,
             categoryId = book.categoryId,
             updatedAt = System.currentTimeMillis()
@@ -90,8 +90,8 @@ object LibraryStorage {
     fun basicItem(bookId: String, title: String): LibraryBookItem {
         return LibraryBookItem(
             bookId = bookId,
-            title = title.ifBlank { "Chua co tieu de" },
-            author = "Khong ro tac gia",
+            title = title.ifBlank { "Chưa có tiêu đề" },
+            author = "Không rõ tác giả",
             coverImage = null,
             categoryId = null,
             updatedAt = System.currentTimeMillis()
@@ -112,8 +112,8 @@ object LibraryStorage {
             result.add(
                 LibraryBookItem(
                     bookId = id,
-                    title = obj.optString("title").ifBlank { "Chua co tieu de" },
-                    author = obj.optString("author").ifBlank { "Khong ro tac gia" },
+                    title = obj.optString("title").ifBlank { "Chưa có tiêu đề" },
+                    author = obj.optString("author").ifBlank { "Không rõ tác giả" },
                     coverImage = obj.optString("coverImage").takeIf { it.isNotBlank() },
                     categoryId = obj.optString("categoryId").takeIf { it.isNotBlank() },
                     updatedAt = obj.optLong("updatedAt", 0L)

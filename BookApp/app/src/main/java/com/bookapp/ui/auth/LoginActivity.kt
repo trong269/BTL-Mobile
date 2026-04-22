@@ -16,6 +16,7 @@ import com.bookapp.ui.home.HomeActivity
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.IOException
 
 class LoginActivity : AppCompatActivity() {
 
@@ -37,13 +38,13 @@ class LoginActivity : AppCompatActivity() {
             val passwordValue = password.text.toString()
 
             if (usernameValue.isEmpty() || passwordValue.isEmpty()) {
-                Toast.makeText(this, "Vui long nhap day du tai khoan va mat khau", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Vui lòng nhập đầy đủ tài khoản và mật khẩu", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val request = LoginRequest(usernameValue, passwordValue)
             btnLogin.isEnabled = false
-            btnLogin.text = "Dang xu ly..."
+            btnLogin.text = "Đang xử lý..."
 
             RetrofitClient.instance.login(request)
                 .enqueue(object : Callback<LoginResponse> {
@@ -52,7 +53,7 @@ class LoginActivity : AppCompatActivity() {
                         response: Response<LoginResponse>
                     ) {
                         btnLogin.isEnabled = true
-                        btnLogin.text = "Dang nhap"
+                        btnLogin.text = "Đăng nhập"
 
                         if (response.isSuccessful) {
                             val body = response.body()
@@ -79,22 +80,38 @@ class LoginActivity : AppCompatActivity() {
                             }
                             finish()
                         } else {
-                            val errorText = response.errorBody()?.string()?.take(120)
-                            val message = if (errorText.isNullOrBlank()) {
-                                "Login failed (HTTP ${response.code()})"
-                            } else {
-                                "Login failed (HTTP ${response.code()}): $errorText"
-                            }
+                            val errorText = runCatching { response.errorBody()?.string() }.getOrNull()
+                            val message = mapLoginError(response.code(), errorText)
                             Toast.makeText(this@LoginActivity, message, Toast.LENGTH_SHORT).show()
                         }
                     }
 
                     override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                         btnLogin.isEnabled = true
-                        btnLogin.text = "Dang nhap"
-                        Toast.makeText(this@LoginActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                        btnLogin.text = "Đăng nhập"
+                        val message = if (t is IOException) {
+                            "Không thể kết nối máy chủ. Vui lòng kiểm tra mạng và thử lại."
+                        } else {
+                            "Đăng nhập thất bại. Vui lòng thử lại sau."
+                        }
+                        Toast.makeText(this@LoginActivity, message, Toast.LENGTH_SHORT).show()
                     }
                 })
+        }
+    }
+
+    private fun mapLoginError(code: Int, rawError: String?): String {
+        val normalized = rawError.orEmpty().lowercase()
+        if (code == 401 || code == 403 || normalized.contains("invalid") || normalized.contains("sai") || normalized.contains("password") || normalized.contains("credential")) {
+            return "Sai tài khoản hoặc mật khẩu. Vui lòng kiểm tra lại."
+        }
+
+        return when (code) {
+            400 -> "Thông tin đăng nhập không hợp lệ."
+            404 -> "Không tìm thấy tài khoản."
+            429 -> "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút."
+            in 500..599 -> "Máy chủ đang bận. Vui lòng thử lại sau."
+            else -> "Đăng nhập thất bại (HTTP $code)."
         }
     }
 }

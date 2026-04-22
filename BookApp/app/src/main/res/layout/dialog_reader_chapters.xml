@@ -17,7 +17,7 @@
             android:layout_width="38dp"
             android:layout_height="38dp"
             android:background="@android:color/transparent"
-            android:contentDescription="Dong danh sach chuong"
+            android:contentDescription="Đóng danh sách chương"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             android:tint="#1F6FB2" />
 
@@ -28,7 +28,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:maxLines="1"
-            android:text="Danh sach chuong"
+            android:text="Danh sách chương"
             android:textColor="#111111"
             android:textSize="19sp"
             android:textStyle="bold" />
@@ -63,7 +63,7 @@
             android:layout_width="34dp"
             android:layout_height="34dp"
             android:background="@android:color/transparent"
-            android:contentDescription="Trang dau"
+            android:contentDescription="Trang đầu"
             android:src="@android:drawable/ic_media_previous"
             android:tint="#AEB4BC" />
 
@@ -73,7 +73,7 @@
             android:layout_height="34dp"
             android:layout_marginStart="12dp"
             android:background="@android:color/transparent"
-            android:contentDescription="Trang truoc"
+            android:contentDescription="Trang trước"
             android:src="@android:drawable/ic_media_rew"
             android:tint="#AEB4BC" />
 
@@ -103,7 +103,7 @@
             android:layout_width="34dp"
             android:layout_height="34dp"
             android:background="@android:color/transparent"
-            android:contentDescription="Trang cuoi"
+                android:contentDescription="Trang cuối"
             android:src="@android:drawable/ic_media_next"
             android:tint="#AEB4BC" />
     </LinearLayout>

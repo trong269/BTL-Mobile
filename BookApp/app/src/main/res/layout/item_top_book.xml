@@ -20,7 +20,7 @@
             android:id="@+id/imgTopBookCover"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Top book cover"
+            android:contentDescription="Ảnh bìa sách nổi bật"
             android:scaleType="centerCrop" />
 
         <TextView
@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Chua cap nhat"
+            android:text="Chưa cập nhật"
             android:textColor="#5F6C80"
             android:textSize="12sp"
             android:textStyle="bold" />

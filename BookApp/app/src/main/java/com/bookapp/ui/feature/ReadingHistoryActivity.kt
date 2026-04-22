@@ -60,20 +60,20 @@ class ReadingHistoryActivity : AppCompatActivity() {
         btnDeleteSelected.setOnClickListener {
             val selectedIds = historyAdapter.getSelectedBookIds()
             if (selectedIds.isEmpty()) {
-                Toast.makeText(this, "Ban chua chon sach nao", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Bạn chưa chọn sách nào", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             AlertDialog.Builder(this)
-                .setTitle("Xoa muc da chon")
-                .setMessage("Ban co chac muon xoa ${selectedIds.size} muc lich su da chon?")
-                .setNegativeButton("Huy", null)
-                .setPositiveButton("Xoa") { _, _ ->
+                .setTitle("Xóa mục đã chọn")
+                .setMessage("Bạn có chắc muốn xóa ${selectedIds.size} mục lịch sử đã chọn?")
+                .setNegativeButton("Hủy", null)
+                .setPositiveButton("Xóa") { _, _ ->
                     LibraryStorage.removeRecentByBookIds(this, selectedIds)
                     historyAdapter.clearSelection()
                     syncSelectionUi(0)
                     renderData()
-                    Toast.makeText(this, "Da xoa ${selectedIds.size} muc lich su", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Đã xóa ${selectedIds.size} mục lịch sử", Toast.LENGTH_SHORT).show()
                 }
                 .show()
         }
@@ -112,17 +112,17 @@ class ReadingHistoryActivity : AppCompatActivity() {
 
         tvSelectionHint.visibility = if (hasSelection) View.VISIBLE else View.GONE
         tvSelectionHint.text = if (hasSelection) {
-            "Da chon $selectedCount muc"
+            "Đã chọn $selectedCount mục"
         } else {
             ""
         }
     }
 
     private fun showHistoryRangeSelector() {
-        val options = arrayOf("1 gio gan nhat", "24 gio gan nhat", "7 ngay gan nhat", "Tat ca lich su")
+        val options = arrayOf("1 giờ gần nhất", "24 giờ gần nhất", "7 ngày gần nhất", "Tất cả lịch sử")
 
         AlertDialog.Builder(this)
-            .setTitle("Xoa lich su")
+            .setTitle("Xóa lịch sử")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> confirmDeleteWithin(TimeUnit.HOURS.toMillis(1), options[0])
@@ -136,26 +136,26 @@ class ReadingHistoryActivity : AppCompatActivity() {
 
     private fun confirmDeleteAll() {
         AlertDialog.Builder(this)
-            .setTitle("Xoa tat ca lich su")
-            .setMessage("Ban co chac muon xoa tat ca lich su doc?")
-            .setNegativeButton("Huy", null)
-            .setPositiveButton("Xoa") { _, _ ->
+            .setTitle("Xóa tất cả lịch sử")
+            .setMessage("Bạn có chắc muốn xóa tất cả lịch sử đọc?")
+            .setNegativeButton("Hủy", null)
+            .setPositiveButton("Xóa") { _, _ ->
                 LibraryStorage.clearAllRecents(this)
                 renderData()
-                Toast.makeText(this, "Da xoa toan bo lich su doc", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Đã xóa toàn bộ lịch sử đọc", Toast.LENGTH_SHORT).show()
             }
             .show()
     }
 
     private fun confirmDeleteWithin(durationMs: Long, label: String) {
         AlertDialog.Builder(this)
-            .setTitle("Xoa lich su")
-            .setMessage("Ban co chac muon xoa lich su doc trong $label?")
-            .setNegativeButton("Huy", null)
-            .setPositiveButton("Xoa") { _, _ ->
+            .setTitle("Xóa lịch sử")
+            .setMessage("Bạn có chắc muốn xóa lịch sử đọc trong $label?")
+            .setNegativeButton("Hủy", null)
+            .setPositiveButton("Xóa") { _, _ ->
                 val removed = LibraryStorage.clearRecentsWithinLast(this, durationMs)
                 renderData()
-                Toast.makeText(this, "Da xoa $removed muc", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Đã xóa $removed mục", Toast.LENGTH_SHORT).show()
             }
             .show()
     }

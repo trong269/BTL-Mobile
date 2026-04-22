@@ -19,8 +19,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="serif"
-            android:text="Tao tai khoan"
-            android:textColor="#8E4E12"
+            android:text="Tạo tài khoản"
+            android:textColor="@color/text_accent"
             android:textSize="34sp"
             android:textStyle="bold" />
 
@@ -28,16 +28,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="Tao tai khoan ca nhan de bat dau hanh trinh doc sach."
-            android:textColor="#6E4A2D"
+            android:text="Tạo tài khoản cá nhân để bắt đầu hành trình đọc sách."
+            android:textColor="@color/text_secondary"
             android:textSize="20sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="TEN TAI KHOAN"
-            android:textColor="#5F3B1F"
+            android:text="TÊN TÀI KHOẢN"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -47,11 +47,11 @@
             android:layout_height="56dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/auth_input_bg"
-            android:hint="Nhap ten tai khoan"
+            android:hint="Nhập tên tài khoản"
             android:inputType="text"
             android:paddingHorizontal="14dp"
-            android:textColor="#4A2D12"
-            android:textColorHint="#9A7D60"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
             android:textSize="17sp" />
 
         <TextView
@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:text="EMAIL"
-            android:textColor="#5F3B1F"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -69,19 +69,19 @@
             android:layout_height="56dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/auth_input_bg"
-            android:hint="Nhap email"
+            android:hint="Nhập email"
             android:inputType="textEmailAddress"
             android:paddingHorizontal="14dp"
-            android:textColor="#4A2D12"
-            android:textColorHint="#9A7D60"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
             android:textSize="17sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="MAT KHAU"
-            android:textColor="#5F3B1F"
+            android:text="MẬT KHẨU"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -91,11 +91,11 @@
             android:layout_height="56dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/auth_input_bg"
-            android:hint="Toi thieu 6 ky tu"
+            android:hint="Tối thiểu 6 ký tự"
             android:inputType="textPassword"
             android:paddingHorizontal="14dp"
-            android:textColor="#4A2D12"
-            android:textColorHint="#9A7D60"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
             android:textSize="17sp" />
 
         <EditText
@@ -104,11 +104,11 @@
             android:layout_height="56dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/auth_input_bg"
-            android:hint="Nhap lai mat khau"
+            android:hint="Nhập lại mật khẩu"
             android:inputType="textPassword"
             android:paddingHorizontal="14dp"
-            android:textColor="#4A2D12"
-            android:textColorHint="#9A7D60"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
             android:textSize="17sp" />
 
         <Button
@@ -117,7 +117,7 @@
             android:layout_height="60dp"
             android:layout_marginTop="24dp"
             android:background="@drawable/auth_primary_button_bg"
-            android:text="Dang ky"
+            android:text="Đăng ký"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="24sp"
@@ -129,8 +129,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="22dp"
-            android:text="Da co tai khoan? Dang nhap"
-            android:textColor="#7A4311"
+            android:text="Đã có tài khoản? Đăng nhập"
+            android:textColor="@color/text_accent"
             android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>

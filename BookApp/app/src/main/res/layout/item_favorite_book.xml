@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Khong co anh"
+            android:text="Không có ảnh"
             android:textColor="#8A6C4A"
             android:textSize="11sp"
             android:textStyle="bold" />
@@ -64,7 +64,7 @@
             android:layout_height="36dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/btn_outline_bg"
-            android:text="Bo yeu thich"
+            android:text="Bỏ yêu thích"
             android:textAllCaps="false"
             android:textColor="#8D4312"
             android:textStyle="bold" />

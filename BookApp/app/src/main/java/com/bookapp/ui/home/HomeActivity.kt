@@ -38,6 +38,8 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var btnTopWeekTab: Button
     private lateinit var btnTopMonthTab: Button
     private lateinit var tvTopDescription: TextView
+    private lateinit var tvFeaturedBookTitle: TextView
+    private lateinit var btnContinueRead: Button
     private lateinit var topBookAdapter: TopBookAdapter
 
     private val allBooks = mutableListOf<Book>()
@@ -45,6 +47,7 @@ class HomeActivity : AppCompatActivity() {
     private var selectedTopPeriod = TOP_PERIOD_WEEK
     private var topBooksWeek: List<Book> = emptyList()
     private var topBooksMonth: List<Book> = emptyList()
+    private var featuredMonthlyBook: Book? = null
     private var lastOpenBookDetailMs = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,7 +122,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun loadBooks() {
-        showError("Dang tai du lieu sach...")
+        showError("Đang tải dữ liệu sách...")
 
         RetrofitClient.instance.getAllBooks()
             .enqueue(object : Callback<List<Book>> {
@@ -128,15 +131,17 @@ class HomeActivity : AppCompatActivity() {
                         val books = response.body().orEmpty()
                         allBooks.clear()
                         allBooks.addAll(books)
+                        updateFeaturedMonthlyBook()
                         currentPage = 1
                         renderPage()
                     } else {
-                        showError("Khong tai duoc danh sach sach (HTTP ${response.code()})")
+                        showError("Không tải được danh sách sách (HTTP ${response.code()})")
                     }
                 }
 
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
-                    showError("Loi ket noi: ${t.message ?: "Khong xac dinh"}")
+                    updateFeaturedMonthlyBook()
+                    showError("Lỗi kết nối: ${t.message ?: "Không xác định"}")
                 }
             })
     }
@@ -162,12 +167,14 @@ class HomeActivity : AppCompatActivity() {
                 override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
                     if (response.isSuccessful) {
                         topBooksMonth = response.body().orEmpty()
+                        updateFeaturedMonthlyBook()
                         renderSelectedTopList()
                     }
                 }
 
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
                     topBooksMonth = emptyList()
+                    updateFeaturedMonthlyBook()
                     renderSelectedTopList()
                 }
             })
@@ -179,7 +186,7 @@ class HomeActivity : AppCompatActivity() {
             tvPageIndicator.text = "Trang 1/1"
             btnPrevPage.isEnabled = false
             btnNextPage.isEnabled = false
-            showError("Chua co sach trong he thong")
+            showError("Chưa có sách trong hệ thống")
             topBooksWeek = emptyList()
             topBooksMonth = emptyList()
             renderSelectedTopList()
@@ -206,7 +213,7 @@ class HomeActivity : AppCompatActivity() {
         val activeBackground = R.drawable.home_primary_button_bg
         val inactiveBackground = R.drawable.home_chip_bg
         val activeTextColor = ContextCompat.getColor(this, android.R.color.white)
-        val inactiveTextColor = ContextCompat.getColor(this, R.color.home_primary_dark)
+        val inactiveTextColor = ContextCompat.getColor(this, R.color.text_accent)
 
         btnTopWeekTab.setBackgroundResource(if (isWeekSelected) activeBackground else inactiveBackground)
         btnTopMonthTab.setBackgroundResource(if (isWeekSelected) inactiveBackground else activeBackground)
@@ -214,10 +221,10 @@ class HomeActivity : AppCompatActivity() {
         btnTopMonthTab.setTextColor(if (isWeekSelected) inactiveTextColor else activeTextColor)
 
         if (isWeekSelected) {
-            tvTopDescription.text = "Cap nhat xu huong trong 7 ngay gan nhat"
+            tvTopDescription.text = "Cập nhật xu hướng trong 7 ngày gần nhất"
             topBookAdapter.submitList(topBooksWeek, "7 ngay")
         } else {
-            tvTopDescription.text = "Nhung dau sach noi bat nhat trong 30 ngay"
+            tvTopDescription.text = "Những đầu sách nổi bật nhất trong 30 ngày"
             topBookAdapter.submitList(topBooksMonth, "30 ngay")
         }
     }
@@ -238,6 +245,8 @@ class HomeActivity : AppCompatActivity() {
     private fun bindFeatureButtons() {
         val edtSearch = findViewById<EditText>(R.id.edtSearch)
         val btnSearchIcon = findViewById<android.widget.ImageButton>(R.id.btnSearchIcon)
+        tvFeaturedBookTitle = findViewById(R.id.tvFeaturedBookTitle)
+        btnContinueRead = findViewById(R.id.btnContinueRead)
 
         val performSearch = {
             val query = edtSearch.text.toString().trim()
@@ -269,8 +278,13 @@ class HomeActivity : AppCompatActivity() {
             performSearch()
         }
 
-        findViewById<Button>(R.id.btnContinueRead).setOnClickListener {
-            openLibrary(LibraryActivity.TAB_RECENTS)
+        btnContinueRead.setOnClickListener {
+            val featured = featuredMonthlyBook
+            if (featured == null) {
+                Toast.makeText(this, "Hiện chưa có sách nổi bật tháng này", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            openBookDetail(featured)
         }
         findViewById<Button>(R.id.btnLibrary).setOnClickListener {
             openLibrary(null)
@@ -302,7 +316,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun bindBottomNavigation() {
         findViewById<Button>(R.id.navHome).setOnClickListener {
-            Toast.makeText(this, "Ban dang o trang Home", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Bạn đang ở trang Home", Toast.LENGTH_SHORT).show()
         }
         findViewById<Button>(R.id.navExplore).setOnClickListener {
             val intent = Intent(this, BookCatalogActivity::class.java).apply {
@@ -340,16 +354,37 @@ class HomeActivity : AppCompatActivity() {
 
         val id = book.id?.trim()
         if (id.isNullOrEmpty()) {
-            Toast.makeText(this, "Sach nay chua co ID hop le", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Sách này chưa có ID hợp lệ", Toast.LENGTH_SHORT).show()
             return
         }
 
         lastOpenBookDetailMs = now
         val intent = Intent(this, BookDetailActivity::class.java).apply {
             putExtra(BookDetailActivity.EXTRA_BOOK_ID, id)
-            putExtra(BookDetailActivity.EXTRA_BOOK_TITLE, book.title ?: "Chi tiet sach")
+            putExtra(BookDetailActivity.EXTRA_BOOK_TITLE, book.title ?: "Chi tiết sách")
         }
         startActivity(intent)
+    }
+
+    private fun updateFeaturedMonthlyBook() {
+        val topMonthly = topBooksMonth.firstOrNull { !it.id.isNullOrBlank() }
+        val fallback = allBooks
+            .filter { !it.id.isNullOrBlank() }
+            .maxByOrNull { it.views ?: 0 }
+
+        val nextFeatured = topMonthly ?: fallback
+        featuredMonthlyBook = nextFeatured
+
+        if (!::tvFeaturedBookTitle.isInitialized) {
+            return
+        }
+
+        if (nextFeatured == null) {
+            tvFeaturedBookTitle.text = "Chưa có sách nổi bật"
+            return
+        }
+
+        tvFeaturedBookTitle.text = nextFeatured.title?.trim().orEmpty().ifEmpty { "Chưa có tiêu đề" }
     }
 
     companion object {

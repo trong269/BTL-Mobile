@@ -49,12 +49,12 @@ class BookAdapter(
 
         fun bind(book: Book) {
             bindCover(book.coverImage)
-            tvTitle.text = book.title?.takeIf { it.isNotBlank() } ?: "Chua co tieu de"
-            tvAuthor.text = book.author?.takeIf { it.isNotBlank() } ?: "Khong ro tac gia"
+            tvTitle.text = book.title?.takeIf { it.isNotBlank() } ?: "Chưa có tiêu đề"
+            tvAuthor.text = book.author?.takeIf { it.isNotBlank() } ?: "Không rõ tác giả"
 
             val ratingText = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             val viewsText = book.views ?: 0
-            tvMeta.text = "Danh gia: $ratingText | Luot xem: $viewsText"
+            tvMeta.text = "Đánh giá: $ratingText | Lượt xem: $viewsText"
 
             itemView.setOnClickListener {
                 onItemClick(book)

@@ -20,7 +20,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#23408E"
+            android:textColor="@color/text_accent"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -28,7 +28,7 @@
             android:id="@+id/tvCommentDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#9099A4"
+            android:textColor="@color/text_muted"
             android:textSize="10sp" />
     </LinearLayout>
 
@@ -37,7 +37,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:textColor="#3F4A57"
+        android:textColor="@color/text_secondary"
         android:textSize="13sp" />
 
 </LinearLayout>

@@ -121,14 +121,14 @@ class LibraryBookAdapter(
     }
 
     private fun formatTime(timestamp: Long): String {
-        if (timestamp <= 0L) return "Vua cap nhat"
+        if (timestamp <= 0L) return "Vừa cập nhật"
 
         val now = System.currentTimeMillis()
         val diff = (now - timestamp).coerceAtLeast(0L)
         val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
 
         return when {
-            minutes < 1 -> "Vua cap nhat"
+            minutes < 1 -> "Vừa cập nhật"
             minutes < 60 -> "$minutes phut truoc"
             minutes < 24 * 60 -> "${minutes / 60} gio truoc"
             minutes < 7 * 24 * 60 -> "${minutes / (24 * 60)} ngay truoc"

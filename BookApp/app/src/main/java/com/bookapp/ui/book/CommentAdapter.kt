@@ -36,7 +36,7 @@ class CommentAdapter : RecyclerView.Adapter<CommentAdapter.CommentViewHolder>() 
         private val tvContent: TextView = itemView.findViewById(R.id.tvCommentContent)
 
         fun bind(comment: Comment) {
-            tvUser.text = comment.userId?.take(8)?.let { "Nguoi dung #$it" } ?: "An danh"
+            tvUser.text = comment.userId?.take(8)?.let { "Người dùng #$it" } ?: "Ẩn danh"
             tvDate.text = comment.createdAt?.take(10) ?: ""
             tvContent.text = comment.content ?: ""
         }
