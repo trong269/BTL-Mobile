@@ -32,7 +32,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="||"
-                    android:textColor="#7A4A1A"
+                    android:textColor="@color/text_accent"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -43,7 +43,7 @@
                     android:layout_weight="1"
                     android:fontFamily="serif"
                     android:text="Khám phá"
-                    android:textColor="#6D3B0B"
+                    android:textColor="@color/text_primary"
                     android:textSize="30sp"
                     android:textStyle="bold" />
 
@@ -51,7 +51,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="o"
-                    android:textColor="#7A4A1A"
+                    android:textColor="@color/text_accent"
                     android:textSize="18sp" />
             </LinearLayout>
 
@@ -85,7 +85,7 @@
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
                     android:background="@drawable/home_primary_button_bg"
-                    android:contentDescription="Search"
+                    android:contentDescription="Tìm kiếm"
                     android:padding="12dp"
                     android:src="@android:drawable/ic_menu_search"
                     android:tint="@android:color/white" />
@@ -111,6 +111,7 @@
                     android:textSize="11sp" />
 
                 <TextView
+                    android:id="@+id/tvFeaturedBookTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -121,12 +122,14 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvFeaturedBookDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:text="Tuyển tập giàu chiều sâu cho những phiên đọc tập trung và thư thái."
                     android:textColor="#816140"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnContinueRead"
@@ -149,7 +152,7 @@
                 android:layout_marginRight="16dp"
                 android:fontFamily="serif"
                 android:text="Danh mục chọn lọc"
-                android:textColor="#25190F"
+                android:textColor="@color/text_primary"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
@@ -235,7 +238,7 @@
                     android:layout_weight="1"
                     android:fontFamily="serif"
                     android:text="Sách mới"
-                    android:textColor="#25190F"
+                    android:textColor="@color/text_primary"
                     android:textSize="34sp"
                     android:textStyle="bold" />
 
@@ -244,7 +247,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Xem tất cả"
-                    android:textColor="#7A4715"
+                    android:textColor="@color/text_accent"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -327,7 +330,7 @@
                     android:layout_weight="1"
                     android:fontFamily="serif"
                     android:text="Bảng xếp hạng"
-                    android:textColor="#25190F"
+                    android:textColor="@color/text_primary"
                     android:textSize="30sp"
                     android:textStyle="bold" />
 
@@ -375,7 +378,7 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginRight="16dp"
                 android:text="Top sách được cập nhật từ dữ liệu đọc thực tế"
-                android:textColor="#886B4B"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
             <androidx.recyclerview.widget.RecyclerView

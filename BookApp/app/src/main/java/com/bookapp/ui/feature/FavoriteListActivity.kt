@@ -45,13 +45,13 @@ class FavoriteListActivity : AppCompatActivity() {
     private fun setupRecycler() {
         favoriteListAdapter = FavoriteListAdapter { item ->
             AlertDialog.Builder(this)
-                .setTitle("Bo yeu thich")
-                .setMessage("Bo '${item.title}' khoi danh sach yeu thich?")
-                .setNegativeButton("Huy", null)
-                .setPositiveButton("Bo") { _, _ ->
+                .setTitle("Bỏ yêu thích")
+                .setMessage("Bỏ '${item.title}' khỏi danh sách yêu thích?")
+                .setNegativeButton("Hủy", null)
+                .setPositiveButton("Bỏ") { _, _ ->
                     LibraryStorage.removeFavorite(this, item.bookId)
                     renderData()
-                    Toast.makeText(this, "Da bo yeu thich", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Đã bỏ yêu thích", Toast.LENGTH_SHORT).show()
                 }
                 .show()
         }

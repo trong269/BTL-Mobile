@@ -75,7 +75,7 @@ class ReaderActivity : AppCompatActivity() {
 
     private var userId: String? = null
     private var bookId: String? = null
-    private var bookTitle: String = "Doc sach"
+    private var bookTitle: String = "Đọc sách"
     private var targetChapterId: String? = null
 
     private var chapters: List<Chapter> = emptyList()
@@ -165,12 +165,12 @@ class ReaderActivity : AppCompatActivity() {
         setContentView(R.layout.activity_reader)
 
         bookId = intent.getStringExtra(EXTRA_BOOK_ID)?.trim()?.takeIf { it.isNotEmpty() }
-        bookTitle = intent.getStringExtra(EXTRA_BOOK_TITLE)?.takeIf { it.isNotBlank() } ?: "Doc sach"
+        bookTitle = intent.getStringExtra(EXTRA_BOOK_TITLE)?.takeIf { it.isNotBlank() } ?: "Đọc sách"
         targetChapterId = intent.getStringExtra(EXTRA_TARGET_CHAPTER_ID)?.trim()?.takeIf { it.isNotEmpty() }
         userId = getSharedPreferences("BookAppPrefs", MODE_PRIVATE).getString("userId", null)
 
         if (bookId == null || userId == null) {
-            Toast.makeText(this, "Thieu thong tin de mo trinh doc", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Thiếu thông tin để mở trình đọc", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -339,14 +339,14 @@ class ReaderActivity : AppCompatActivity() {
             .enqueue(object : Callback<List<Chapter>> {
                 override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
                     if (!response.isSuccessful) {
-                        Toast.makeText(this@ReaderActivity, "Khong tai duoc danh sach chuong", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ReaderActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
                         finish()
                         return
                     }
 
                     val loaded = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
                     if (loaded.isEmpty()) {
-                        Toast.makeText(this@ReaderActivity, "Sach chua co chuong", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ReaderActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
                         finish()
                         return
                     }
@@ -355,7 +355,7 @@ class ReaderActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
-                    Toast.makeText(this@ReaderActivity, "Loi tai chuong: ${t.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReaderActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             })
@@ -370,7 +370,7 @@ class ReaderActivity : AppCompatActivity() {
         ).enqueue(object : Callback<ReadingProgress> {
             override fun onResponse(call: Call<ReadingProgress>, response: Response<ReadingProgress>) {
                 if (!response.isSuccessful) {
-                    Toast.makeText(this@ReaderActivity, "Khong tao duoc tien trinh doc", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReaderActivity, "Không tạo được tiến trình đọc", Toast.LENGTH_SHORT).show()
                     finish()
                     return
                 }
@@ -394,7 +394,7 @@ class ReaderActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<ReadingProgress>, t: Throwable) {
-                Toast.makeText(this@ReaderActivity, "Loi tien trinh: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ReaderActivity, "Lỗi tiến trình: ${t.message}", Toast.LENGTH_SHORT).show()
                 finish()
             }
         })
@@ -405,9 +405,9 @@ class ReaderActivity : AppCompatActivity() {
 
         currentChapterIndex = index
         val chapter = chapters[index]
-        currentChapterRawText = chapter.content?.takeIf { it.isNotBlank() } ?: "(Chuong nay chua co noi dung)"
+        currentChapterRawText = chapter.content?.takeIf { it.isNotBlank() } ?: "(Chương này chưa có nội dung)"
 
-        val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Khong co tieu de)"
+        val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Không có tiêu đề)"
         tvFooterChapterTitle.text = chapterTitle
         tvFooterChapterCounter.text = "${index + 1}/${chapters.size}"
 
@@ -861,7 +861,7 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun paginateChapter(rawText: String): List<String> {
-        if (rawText.isBlank()) return listOf("(Chuong nay chua co noi dung)")
+        if (rawText.isBlank()) return listOf("(Chương này chưa có nội dung)")
 
         val density = resources.displayMetrics.density
         val fallbackWidth = (resources.displayMetrics.widthPixels - (48f * density)).toInt()

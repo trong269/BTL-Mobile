@@ -25,7 +25,7 @@
                 android:id="@+id/tvReviewUser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#1B1F24"
+                android:textColor="@color/text_primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="#9099A4"
+                android:textColor="@color/text_muted"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -55,7 +55,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="#3F4A57"
+        android:textColor="@color/text_secondary"
         android:textSize="13sp" />
 
 </LinearLayout>
