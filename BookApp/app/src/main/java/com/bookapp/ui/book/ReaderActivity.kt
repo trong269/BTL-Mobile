@@ -75,7 +75,7 @@ class ReaderActivity : AppCompatActivity() {
 
     private var userId: String? = null
     private var bookId: String? = null
-    private var bookTitle: String = "Doc sach"
+    private var bookTitle: String = "Đọc sách"
     private var targetChapterId: String? = null
 
     private var chapters: List<Chapter> = emptyList()
@@ -85,12 +85,12 @@ class ReaderActivity : AppCompatActivity() {
     private var chapterPages: List<String> = emptyList()
     private var currentPageIndex: Int = 0
 
-    private var backgroundColor: Int = 0xFFFDFDFD.toInt()
+    private var backgroundColor: Int = 0xFFF1E5C8.toInt()
     private var fontSizeSp: Float = 18f
     private var lineSpacingMultiplier: Float = 1.5f
     private var readingMode: ReadingMode = ReadingMode.SCROLL
     private var fontFamily: String = "sans-serif"
-    private var autoScrollSpeed: Int = 30
+    private var autoScrollSpeed: Int = 20
     private var pageTurnSeconds: Int = 20
 
     private var isAutoPlaying: Boolean = false
@@ -106,10 +106,11 @@ class ReaderActivity : AppCompatActivity() {
                     stopAutoPlay()
                     return
                 }
-                // Keep the same speed index but reduce effective vertical speed by half.
-                val step = (autoScrollSpeed / 2).coerceIn(2, 40)
-                readerScroll.smoothScrollBy(0, step)
-                autoPlayHandler.postDelayed(this, 80L)
+                // Smooth scrolling: smaller steps with higher frequency for smoother animation
+                // Speed range: 8-80, step range: 1-10 pixels per 50ms
+                val step = (autoScrollSpeed / 8f).coerceIn(1f, 10f).toInt()
+                readerScroll.scrollBy(0, step)
+                autoPlayHandler.postDelayed(this, 50L)
             } else {
                 val hasNextPage = currentPageIndex < chapterPages.lastIndex
                 if (hasNextPage) {
@@ -131,17 +132,14 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private val fontOptions = listOf(
-        FontOption("HelveticaNeue", "sans-serif"),
-        FontOption("Palatino", "serif"),
-        FontOption("ArialMT", "sans-serif"),
-        FontOption("AvenirNext-Medium", "sans-serif-medium"),
-        FontOption("Bookerly", "serif"),
-        FontOption("TimesNewRoman", "serif"),
-        FontOption("Georgia", "serif"),
-        FontOption("Courier", "monospace"),
-        FontOption("Roboto-Regular", "sans-serif"),
-        FontOption("UTM-Centur", "serif"),
-        FontOption("UVNVan", "sans-serif")
+        FontOption("Roboto (Mặc định)", "sans-serif"),
+        FontOption("Roboto Light", "sans-serif-light"),
+        FontOption("Roboto Medium", "sans-serif-medium"),
+        FontOption("Noto Serif", "serif"),
+        FontOption("Roboto Condensed", "sans-serif-condensed"),
+        FontOption("Roboto Mono", "monospace"),
+        FontOption("Comic (Vui nhộn)", "casual"),
+        FontOption("Dancing Script", "cursive"),
     )
 
     private val prefs by lazy {
@@ -165,12 +163,12 @@ class ReaderActivity : AppCompatActivity() {
         setContentView(R.layout.activity_reader)
 
         bookId = intent.getStringExtra(EXTRA_BOOK_ID)?.trim()?.takeIf { it.isNotEmpty() }
-        bookTitle = intent.getStringExtra(EXTRA_BOOK_TITLE)?.takeIf { it.isNotBlank() } ?: "Doc sach"
+        bookTitle = intent.getStringExtra(EXTRA_BOOK_TITLE)?.takeIf { it.isNotBlank() } ?: "Đọc sách"
         targetChapterId = intent.getStringExtra(EXTRA_TARGET_CHAPTER_ID)?.trim()?.takeIf { it.isNotEmpty() }
         userId = getSharedPreferences("BookAppPrefs", MODE_PRIVATE).getString("userId", null)
 
         if (bookId == null || userId == null) {
-            Toast.makeText(this, "Thieu thong tin de mo trinh doc", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Thiếu thông tin để mở trình đọc", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -339,14 +337,14 @@ class ReaderActivity : AppCompatActivity() {
             .enqueue(object : Callback<List<Chapter>> {
                 override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
                     if (!response.isSuccessful) {
-                        Toast.makeText(this@ReaderActivity, "Khong tai duoc danh sach chuong", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ReaderActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
                         finish()
                         return
                     }
 
                     val loaded = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
                     if (loaded.isEmpty()) {
-                        Toast.makeText(this@ReaderActivity, "Sach chua co chuong", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ReaderActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
                         finish()
                         return
                     }
@@ -355,7 +353,7 @@ class ReaderActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
-                    Toast.makeText(this@ReaderActivity, "Loi tai chuong: ${t.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReaderActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             })
@@ -370,7 +368,7 @@ class ReaderActivity : AppCompatActivity() {
         ).enqueue(object : Callback<ReadingProgress> {
             override fun onResponse(call: Call<ReadingProgress>, response: Response<ReadingProgress>) {
                 if (!response.isSuccessful) {
-                    Toast.makeText(this@ReaderActivity, "Khong tao duoc tien trinh doc", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReaderActivity, "Không tạo được tiến trình đọc", Toast.LENGTH_SHORT).show()
                     finish()
                     return
                 }
@@ -394,7 +392,7 @@ class ReaderActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<ReadingProgress>, t: Throwable) {
-                Toast.makeText(this@ReaderActivity, "Loi tien trinh: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ReaderActivity, "Lỗi tiến trình: ${t.message}", Toast.LENGTH_SHORT).show()
                 finish()
             }
         })
@@ -405,9 +403,9 @@ class ReaderActivity : AppCompatActivity() {
 
         currentChapterIndex = index
         val chapter = chapters[index]
-        currentChapterRawText = chapter.content?.takeIf { it.isNotBlank() } ?: "(Chuong nay chua co noi dung)"
+        currentChapterRawText = chapter.content?.takeIf { it.isNotBlank() } ?: "(Chương này chưa có nội dung)"
 
-        val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Khong co tieu de)"
+        val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Không có tiêu đề)"
         tvFooterChapterTitle.text = chapterTitle
         tvFooterChapterCounter.text = "${index + 1}/${chapters.size}"
 
@@ -596,7 +594,7 @@ class ReaderActivity : AppCompatActivity() {
             styleModeButton(btnModeScroll, readingMode == ReadingMode.SCROLL)
             styleModeButton(btnModePage, readingMode == ReadingMode.PAGE)
 
-            styleColorChip(colorAuto, backgroundColor == 0xFFFDFDFD.toInt())
+            styleColorChip(colorAuto, backgroundColor == 0xFFF1E5C8.toInt())
             styleColorBlock(colorWhite, 0xFFFFFFFF.toInt(), backgroundColor == 0xFFFFFFFF.toInt())
             styleColorBlock(colorBlack, 0xFF1A1A1A.toInt(), backgroundColor == 0xFF1A1A1A.toInt())
             styleColorBlock(colorCream, 0xFFF1E5C8.toInt(), backgroundColor == 0xFFF1E5C8.toInt())
@@ -661,7 +659,7 @@ class ReaderActivity : AppCompatActivity() {
         }
 
         colorAuto.setOnClickListener {
-            backgroundColor = 0xFFFDFDFD.toInt()
+            backgroundColor = 0xFFF1E5C8.toInt()
             applyReaderAppearance()
             refreshSettingViews()
         }
@@ -861,7 +859,7 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun paginateChapter(rawText: String): List<String> {
-        if (rawText.isBlank()) return listOf("(Chuong nay chua co noi dung)")
+        if (rawText.isBlank()) return listOf("(Chương này chưa có nội dung)")
 
         val density = resources.displayMetrics.density
         val fallbackWidth = (resources.displayMetrics.widthPixels - (48f * density)).toInt()
@@ -997,7 +995,7 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun loadReaderSettings() {
-        backgroundColor = prefs.getInt("backgroundColor", 0xFFFDFDFD.toInt())
+        backgroundColor = prefs.getInt("backgroundColor", 0xFFF1E5C8.toInt())
         fontSizeSp = prefs.getFloat("fontSizeSp", 18f)
         lineSpacingMultiplier = prefs.getFloat("lineSpacingMultiplier", 1.5f)
         readingMode = if (prefs.getString("readingMode", "SCROLL") == "PAGE") {
@@ -1062,13 +1060,13 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun styleModeButton(target: TextView, selected: Boolean) {
-        target.setBackgroundResource(if (selected) R.drawable.btn_primary_bg else R.drawable.btn_outline_bg)
-        target.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF23408E.toInt())
+        target.setBackgroundResource(if (selected) R.drawable.reader_btn_primary_bg else R.drawable.reader_btn_outline_bg)
+        target.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF944A00.toInt())
     }
 
     private fun styleColorChip(target: TextView, selected: Boolean) {
-        target.setBackgroundResource(if (selected) R.drawable.btn_primary_bg else R.drawable.btn_outline_bg)
-        target.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF23408E.toInt())
+        target.setBackgroundResource(if (selected) R.drawable.reader_btn_primary_bg else R.drawable.reader_btn_outline_bg)
+        target.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF944A00.toInt())
     }
 
     private fun styleColorBlock(target: View, color: Int, selected: Boolean) {
@@ -1078,7 +1076,7 @@ class ReaderActivity : AppCompatActivity() {
             cornerRadius = 8f * resources.displayMetrics.density
             setStroke(
                 if (selected) (3f * resources.displayMetrics.density).roundToInt() else 1,
-                if (selected) 0xFF1F6FB2.toInt() else 0xFF9FA5AE.toInt()
+                if (selected) 0xFF944A00.toInt() else 0xFF9FA5AE.toInt()
             )
         }
         target.background = drawable

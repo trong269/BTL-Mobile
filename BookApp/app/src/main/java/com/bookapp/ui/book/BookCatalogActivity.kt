@@ -55,6 +55,9 @@ class BookCatalogActivity : AppCompatActivity() {
     private val selectedCategoriesForFilter = mutableSetOf<String>()  // Để lọc, riêng biệt với selectedCategoryId
     private var minRating = 0.0  // 0.0 = hiển thị tất cả
     private var selectedYear: Int? = null  // null = hiển thị tất cả năm
+    
+    // Request ID to prevent race condition - only update UI for the latest request
+    private var currentRequestId = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -145,13 +148,13 @@ class BookCatalogActivity : AppCompatActivity() {
         llCategoryTabs.removeAllViews()
 
         // Tab "Tất cả"
-        addTab("Tat ca", null)
+        addTab("Tất cả", null)
         // Tab "Nổi bật"
-        addTabMode("Noi bat", "featured")
+        addTabMode("Nổi bật", "featured")
         // Tab "Mới nhất"
-        addTabMode("Moi nhat", "new")
+        addTabMode("Mới nhất", "new")
         // Tabs thể loại
-        categories.forEach { cat -> addTab(cat.name ?: "", cat.id) }
+//        categories.forEach { cat -> addTab(cat.name ?: "", cat.id) }
     }
 
     private fun addTab(label: String, categoryId: String?) {
@@ -159,7 +162,15 @@ class BookCatalogActivity : AppCompatActivity() {
             text = label
             textSize = 12f
             isAllCaps = false
-            val isSelected = (categoryId == selectedCategoryId && searchQuery.isEmpty())
+            val isSelected = if (categoryId == null) {
+                // For "Tat ca" tab: only selected if no filters and in default mode
+                selectedCategoryId == null && selectedCategoriesForFilter.isEmpty() && 
+                currentMode == "all" && searchQuery.isEmpty()
+            } else {
+                // For category tabs: selected if in category view or category is in filter
+                (categoryId == selectedCategoryId && searchQuery.isEmpty()) || 
+                selectedCategoriesForFilter.contains(categoryId)
+            }
             setBackgroundResource(if (isSelected) R.drawable.chip_selected_bg else R.drawable.chip_unselected_bg)
             setTextColor(if (isSelected) 0xFFFFFFFF.toInt() else 0xFF23408E.toInt())
             val lp = LinearLayout.LayoutParams(
@@ -172,7 +183,12 @@ class BookCatalogActivity : AppCompatActivity() {
                 selectedCategoryId = categoryId
                 searchQuery = ""
                 edtSearch.setText("")
+                // Reset dialog filters when clicking tab
+                selectedCategoriesForFilter.clear()
+                minRating = 0.0
+                selectedYear = null
                 if (categoryId == null) {
+                    currentMode = "all"  // Set to "all" when clicking "Tất cả" tab
                     loadBooksByMode(currentMode)
                 } else {
                     loadBooksByCategory(categoryId)
@@ -188,7 +204,8 @@ class BookCatalogActivity : AppCompatActivity() {
             text = label
             textSize = 12f
             isAllCaps = false
-            val isSelected = (selectedCategoryId == null && currentMode == mode && searchQuery.isEmpty())
+            val isSelected = (selectedCategoryId == null && currentMode == mode && 
+                            searchQuery.isEmpty() && selectedCategoriesForFilter.isEmpty())
             setBackgroundResource(if (isSelected) R.drawable.chip_selected_bg else R.drawable.chip_unselected_bg)
             setTextColor(if (isSelected) 0xFFFFFFFF.toInt() else 0xFF23408E.toInt())
             val lp = LinearLayout.LayoutParams(
@@ -202,6 +219,10 @@ class BookCatalogActivity : AppCompatActivity() {
                 currentMode = mode
                 searchQuery = ""
                 edtSearch.setText("")
+                // Reset dialog filters when clicking tab
+                selectedCategoriesForFilter.clear()
+                minRating = 0.0
+                selectedYear = null
                 loadBooksByMode(mode)
                 refreshCategoryTabs()
             }
@@ -214,7 +235,8 @@ class BookCatalogActivity : AppCompatActivity() {
     }
 
     private fun loadBooksByMode(mode: String) {
-        setStatus("Dang tai...")
+        setStatus("Đang tải...")
+        val requestId = ++currentRequestId
         val call: Call<List<Book>> = when (mode) {
             "featured" -> RetrofitClient.instance.getFeaturedBooks()
             "new" -> RetrofitClient.instance.getNewBooks()
@@ -222,50 +244,86 @@ class BookCatalogActivity : AppCompatActivity() {
         }
         call.enqueue(object : Callback<List<Book>> {
             override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
-                if (response.isSuccessful) {
-                    updateBooks(response.body().orEmpty())
-                } else {
-                    setStatus("Loi tai sach (HTTP ${response.code()})")
+                if (requestId == currentRequestId) {
+                    if (response.isSuccessful) {
+                        updateBooks(response.body().orEmpty())
+                    } else {
+                        setStatus("Lỗi tải sách (HTTP ${response.code()})")
+                    }
                 }
             }
             override fun onFailure(call: Call<List<Book>>, t: Throwable) {
-                setStatus("Loi ket noi: ${t.message}")
+                if (requestId == currentRequestId) {
+                    setStatus("Lỗi kết nối: ${t.message}")
+                }
             }
         })
     }
 
     private fun loadBooksByCategory(categoryId: String) {
-        setStatus("Dang tai...")
+        setStatus("Đang tải...")
+        val requestId = ++currentRequestId
         RetrofitClient.instance.getBooksByCategory(categoryId)
             .enqueue(object : Callback<List<Book>> {
                 override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
-                    if (response.isSuccessful) {
-                        updateBooks(response.body().orEmpty())
-                    } else {
-                        setStatus("Loi tai sach (HTTP ${response.code()})")
+                    if (requestId == currentRequestId) {
+                        if (response.isSuccessful) {
+                            updateBooks(response.body().orEmpty())
+                        } else {
+                            setStatus("Lỗi tải sách (HTTP ${response.code()})")
+                        }
                     }
                 }
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
-                    setStatus("Loi ket noi: ${t.message}")
+                    if (requestId == currentRequestId) {
+                        setStatus("Lỗi kếtt nối: ${t.message}")
+                    }
                 }
             })
     }
 
     private fun loadSearchResults(keyword: String) {
-        setStatus("Dang tim kiem \"$keyword\"...")
+        setStatus("Đang tìm kiếm \"$keyword\"...")
+        val requestId = ++currentRequestId
         RetrofitClient.instance.searchBooks(keyword)
             .enqueue(object : Callback<List<Book>> {
                 override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
-                    if (response.isSuccessful) {
-                        val results = response.body().orEmpty()
-                        updateBooks(results)
-                        if (results.isEmpty()) setStatus("Khong tim thay ket qua cho \"$keyword\"")
-                    } else {
-                        setStatus("Loi tim kiem (HTTP ${response.code()})")
+                    if (requestId == currentRequestId) {
+                        if (response.isSuccessful) {
+                            val results = response.body().orEmpty()
+                            updateBooks(results)
+                            if (results.isEmpty()) setStatus("Không tìm thấy kết quả cho \"$keyword\"")
+                        } else {
+                            setStatus("Lỗi tìm kiếm (HTTP ${response.code()})")
+                        }
                     }
                 }
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
-                    setStatus("Loi ket noi: ${t.message}")
+                    if (requestId == currentRequestId) {
+                        setStatus("Lỗi kết nối: ${t.message}")
+                    }
+                }
+            })
+    }
+
+    private fun loadAllBooksForFilter() {
+        setStatus("Dang tai...")
+        val requestId = ++currentRequestId
+        RetrofitClient.instance.getAllBooks()
+            .enqueue(object : Callback<List<Book>> {
+                override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
+                    if (requestId == currentRequestId) {
+                        if (response.isSuccessful) {
+                            updateBooks(response.body().orEmpty())
+                        } else {
+                            setStatus("Loi tai sach (HTTP ${response.code()})")
+                        }
+                    }
+                }
+                override fun onFailure(call: Call<List<Book>>, t: Throwable) {
+                    if (requestId == currentRequestId) {
+                        setStatus("Loi ket noi: ${t.message}")
+                    }
                 }
             })
     }
@@ -323,7 +381,7 @@ class BookCatalogActivity : AppCompatActivity() {
             btnPrev.isEnabled = false
             btnNext.isEnabled = false
             tvStatus.visibility = View.VISIBLE
-            tvStatus.text = "Khong co sach"
+            tvStatus.text = "Không có sách"
             return
         }
 
@@ -368,16 +426,25 @@ class BookCatalogActivity : AppCompatActivity() {
         // Apply button
         val btnApply: Button = dialogView.findViewById(R.id.btnDialogApplyFilter)
         btnApply.setOnClickListener {
-            applyFilters()
+            // Always load all books when applying filters to ensure correct filtering
+            // and avoid race conditions with pending network calls
+            selectedCategoryId = null
+            currentMode = "all"
+            searchQuery = ""
+            edtSearch.setText("")
+            refreshCategoryTabs()  // Update tabs immediately based on current filter state
+            loadAllBooksForFilter()
             dialog.dismiss()
         }
         
         // Clear button
         val btnClear: Button = dialogView.findViewById(R.id.btnDialogClearFilters)
         btnClear.setOnClickListener {
+            selectedCategoryId = null
             selectedCategoriesForFilter.clear()
             minRating = 0.0
             selectedYear = null
+            currentMode = "all"
             populateDialogFilters(dialogView)
         }
         

@@ -14,4 +14,19 @@
     <color name="auth_primary">#FF9A5A17</color>
     <color name="auth_primary_dark">#FF6D3D0B</color>
     <color name="auth_input_stroke">#FFE0CDB2</color>
+    <color name="text_primary">#FF1B1F24</color>
+    <color name="text_secondary">#FF3F4A57</color>
+    <color name="text_muted">#FF9099A4</color>
+    <color name="text_accent">#FF23408E</color>
+    <color name="text_input">#FF212121</color>
+    
+    <!-- Reader colors based on design system -->
+    <color name="reader_primary">#944A00</color>
+    <color name="reader_secondary">#FEA520</color>
+    <color name="reader_tertiary">#5D4037</color>
+    <color name="reader_neutral">#1D1B16</color>
+    <color name="reader_bg_cream">#F1E5C8</color>
+    <color name="reader_header_bg">#F5FFFFFF</color>
+    <color name="reader_text_primary">#1D1B16</color>
+    <color name="reader_text_secondary">#5D4037</color>
 </resources>

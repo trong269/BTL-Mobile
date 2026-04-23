@@ -16,13 +16,13 @@
 
         <ImageButton
             android:id="@+id/btnFavoriteListBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:src="@android:drawable/ic_media_previous"
-            android:tint="@android:color/white" />
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/back_round_bg"
+            android:contentDescription="Quay lại"
+            android:padding="5dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_back_arrow" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -34,7 +34,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Danh sach yeu thich"
+                android:text="Danh sách yêu thích"
                 android:textColor="@android:color/white"
                 android:textSize="21sp"
                 android:textStyle="bold" />
@@ -43,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Tat ca sach ban da danh dau yeu thich"
+                android:text="Tất cả sách bạn đã đánh dấu yêu thích"
                 android:textColor="#FFEED9C0"
                 android:textSize="13sp" />
         </LinearLayout>
@@ -60,7 +60,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tong sach yeu thich"
+            android:text="Tổng sách yêu thích"
             android:textColor="#7A5A39"
             android:textSize="13sp" />
 
@@ -92,7 +92,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:gravity="center"
-        android:text="Danh sach yeu thich dang trong. Ban hay them sach yeu thich tu trang chi tiet."
+        android:text="Danh sách yêu thích đang trống. Bạn hãy thêm sách yêu thích từ trang chi tiết sách."
         android:textColor="#886B4B"
         android:textSize="13sp"
         android:visibility="gone" />

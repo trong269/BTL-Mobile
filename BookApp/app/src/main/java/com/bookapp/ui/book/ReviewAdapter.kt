@@ -38,10 +38,10 @@ class ReviewAdapter : RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder>() {
         private val tvContent: TextView = itemView.findViewById(R.id.tvReviewContent)
 
         fun bind(review: Review) {
-            tvUser.text = review.userId?.take(8)?.let { "Nguoi dung #$it" } ?: "An danh"
+            tvUser.text = review.userId?.take(8)?.let { "Người dùng #$it" } ?: "Ẩn danh"
             tvDate.text = review.createdAt?.take(10) ?: ""
             ratingBar.rating = review.rating?.toFloat() ?: 0f
-            tvContent.text = review.review?.takeIf { it.isNotBlank() } ?: "(Khong co nhan xet)"
+            tvContent.text = review.review?.takeIf { it.isNotBlank() } ?: "(Không có nhận xét)"
         }
     }
 }

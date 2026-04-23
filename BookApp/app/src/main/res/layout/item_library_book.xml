@@ -16,7 +16,7 @@
             android:id="@+id/ivLibraryCover"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Book cover"
+            android:contentDescription="Ảnh bìa sách"
             android:scaleType="centerCrop" />
 
         <TextView
@@ -24,7 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Khong co anh"
+            android:text="Không có ảnh"
             android:textColor="#8A6C4A"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -40,7 +40,7 @@
             android:paddingTop="3dp"
             android:paddingRight="8dp"
             android:paddingBottom="3dp"
-            android:text="Yeu thich"
+            android:text="Yêu thích"
             android:textColor="@android:color/white"
             android:textSize="10sp"
             android:textStyle="bold" />

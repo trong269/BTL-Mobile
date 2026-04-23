@@ -43,8 +43,8 @@ class LibraryActivity : AppCompatActivity() {
         recyclerFavorites = findViewById(R.id.recyclerFavoriteBooks)
         recyclerRecents = findViewById(R.id.recyclerRecentBooks)
 
-        favoriteAdapter = LibraryBookAdapter("Yeu thich")
-        recentAdapter = LibraryBookAdapter("Doc gan day")
+        favoriteAdapter = LibraryBookAdapter("Yêu thích")
+        recentAdapter = LibraryBookAdapter("Đọc gần đây")
 
         recyclerFavorites.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)

@@ -27,7 +27,7 @@
                     android:layout_height="match_parent"
                     android:background="@drawable/home_header_bg"
                     android:scaleType="centerCrop"
-                    android:contentDescription="Anh bia sach" />
+                    android:contentDescription="Ảnh Bìa Sách" />
 
                 <!-- Gradient overlay -->
                 <View
@@ -43,7 +43,7 @@
                     android:layout_height="34dp"
                     android:layout_margin="12dp"
                     android:background="@drawable/back_round_bg"
-                    android:contentDescription="Quay lai"
+                    android:contentDescription="Quay lại"
                     android:padding="5dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_back_arrow" />
@@ -62,7 +62,7 @@
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="Danh gia"
+                        android:contentDescription="Đánh giá"
                         android:src="@drawable/ic_star_badge" />
 
                     <TextView
@@ -70,7 +70,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="3dp"
-                        android:textColor="#1B1F24"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -91,7 +91,7 @@
                     android:id="@+id/tvDetailTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="#1B1F24"
+                    android:textColor="@color/text_primary"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
@@ -100,7 +100,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textColor="#68707A"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
                 <TextView
@@ -111,7 +111,7 @@
                     android:background="@drawable/chip_unselected_bg"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="4dp"
-                    android:textColor="#23408E"
+                    android:textColor="@color/text_accent"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -135,14 +135,14 @@
                             android:id="@+id/tvDetailChapters"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#1B1F24"
+                            android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Chuong"
+                            android:text="Chương"
                             android:textColor="#9099A4"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -164,7 +164,7 @@
                             android:id="@+id/tvDetailPages"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#1B1F24"
+                            android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
@@ -172,7 +172,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Trang"
-                            android:textColor="#9099A4"
+                            android:textColor="@color/text_muted"
                             android:textSize="11sp" />
                     </LinearLayout>
 
@@ -193,14 +193,14 @@
                             android:id="@+id/tvDetailViews"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#1B1F24"
+                            android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Luot xem"
+                            android:text="Lượt xem"
                             android:textColor="#9099A4"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -219,7 +219,7 @@
                         android:layout_height="50dp"
                         android:layout_weight="2"
                         android:background="@drawable/btn_primary_bg"
-                        android:text="Doc Ngay"
+                        android:text="Đọc ngay"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         android:textSize="15sp"
@@ -232,9 +232,9 @@
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
                         android:background="@drawable/btn_outline_bg"
-                        android:text="@string/favorite_inactive"
+                        android:text="Thích"
                         android:textAllCaps="false"
-                        android:textColor="#23408E"
+                        android:textColor="@color/text_accent"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -245,9 +245,9 @@
                     android:layout_height="48dp"
                     android:layout_marginTop="10dp"
                     android:background="@drawable/btn_outline_bg"
-                    android:text="Danh Sach Chuong"
+                    android:text="Danh Sách Chương"
                     android:textAllCaps="false"
-                    android:textColor="#23408E"
+                    android:textColor="@color/text_accent"
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -268,7 +268,7 @@
                     android:layout_height="44dp"
                     android:layout_weight="1"
                     android:background="@drawable/btn_primary_bg"
-                    android:text="Gioi thieu"
+                    android:text="Giới thiệu"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="13sp"
@@ -280,9 +280,9 @@
                     android:layout_height="44dp"
                     android:layout_weight="1"
                     android:background="@android:color/transparent"
-                    android:text="Danh gia"
+                    android:text="Đánh giá"
                     android:textAllCaps="false"
-                    android:textColor="#68707A"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
                 <Button
@@ -291,9 +291,9 @@
                     android:layout_height="44dp"
                     android:layout_weight="1"
                     android:background="@android:color/transparent"
-                    android:text="Binh luan"
+                    android:text="Bình luận"
                     android:textAllCaps="false"
-                    android:textColor="#68707A"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -312,7 +312,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Mo ta"
+                    android:text="Mô tả"
                     android:textColor="#23408E"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -323,7 +323,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:lineSpacingExtra="4dp"
-                    android:textColor="#3F4A57"
+                    android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
 
@@ -349,7 +349,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Danh gia cua ban"
+                        android:text="Đánh giá của bạn"
                         android:textColor="#23408E"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -371,12 +371,12 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/input_bg"
-                        android:hint="Viet nhan xet cua ban..."
+                        android:hint="Viết đánh giá của bạn..."
                         android:inputType="textMultiLine"
                         android:minLines="2"
                         android:padding="10dp"
-                        android:textColor="#212121"
-                        android:textColorHint="#9099A4"
+                        android:textColor="@color/text_input"
+                        android:textColorHint="@color/text_muted"
                         android:textSize="13sp" />
 
                     <Button
@@ -385,7 +385,7 @@
                         android:layout_height="44dp"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/btn_primary_bg"
-                        android:text="Gui danh gia"
+                        android:text="Gửi đánh giá"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         android:textSize="14sp"
@@ -398,7 +398,7 @@
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="14dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Nhan xet tu nguoi doc"
+                    android:text="Nhận xét từ người đọc"
                     android:textColor="#1B1F24"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -415,7 +415,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:gravity="center"
-                    android:text="Chua co danh gia nao. Hay la nguoi dau tien!"
+                    android:text="Chưa có đánh giá nào. Hãy là người đánh giá đầu tiên!"
                     android:textColor="#9099A4"
                     android:textSize="13sp"
                     android:visibility="gone" />
@@ -446,11 +446,11 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:background="@drawable/input_bg"
-                        android:hint="Viet binh luan..."
+                        android:hint="Viết bình luận..."
                         android:inputType="text"
                         android:padding="10dp"
-                        android:textColor="#212121"
-                        android:textColorHint="#9099A4"
+                        android:textColor="@color/text_input"
+                        android:textColorHint="@color/text_muted"
                         android:textSize="13sp" />
 
                     <Button
@@ -460,7 +460,7 @@
                         android:layout_marginStart="8dp"
                         android:background="@drawable/btn_primary_bg"
                         android:paddingHorizontal="16dp"
-                        android:text="Gui"
+                        android:text="Gửi"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         android:textSize="14sp"
@@ -473,7 +473,7 @@
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginTop="14dp"
                     android:layout_marginBottom="6dp"
-                    android:text="Binh luan"
+                    android:text="Bình luận"
                     android:textColor="#1B1F24"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -490,7 +490,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:gravity="center"
-                    android:text="Chua co binh luan nao. Hay la nguoi dau tien!"
+                    android:text="Chưa có bình luận nào. Hãy là người đầu tiên!"
                     android:textColor="#9099A4"
                     android:textSize="13sp"
                     android:visibility="gone" />

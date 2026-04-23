@@ -16,13 +16,13 @@
 
         <ImageButton
             android:id="@+id/btnHistoryBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="Back"
-            android:padding="8dp"
-            android:src="@android:drawable/ic_media_previous"
-            android:tint="@android:color/white" />
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/back_round_bg"
+            android:contentDescription="Quay lại"
+            android:padding="5dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_back_arrow" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -34,7 +34,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Lich su doc"
+                android:text="Lịch sử đọc"
                 android:textColor="@android:color/white"
                 android:textSize="21sp"
                 android:textStyle="bold" />
@@ -43,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Chon muc can xoa bang checkbox giong lich su Google"
+                android:text="Chọn mục cần xóa bằng checkbox giống lịch sử Google"
                 android:textColor="#FFEED9C0"
                 android:textSize="13sp" />
         </LinearLayout>
@@ -66,7 +66,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tong muc lich su"
+                android:text="Tổng mục lịch sử"
                 android:textColor="#7A5A39"
                 android:textSize="13sp" />
 
@@ -95,7 +95,7 @@
             android:layout_height="42dp"
             android:layout_weight="1"
             android:background="@drawable/home_chip_bg"
-            android:text="Xoa lich su"
+            android:text="Xóa lịch sử"
             android:textAllCaps="false"
             android:textColor="@color/home_primary_dark"
             android:textStyle="bold" />
@@ -107,7 +107,7 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:background="@drawable/btn_primary_bg"
-            android:text="Xoa muc da chon"
+            android:text="Xóa mục đã chọn"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textStyle="bold"
@@ -120,7 +120,7 @@
         android:layout_height="40dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/btn_outline_bg"
-        android:text="Bo chon"
+        android:text="Bỏ chọn"
         android:textAllCaps="false"
         android:textColor="@color/home_primary_dark"
         android:textStyle="bold"
@@ -131,7 +131,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="#805F3D"
+        android:textColor="@color/text_secondary"
         android:textSize="12sp"
         android:visibility="gone" />
 
@@ -152,7 +152,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:gravity="center"
-        android:text="Lich su doc dang trong. Ban hay mo mot cuon sach de bat dau."
+        android:text="Lịch sử đọc đang trống. Bạn hãy mở một cuốn sách để bắt đầu."
         android:textColor="#886B4B"
         android:textSize="13sp"
         android:visibility="gone" />

@@ -19,7 +19,7 @@
             android:id="@+id/tvFeatureTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tinh nang"
+            android:text="Tính năng"
             android:textColor="#1B1F24"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Noi dung tinh nang"
+            android:text="Nội dung tính năng"
             android:textColor="#4E5762"
             android:textSize="15sp" />
 
@@ -39,7 +39,7 @@
             android:layout_height="48dp"
             android:layout_marginTop="18dp"
             android:background="@drawable/home_primary_button_bg"
-            android:text="Quay lai Home"
+            android:text="Quay lại Home"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textStyle="bold" />

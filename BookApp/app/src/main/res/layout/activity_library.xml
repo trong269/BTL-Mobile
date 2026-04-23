@@ -19,13 +19,13 @@
 
             <ImageButton
                 android:id="@+id/btnLibraryBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Quay lai"
-                android:padding="8dp"
-                android:src="@android:drawable/ic_media_previous"
-                android:tint="#6E3D0D" />
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/back_round_bg"
+                android:contentDescription="Quay lại"
+                android:padding="5dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_back_arrow" />
 
             <TextView
                 android:layout_width="0dp"
@@ -33,7 +33,7 @@
                 android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:fontFamily="serif"
-                android:text="Thu vien cua ban"
+                android:text="Thư viện của bạn"
                 android:textColor="#6E3D0D"
                 android:textSize="34sp"
                 android:textStyle="bold" />
@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="o"
-                android:textColor="#6E3D0D"
+                android:textColor="@color/text_accent"
                 android:textSize="18sp" />
         </LinearLayout>
 
@@ -55,7 +55,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Yeu thich"
+                android:text="Yêu thích"
                 android:textColor="#24190F"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -64,7 +64,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
-                android:text="Da doc"
+                android:text="Đã đọc"
                 android:textColor="#6A5A47"
                 android:textSize="16sp" />
 
@@ -72,7 +72,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
-                android:text="Lich su"
+                android:text="Lịch sử"
                 android:textColor="#6A5A47"
                 android:textSize="16sp" />
         </LinearLayout>
@@ -81,7 +81,7 @@
             android:layout_width="60dp"
             android:layout_height="2dp"
             android:layout_marginTop="6dp"
-            android:background="#8A4E14" />
+            android:background="@color/text_accent" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -100,7 +100,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="serif"
-                    android:text="Sach yeu thich"
+                    android:text="Sách yêu thích"
                     android:textColor="#24190F"
                     android:textSize="40sp"
                     android:textStyle="bold" />
@@ -111,16 +111,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="0"
-                    android:textColor="#6B3C10"
+                    android:textColor="@color/text_accent"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TUYEN CHON"
+                    android:text="TUYỂN CHỌN"
                     android:textAllCaps="true"
-                    android:textColor="#6E4C2E"
+                    android:textColor="@color/text_muted"
                     android:textSize="11sp" />
             </LinearLayout>
 
@@ -134,7 +134,7 @@
                 android:paddingTop="6dp"
                 android:paddingRight="12dp"
                 android:paddingBottom="6dp"
-                android:text="Xem tat ca"
+                android:text="Xem tất cả"
                 android:textColor="#6B3C10"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -152,7 +152,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Chua co sach yeu thich. Hay bam yeu thich trong chi tiet sach de them vao day."
+            android:text="Chưa có sách yêu thích. Hãy bấm yêu thích trong chi tiết sách để thêm vào đây."
             android:textColor="#886B4B"
             android:textSize="13sp" />
 
@@ -169,7 +169,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="serif"
-                android:text="Doc gan day"
+                android:text="Đọc gần đây"
                 android:textColor="#24190F"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -183,7 +183,7 @@
                 android:paddingTop="6dp"
                 android:paddingRight="12dp"
                 android:paddingBottom="6dp"
-                android:text="Xem tat ca"
+                android:text="Xem tất cả"
                 android:textColor="#6B3C10"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -195,7 +195,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="0"
-            android:textColor="#6B3C10"
+            android:textColor="@color/text_accent"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -211,7 +211,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Chua co lich su doc. Hay mo mot chuong de bat dau."
+            android:text="Chưa có lịch sử đọc. Hay mở một chương để bắt đầu."
             android:textColor="#886B4B"
             android:textSize="13sp" />
 
