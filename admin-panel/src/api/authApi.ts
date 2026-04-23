@@ -14,6 +14,7 @@ export interface UserProfile {
 }
 
 export interface LoginResponse {
+  token: string;
   user: {
     id: string;
     username: string;
@@ -27,7 +28,10 @@ export interface LoginResponse {
 
 export async function login(payload: LoginRequest) {
   const response = await axiosClient.post<LoginResponse>('/auth/login', payload);
-  const { user } = response.data;
+  const { token, user } = response.data;
+
+  localStorage.setItem('token', token);
+
   return {
     id: user.id,
     name: user.fullName || user.username,
@@ -38,6 +42,7 @@ export async function login(payload: LoginRequest) {
 }
 
 export async function logout() {
+  localStorage.removeItem('token');
   await axiosClient.post('/auth/logout');
 }
 
