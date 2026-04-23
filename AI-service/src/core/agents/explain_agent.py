@@ -42,11 +42,20 @@ class ExplainAgent(BaseBookAgent):
             logger.error("Failed to build ExplainAgent graph: %s", e)
             raise
 
-    def run(self, text: str, book_name: str = "", **kwargs) -> str:
+    def run(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ) -> str:
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }
@@ -61,11 +70,20 @@ class ExplainAgent(BaseBookAgent):
         except Exception as e:
             raise
 
-    async def arun(self, text: str, book_name: str = "", **kwargs) -> str:
+    async def arun(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ) -> str:
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }
@@ -80,11 +98,20 @@ class ExplainAgent(BaseBookAgent):
             logger.error("ExplainAgent.arun() failed: %s", e)
             raise
 
-    async def astream(self, text: str, book_name: str = "", **kwargs):
+    async def astream(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ):
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }

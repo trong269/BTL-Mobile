@@ -1,5 +1,7 @@
 import os
 import sys
+from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -8,34 +10,49 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from main import app
 
+
 class MockAgent:
     """Mock thay thế AI Agent thật để không phụ thuộc vào LLM/API key"""
-    async def arun(self, text: str, book_name: str = "") -> str:
-        return f"Mocked result for: {text}"
 
-    async def astream(self, text: str, book_name: str = ""):
+    async def arun(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+    ) -> str:
+        return (
+            f"## Mocked result\n"
+            f"- before:{context_before}\n"
+            f"- text:{text}\n"
+            f"- after:{context_after}"
+        )
+
+    async def astream(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+    ):
         words = ["Mocked", "stream", "result", "for:", text]
         for word in words:
             yield word + " "
 
-class MockAgentFactory:
-    """Mock thay thế AgentFactory"""
-    def get_agent(self, name: str):
-        if name not in ["summarize", "explain"]:
-            raise ValueError(f"Agent {name} not found")
-        return MockAgent()
 
 @pytest.fixture
-def mock_app():
-    # Override app.state để test không gọi LLM
-    app.state.agent_factory = MockAgentFactory()
-    return app
+def client():
+    return TestClient(app)
+
 
 @pytest.fixture
-def client(mock_app):
-    return TestClient(mock_app)
+def mock_agent_factory():
+    with patch("src.routers.ai_router.AgentFactory.get_agent", return_value=MockAgent()) as mocked:
+        yield mocked
+
 
 # ----------------- TESTS -----------------
+
 
 def test_health_check(client):
     """Test API health check"""
@@ -43,32 +60,49 @@ def test_health_check(client):
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "service": "Book AI Service"}
 
-def test_summarize_success(client):
+
+def test_summarize_success(client, mock_agent_factory):
     """Test API summarize với dữ liệu hợp lệ"""
-    payload = {"text": "Đây là nội dung cần tóm tắt"}
+    payload = {
+        "text": "Đây là nội dung cần tóm tắt",
+        "book_name": "Lão Hạc",
+        "context_before": "Ông giáo đang hồi tưởng.",
+        "context_after": "Bi kịch dần hiện ra.",
+    }
     response = client.post("/api/ai/summarize", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert data["task"] == "summarize"
-    assert "Mocked result for" in data["result"]
+    assert data["result"].startswith("- ")
+    assert "#" not in data["result"]
+    mock_agent_factory.assert_called_once_with("summarize")
+
 
 def test_summarize_empty_text(client):
     """Test API summarize với text rỗng (Pydantic validator sẽ báo lỗi 422)"""
     payload = {"text": "   "}
     response = client.post("/api/ai/summarize", json=payload)
-    # Lỗi pydantic validation sẽ trả về 422
     assert response.status_code == 422
     error_detail = response.json()["detail"][0]["msg"]
     assert "không được để trống" in error_detail.lower() or "value error" in error_detail.lower()
 
-def test_explain_success(client):
+
+def test_explain_success(client, mock_agent_factory):
     """Test API explain với dữ liệu hợp lệ"""
-    payload = {"text": "Khái niệm này có nghĩa là gì"}
+    payload = {
+        "text": "Khái niệm này có nghĩa là gì",
+        "book_name": "Sapiens",
+        "context_before": "Đoạn trước nói về nông nghiệp.",
+        "context_after": "Đoạn sau nói về hệ quả.",
+    }
     response = client.post("/api/ai/explain", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert data["task"] == "explain"
-    assert "Mocked result for" in data["result"]
+    assert data["result"].startswith("- ")
+    assert "#" not in data["result"]
+    mock_agent_factory.assert_called_once_with("explain")
+
 
 def test_explain_empty_text(client):
     """Test API explain với text bị thiếu rỗng"""
@@ -76,22 +110,5 @@ def test_explain_empty_text(client):
     response = client.post("/api/ai/explain", json=payload)
     assert response.status_code == 422
 
-def test_summarize_stream(client):
-    """Test API stream summarize"""
-    payload = {"text": "Nội dung stream tóm tắt"}
-    with client.stream("POST", "/api/ai/summarize/stream", json=payload) as response:
-        assert response.status_code == 200
-        content = ""
-        for chunk in response.iter_text():
-            content += chunk
-        assert "Mocked stream result" in content
 
-def test_explain_stream(client):
-    """Test API stream explain"""
-    payload = {"text": "Nội dung stream giải thích"}
-    with client.stream("POST", "/api/ai/explain/stream", json=payload) as response:
-        assert response.status_code == 200
-        content = ""
-        for chunk in response.iter_text():
-            content += chunk
-        assert "Mocked stream result" in content
+

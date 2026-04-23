@@ -17,6 +17,11 @@ class SummarizeAgent(BaseBookAgent):
     """
     Agent tóm tắt văn bản.
     Graph: START → summarize_node → END
+
+    BUG-13 FIX: This file was previously named 'sumarize_agent.py' (missing 'm').
+    The correct file is now 'summarize_agent.py'. The old file is kept to avoid
+    breaking any stale __pycache__ references during the transition but all new
+    imports should use this corrected filename.
     """
 
     def build_graph(self) -> CompiledStateGraph:
@@ -42,11 +47,20 @@ class SummarizeAgent(BaseBookAgent):
             logger.error("Failed to build SummarizeAgent graph: %s", e)
             raise
 
-    def run(self, text: str, book_name: str = "", **kwargs) -> str:
+    def run(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ) -> str:
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }
@@ -61,11 +75,20 @@ class SummarizeAgent(BaseBookAgent):
             logger.error("SummarizeAgent.run() failed: %s", e)
             raise
 
-    async def arun(self, text: str, book_name: str = "", **kwargs) -> str:
+    async def arun(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ) -> str:
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }
@@ -80,11 +103,20 @@ class SummarizeAgent(BaseBookAgent):
             logger.error("SummarizeAgent.arun() failed: %s", e)
             raise
 
-    async def astream(self, text: str, book_name: str = "", **kwargs):
+    async def astream(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ):
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }

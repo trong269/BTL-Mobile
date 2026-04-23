@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_reader_chapters_bg"
+    android:orientation="vertical"
+    android:paddingBottom="18dp">
+
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="18dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="12dp">
+
+        <FrameLayout
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/reader_ai_icon_bg"
+            android:foregroundGravity="center">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:contentDescription="AI"
+                android:src="@drawable/ic_ai_spark"
+                android:tint="#1E2B63" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvAiSheetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Phân tích AI"
+                android:textColor="#101828"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvAiSheetSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Xử lý theo ngữ cảnh cuốn sách đang đọc"
+                android:textColor="#667085"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnAiSheetClose"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Đóng"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="#1F6FB2" />
+    </LinearLayout>
+
+    <!-- ── Selected text preview ──────────────────────────────────────── -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:text="Đoạn bạn đã chọn"
+        android:textColor="#8A8F96"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvAiSelectedText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/reader_ai_selection_card_bg"
+        android:ellipsize="end"
+        android:maxLines="5"
+        android:padding="16dp"
+        android:textColor="#24324B"
+        android:textSize="15sp" />
+
+    <!-- ── Content states (loading / error / result) ──────────────────── -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp">
+
+        <!-- Loading -->
+        <LinearLayout
+            android:id="@+id/layoutAiLoading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/reader_ai_result_card_bg"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <ProgressBar
+                android:layout_width="36dp"
+                android:layout_height="36dp" />
+
+            <TextView
+                android:id="@+id/tvAiLoadingTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="AI đang phân tích..."
+                android:textColor="#101828"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvAiLoadingHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="Vui lòng đợi trong giây lát"
+                android:textColor="#667085"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Error -->
+        <LinearLayout
+            android:id="@+id/layoutAiError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/reader_ai_error_card_bg"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Không thể xử lý yêu cầu"
+                android:textColor="#9B1C1C"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvAiErrorMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="#7A271A"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Result
+             BUG-10 FIX: The old ScrollView used android:maxHeight which has NO effect
+             in a standard ScrollView (only works in some custom implementations). This
+             caused very long AI responses to push the action buttons completely off-screen.
+             Replaced with NestedScrollView at a fixed 280dp height so the result area is
+             always capped at that size and the buttons remain reachable.
+        -->
+        <LinearLayout
+            android:id="@+id/layoutAiResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/reader_ai_result_card_bg"
+            android:orientation="vertical"
+            android:padding="18dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kết quả"
+                android:textColor="#101828"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="280dp"
+                android:layout_marginTop="10dp"
+                android:overScrollMode="ifContentScrolls"
+                android:scrollbars="vertical">
+
+                <TextView
+                    android:id="@+id/tvAiResultContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="#24324B"
+                    android:textIsSelectable="true"
+                    android:textSize="15sp" />
+            </androidx.core.widget.NestedScrollView>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- ── Action buttons ─────────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/layoutAiActionRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnAiSecondary"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_outline_bg"
+            android:text="Đóng"
+            android:textAllCaps="false"
+            android:textColor="#9A5D1C"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="12dp"
+            android:layout_height="1dp" />
+
+        <!--
+            BUG-12 FIX: Primary button starts as GONE (not just disabled). This means
+            during the loading state users only see the Close button, avoiding the
+            confusing disabled "AI đang phân tích..." button text. The button becomes
+            VISIBLE in renderAiSuccessState() and renderAiErrorState().
+        -->
+        <Button
+            android:id="@+id/btnAiPrimary"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/btn_primary_bg"
+            android:text="Thử lại"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

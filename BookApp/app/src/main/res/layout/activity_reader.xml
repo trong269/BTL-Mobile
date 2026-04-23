@@ -22,7 +22,8 @@
             android:paddingTop="98dp"
             android:paddingEnd="24dp"
             android:paddingBottom="190dp"
-            android:textColor="@color/reader_text_primary"
+            android:textColor="#121212"
+            android:textIsSelectable="true"
             android:textSize="18sp" />
     </androidx.core.widget.NestedScrollView>
 
