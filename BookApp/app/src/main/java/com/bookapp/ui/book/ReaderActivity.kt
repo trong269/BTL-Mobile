@@ -1,5 +1,6 @@
 package com.bookapp.ui.book
 
+import io.noties.markwon.Markwon
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -202,12 +203,21 @@ class ReaderActivity : AppCompatActivity() {
 
     private var downX = 0f
     private var downY = 0f
+    private var downEventTime = 0L
     private var dragDetected = false
     private var pageSwipeHandled = false
     private var pageTurnAnimating = false
     private var isSelectionModeActive = false
     private var activeAiCall: Call<AITextResponse>? = null
     private val touchSlop by lazy { ViewConfiguration.get(this).scaledTouchSlop }
+    private val longPressTimeoutMs by lazy { ViewConfiguration.getLongPressTimeout().toLong() }
+
+    private var isCustomLongPress = false
+    private val selectionRunnable = Runnable {
+        isCustomLongPress = true
+        tvContent.performLongClick()
+        isCustomLongPress = false
+    }
 
     private var contentPaddingLeftDefault = 0
     private var contentPaddingTopDefault = 0
@@ -339,32 +349,60 @@ class ReaderActivity : AppCompatActivity() {
         }
 
         tvContent.setOnTouchListener { _, event ->
-            if (readingMode != ReadingMode.PAGE || isSelectionModeActive) {
+            // Always track DOWN/MOVE/UP for the 3-second custom selection delay
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = event.x
+                    downY = event.y
+                    downEventTime = event.eventTime
+                    
+                    tvContent.removeCallbacks(selectionRunnable)
+                    tvContent.postDelayed(selectionRunnable, 1000)
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = abs(event.x - downX)
+                    val dy = abs(event.y - downY)
+                    if (dx > touchSlop || dy > touchSlop) {
+                        tvContent.removeCallbacks(selectionRunnable)
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    tvContent.removeCallbacks(selectionRunnable)
+                }
+            }
+
+            if (readingMode != ReadingMode.PAGE) {
                 return@setOnTouchListener false
             }
 
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     stopAutoPlay()
-                    downX = event.x
-                    downY = event.y
                     pageSwipeHandled = false
                     false
                 }
 
                 MotionEvent.ACTION_MOVE -> false
 
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (isSelectionModeActive || pageTurnAnimating || pageSwipeHandled) {
+                MotionEvent.ACTION_CANCEL -> false
+
+                MotionEvent.ACTION_UP -> {
+                    if (isSelectionModeActive || pageTurnAnimating || pageSwipeHandled || hasValidTextSelection()) {
+                        return@setOnTouchListener false
+                    }
+
+                    val pressDuration = (event.eventTime - downEventTime).coerceAtLeast(0L)
+                    if (pressDuration >= longPressTimeoutMs) {
                         return@setOnTouchListener false
                     }
 
                     val dx = event.x - downX
                     val dy = event.y - downY
                     val moved = abs(dx) > touchSlop || abs(dy) > touchSlop
-                    val fromMiddle = downX >= tvContent.width * 0.2f && downX <= tvContent.width * 0.8f
-                    val isHorizontalSwipe =
-                        fromMiddle && abs(dx) > (touchSlop * 2) && abs(dx) > abs(dy)
+                    
+                    // Fix: Removed 'fromMiddle' restriction. Users often start swiping from
+                    // the edges of the screen, which caused 'fromMiddle' to be false and breaking the swipe.
+                    val isHorizontalSwipe = abs(dx) > (touchSlop * 2) && abs(dx) > abs(dy)
 
                     if (isHorizontalSwipe) {
                         pageSwipeHandled = true
@@ -386,6 +424,22 @@ class ReaderActivity : AppCompatActivity() {
                         return@setOnTouchListener true
                     }
 
+                    // Taps without movement: allow intuitive edge-tapping
+                    if (!controlsVisible) {
+                        val widthOffset = tvContent.width
+                        when {
+                            event.x > widthOffset * 0.75f -> {
+                                moveToNextPageOrChapterWithAnimation()
+                                return@setOnTouchListener true
+                            }
+                            event.x < widthOffset * 0.25f -> {
+                                moveToPrevPageOrChapterWithAnimation()
+                                return@setOnTouchListener true
+                            }
+                        }
+                    }
+
+                    // Tap in the middle area or close controls
                     if (controlsVisible) {
                         hideControls()
                     } else {
@@ -397,6 +451,23 @@ class ReaderActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
+        tvContent.setOnLongClickListener {
+            stopAutoPlay()
+            if (!isCustomLongPress) {
+                // Blocks the default 500ms long press so it doesn't trigger selection early
+                return@setOnLongClickListener true
+            }
+            // Allow the 3000ms custom long press
+            false
+        }
+    }
+
+    private fun hasValidTextSelection(): Boolean {
+        val text = tvContent.text ?: return false
+        val start = minOf(tvContent.selectionStart, tvContent.selectionEnd)
+        val end = maxOf(tvContent.selectionStart, tvContent.selectionEnd)
+        return start >= 0 && end > start && end <= text.length
     }
 
     private fun loadChaptersAndProgress() {
@@ -469,6 +540,11 @@ class ReaderActivity : AppCompatActivity() {
     private fun showChapter(index: Int, initialPercent: Int) {
         if (chapters.isEmpty() || index !in chapters.indices) return
 
+        // BUG-3 FIX: Always reset selection mode state when switching chapters.
+        // Auto-play or chapter navigation can switch chapters while action mode is active,
+        // leaving isSelectionModeActive=true which breaks SCROLL touch handling.
+        isSelectionModeActive = false
+        dragDetected = false
         clearTextSelection()
         currentChapterIndex = index
         val chapter = chapters[index]
@@ -663,10 +739,14 @@ class ReaderActivity : AppCompatActivity() {
             styleModeButton(btnModeScroll, readingMode == ReadingMode.SCROLL)
             styleModeButton(btnModePage, readingMode == ReadingMode.PAGE)
 
+            // BUG-9 FIX: Auto and Cream previously shared the same hex value 0xFFF1E5C8,
+            // causing both to appear selected simultaneously. "Auto" is now the warm cream
+            // preset (0xFFF1E5C8) while the manual "Cream" swatch uses a slightly richer
+            // 0xFFEDD9AA so the two can be independently highlighted.
             styleColorChip(colorAuto, backgroundColor == 0xFFF1E5C8.toInt())
             styleColorBlock(colorWhite, 0xFFFFFFFF.toInt(), backgroundColor == 0xFFFFFFFF.toInt())
             styleColorBlock(colorBlack, 0xFF1A1A1A.toInt(), backgroundColor == 0xFF1A1A1A.toInt())
-            styleColorBlock(colorCream, 0xFFF1E5C8.toInt(), backgroundColor == 0xFFF1E5C8.toInt())
+            styleColorBlock(colorCream, 0xFFEDD9AA.toInt(), backgroundColor == 0xFFEDD9AA.toInt())
             styleColorBlock(colorGray, 0xFFE9EDF2.toInt(), backgroundColor == 0xFFE9EDF2.toInt())
         }
 
@@ -743,7 +823,8 @@ class ReaderActivity : AppCompatActivity() {
             refreshSettingViews()
         }
         colorCream.setOnClickListener {
-            backgroundColor = 0xFFF1E5C8.toInt()
+            // BUG-9 FIX: Use distinct color so it doesn't collide with 'Auto'
+            backgroundColor = 0xFFEDD9AA.toInt()
             applyReaderAppearance()
             refreshSettingViews()
         }
@@ -805,7 +886,10 @@ class ReaderActivity : AppCompatActivity() {
     private fun calculateCurrentProgressPercent(): Int {
         if (readingMode == ReadingMode.PAGE) {
             if (chapterPages.isEmpty()) return 0
-            if (chapterPages.size == 1) return 100
+            // BUG-8 FIX: Single-page chapter should show 0% at start and 100% only when
+            // it's the last chapter. Returning 100 immediately confused users who just opened
+            // a short chapter and saw the progress bar already full.
+            if (chapterPages.size == 1) return if (currentPageIndex == 0) 0 else 100
             val ratio = currentPageIndex.toFloat() / chapterPages.lastIndex.toFloat()
             return (ratio * 100f).roundToInt().coerceIn(0, 100)
         }
@@ -921,11 +1005,16 @@ class ReaderActivity : AppCompatActivity() {
         }
 
         if (currentChapterIndex > 0) {
-            switchToChapter(currentChapterIndex - 1)
-            readerScroll.post {
-                currentPageIndex = chapterPages.lastIndex.coerceAtLeast(0)
-                renderCurrentPageOnly()
-            }
+            // BUG-2 FIX: Pass initialPercent=100 so that renderPageModeChapter() will
+            // position us at the LAST page of the previous chapter. Previously we used
+            // readerScroll.post{ currentPageIndex = chapterPages.lastIndex } which ran
+            // before the network call finished, reading stale chapterPages data.
+            stopAutoPlay()
+            currentChapterIndex -= 1
+            val chapterId = chapters[currentChapterIndex].id ?: return
+            updateReadingProgress(chapterId, 100, onSuccess = {
+                showChapter(currentChapterIndex, 100)
+            })
         }
     }
 
@@ -1165,9 +1254,9 @@ class ReaderActivity : AppCompatActivity() {
             }
 
             override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-                if (menu != null) {
-                    addAiSelectionMenuItem(menu)
-                }
+                // BUG-1 FIX: Do NOT add menu item here — onPrepareActionMode is called
+                // repeatedly (e.g. when selection changes) and can cause duplicate items
+                // on certain OEM variants. Menu is already populated in onCreateActionMode.
                 return false
             }
 
@@ -1192,6 +1281,9 @@ class ReaderActivity : AppCompatActivity() {
 
             override fun onDestroyActionMode(mode: ActionMode?) {
                 isSelectionModeActive = false
+                // BUG-7 FIX: Reset drag state so the next tap after closing selection
+                // does not mistakenly trigger hideControls() due to stale dragDetected=true
+                dragDetected = false
                 clearTextSelection()
             }
         }
@@ -1201,9 +1293,29 @@ class ReaderActivity : AppCompatActivity() {
         val existing = menu.findItem(MENU_ITEM_AI)
         if (existing != null) return
 
-        val item = menu.add(Menu.NONE, MENU_ITEM_AI, Menu.NONE, getString(R.string.reader_ai_action))
-        item.icon = AppCompatResources.getDrawable(this, R.drawable.ic_ai_spark)
-        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+        // Create a beautifully decorated, eye-catching text for the AI menu item
+        // because typical text selection toolbars can be boring or ignore icons.
+        val titleText = "✨ Phân tích AI"
+        val spannableTitle = android.text.SpannableString(titleText)
+        
+        // Make it bold
+        spannableTitle.setSpan(
+            android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+            0, titleText.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        // Add a striking purple/blue AI-themed color
+        spannableTitle.setSpan(
+            android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#6200EA")),
+            0, titleText.length, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        val item = menu.add(Menu.NONE, MENU_ITEM_AI, 0, spannableTitle)
+        
+        // Still provide the Drawable icon for OEMs that do render icons in ActionMode
+        item.icon = androidx.appcompat.content.res.AppCompatResources.getDrawable(this, R.drawable.ic_ai_spark)
+        
+        // Force it to always show up directly on the bar so the user doesn't have to open the overflow (...) menu
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS or MenuItem.SHOW_AS_ACTION_WITH_TEXT)
     }
 
     private fun buildAiRequestFromSelection(): ReaderAiRequest? {
@@ -1291,6 +1403,13 @@ class ReaderActivity : AppCompatActivity() {
             activeAiCall?.cancel()
             activeAiCall = null
         }
+        // BUG-11 FIX: When user long-presses to copy the AI result text, the soft keyboard
+        // may appear and cause the BottomSheetDialog to shrink/collapse. Setting
+        // SOFT_INPUT_ADJUST_RESIZE tells the window to resize its content area instead of
+        // pushing the sheet upward, keeping the sheet fully expanded.
+        dialog.window?.setSoftInputMode(
+            android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
         dialog.show()
         dialog.findViewById<View>(MaterialR.id.design_bottom_sheet)
             ?.setBackgroundResource(android.R.color.transparent)
@@ -1379,9 +1498,11 @@ class ReaderActivity : AppCompatActivity() {
         views.secondaryButton.setText(R.string.reader_ai_button_close)
         views.secondaryButton.isEnabled = true
 
-        views.primaryButton.setText(R.string.reader_ai_loading_title)
+        // BUG-12 FIX: Previously showed "AI đang phân tích..." as button text which was
+        // confusing (disabled button looks like a broken actionable element). Now hidden
+        // until a result/error state is available.
+        views.primaryButton.isVisible = false
         views.primaryButton.isEnabled = false
-        views.primaryButton.alpha = 0.55f
         views.primaryButton.setOnClickListener(null)
     }
 
@@ -1392,11 +1513,16 @@ class ReaderActivity : AppCompatActivity() {
         views.loadingLayout.isVisible = false
         views.errorLayout.isVisible = false
         views.resultLayout.isVisible = true
-        views.resultContent.text = result
+        
+        // Render markdown with Markwon
+        val markwon = Markwon.create(this)
+        markwon.setMarkdown(views.resultContent, result)
 
         views.secondaryButton.setText(R.string.reader_ai_button_close)
         views.secondaryButton.isEnabled = true
 
+        // BUG-12 FIX: Make primary button visible again now that we have a result
+        views.primaryButton.isVisible = true
         views.primaryButton.alpha = 1f
         views.primaryButton.isEnabled = true
         views.primaryButton.setText(R.string.reader_ai_button_copy)
@@ -1420,6 +1546,8 @@ class ReaderActivity : AppCompatActivity() {
         views.secondaryButton.setText(R.string.reader_ai_button_close)
         views.secondaryButton.isEnabled = true
 
+        // BUG-12 FIX: Make primary button visible again in error state
+        views.primaryButton.isVisible = true
         views.primaryButton.alpha = 1f
         views.primaryButton.isEnabled = true
         views.primaryButton.setText(R.string.reader_ai_button_retry)
@@ -1427,8 +1555,8 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun normalizeAiResultText(raw: String): String {
+        // We no longer strip formatting, let Markwon render it.
         return raw
-            .replace("**", "")
             .replace(Regex("\\n{3,}"), "\n\n")
             .trim()
     }

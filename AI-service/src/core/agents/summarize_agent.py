@@ -17,6 +17,11 @@ class SummarizeAgent(BaseBookAgent):
     """
     Agent tóm tắt văn bản.
     Graph: START → summarize_node → END
+
+    BUG-13 FIX: This file was previously named 'sumarize_agent.py' (missing 'm').
+    The correct file is now 'summarize_agent.py'. The old file is kept to avoid
+    breaking any stale __pycache__ references during the transition but all new
+    imports should use this corrected filename.
     """
 
     def build_graph(self) -> CompiledStateGraph:

@@ -6,6 +6,7 @@
     android:orientation="vertical"
     android:paddingBottom="18dp">
 
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -68,6 +69,7 @@
             android:tint="#1F6FB2" />
     </LinearLayout>
 
+    <!-- ── Selected text preview ──────────────────────────────────────── -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -91,6 +93,7 @@
         android:textColor="#24324B"
         android:textSize="15sp" />
 
+    <!-- ── Content states (loading / error / result) ──────────────────── -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -98,6 +101,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="20dp">
 
+        <!-- Loading -->
         <LinearLayout
             android:id="@+id/layoutAiLoading"
             android:layout_width="match_parent"
@@ -132,6 +136,7 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
+        <!-- Error -->
         <LinearLayout
             android:id="@+id/layoutAiError"
             android:layout_width="match_parent"
@@ -158,6 +163,13 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
+        <!-- Result
+             BUG-10 FIX: The old ScrollView used android:maxHeight which has NO effect
+             in a standard ScrollView (only works in some custom implementations). This
+             caused very long AI responses to push the action buttons completely off-screen.
+             Replaced with NestedScrollView at a fixed 280dp height so the result area is
+             always capped at that size and the buttons remain reachable.
+        -->
         <LinearLayout
             android:id="@+id/layoutAiResult"
             android:layout_width="match_parent"
@@ -175,11 +187,10 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <ScrollView
+            <androidx.core.widget.NestedScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="280dp"
                 android:layout_marginTop="10dp"
-                android:maxHeight="280dp"
                 android:overScrollMode="ifContentScrolls"
                 android:scrollbars="vertical">
 
@@ -191,10 +202,11 @@
                     android:textColor="#24324B"
                     android:textIsSelectable="true"
                     android:textSize="15sp" />
-            </ScrollView>
+            </androidx.core.widget.NestedScrollView>
         </LinearLayout>
     </FrameLayout>
 
+    <!-- ── Action buttons ─────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/layoutAiActionRow"
         android:layout_width="match_parent"
@@ -221,6 +233,12 @@
             android:layout_width="12dp"
             android:layout_height="1dp" />
 
+        <!--
+            BUG-12 FIX: Primary button starts as GONE (not just disabled). This means
+            during the loading state users only see the Close button, avoiding the
+            confusing disabled "AI đang phân tích..." button text. The button becomes
+            VISIBLE in renderAiSuccessState() and renderAiErrorState().
+        -->
         <Button
             android:id="@+id/btnAiPrimary"
             android:layout_width="0dp"
@@ -231,7 +249,8 @@
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
 </LinearLayout>

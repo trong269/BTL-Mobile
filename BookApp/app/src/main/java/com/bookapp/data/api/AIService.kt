@@ -8,6 +8,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
+import java.util.concurrent.TimeUnit
 
 data class AITextRequest(
     val text: String,
@@ -35,8 +36,15 @@ object AIRetrofitClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    // BUG-6 FIX: Add explicit timeouts so that slow LLM / network conditions do not
+    // leave the UI frozen on the loading spinner indefinitely. The AI service can take
+    // up to ~15 s for a cold-start LLM call, so we use a generous 45 s read timeout
+    // while keeping the connect timeout at 30 s for faster failure on unreachable hosts.
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(45, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
     val instance: AIService by lazy {

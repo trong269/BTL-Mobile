@@ -15,8 +15,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "BASE_URL", "\"http://192.168.1.34:8080/\"")
-        buildConfigField("String", "AI_BASE_URL", "\"http://192.168.1.34:8000/\"")
+        buildConfigField("String", "BASE_URL", "\"http://192.168.1.23:8080/\"")
+        buildConfigField("String", "AI_BASE_URL", "\"http://192.168.1.23:8000/\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -65,4 +65,6 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("io.noties.markwon:core:4.6.2")
 }

@@ -1,5 +1,6 @@
 from src.core.agents.base import BaseBookAgent
-from src.core.agents.sumarize_agent import SummarizeAgent
+# BUG-13 FIX: Import from the corrected filename 'summarize_agent' (was 'sumarize_agent')
+from src.core.agents.summarize_agent import SummarizeAgent
 from src.core.agents.explain_agent import ExplainAgent
 from src.utils.logging import get_logger
 
