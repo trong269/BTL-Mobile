@@ -28,9 +28,14 @@ class LoginActivity : AppCompatActivity() {
         val password = findViewById<EditText>(R.id.edtPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
         val tvGoToRegister = findViewById<TextView>(R.id.tvGoToRegister)
+        val tvForgotPassword = findViewById<TextView>(R.id.tvForgotPassword)
 
         tvGoToRegister.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
+        }
+
+        tvForgotPassword.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
 
         btnLogin.setOnClickListener {
@@ -70,6 +75,18 @@ class LoginActivity : AppCompatActivity() {
                                     putString("fullName", user.fullName ?: "")
                                     putString("role", user.role)
                                     apply()
+                                }
+                                
+                                // Fetch FCM Token
+                                com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        val token = task.result
+                                        RetrofitClient.instance.updateFcmToken(user.id, com.bookapp.data.api.UpdateFcmTokenRequest(token))
+                                            .enqueue(object : Callback<com.bookapp.data.api.MessageResponse> {
+                                                override fun onResponse(call: Call<com.bookapp.data.api.MessageResponse>, response: Response<com.bookapp.data.api.MessageResponse>) {}
+                                                override fun onFailure(call: Call<com.bookapp.data.api.MessageResponse>, t: Throwable) {}
+                                            })
+                                    }
                                 }
                             }
 

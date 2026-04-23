@@ -52,4 +52,11 @@ public class UserController {
         userService.changePassword(userId, request);
         return Map.of("message", "Password changed successfully");
     }
+
+    @PutMapping("/{userId}/fcm-token")
+    public Map<String, String> updateFcmToken(@PathVariable String userId, @RequestBody Map<String, String> request) {
+        String token = request.get("fcmToken");
+        userService.updateFcmToken(userId, token);
+        return Map.of("message", "FCM Token updated successfully");
+    }
 }
