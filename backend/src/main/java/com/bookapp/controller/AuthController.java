@@ -6,6 +6,8 @@ import com.bookapp.dto.RegisterRequest;
 import com.bookapp.model.User;
 import com.bookapp.service.AuthService;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/auth")
