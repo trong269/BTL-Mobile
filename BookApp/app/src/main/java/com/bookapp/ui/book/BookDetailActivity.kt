@@ -51,7 +51,6 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var tvCategory: TextView
     private lateinit var tvRatingBadge: TextView
     private lateinit var tvChapters: TextView
-    private lateinit var tvPages: TextView
     private lateinit var tvViews: TextView
     private lateinit var tvDescription: TextView
     private lateinit var btnFavorite: Button
@@ -119,7 +118,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvCategory = findViewById(R.id.tvDetailCategory)
         tvRatingBadge = findViewById(R.id.tvDetailRatingBadge)
         tvChapters = findViewById(R.id.tvDetailChapters)
-        tvPages = findViewById(R.id.tvDetailPages)
         tvViews = findViewById(R.id.tvDetailViews)
         tvDescription = findViewById(R.id.tvDetailDescription)
         btnFavorite = findViewById(R.id.btnFavorite)
@@ -221,7 +219,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvCategory.text = book.categoryId?.take(8) ?: "Chưa phân loại"
         tvRatingBadge.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
         tvChapters.text = "${book.totalChapters ?: 0}"
-        tvPages.text = "${book.totalPages ?: 0}"
         tvViews.text = "${book.views ?: 0}"
         tvDescription.text = book.description?.takeIf { it.isNotBlank() }?.let { decodeHtmlDescription(it) } ?: "(Chưa có mô tả)"
 

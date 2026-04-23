@@ -77,6 +77,8 @@
             </FrameLayout>
 
             <!-- Card thông tin sách -->
+
+            <!-- Tab: Giới thiệu / Đánh giá / Bình luận -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -151,30 +153,30 @@
                         android:layout_width="10dp"
                         android:layout_height="1dp" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/chip_unselected_bg"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingVertical="10dp">
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="0dp"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_weight="1"-->
+<!--                        android:background="@drawable/chip_unselected_bg"-->
+<!--                        android:gravity="center"-->
+<!--                        android:orientation="vertical"-->
+<!--                        android:paddingVertical="10dp">-->
 
-                        <TextView
-                            android:id="@+id/tvDetailPages"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/text_primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+<!--                        <TextView-->
+<!--                            android:id="@+id/tvDetailPages"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:textColor="@color/text_primary"-->
+<!--                            android:textSize="18sp"-->
+<!--                            android:textStyle="bold" />-->
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Trang"
-                            android:textColor="@color/text_muted"
-                            android:textSize="11sp" />
-                    </LinearLayout>
+<!--                        <TextView-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:text="Trang"-->
+<!--                            android:textColor="@color/text_muted"-->
+<!--                            android:textSize="11sp" />-->
+<!--                    </LinearLayout>-->
 
                     <View
                         android:layout_width="10dp"
@@ -252,7 +254,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Tab: Giới thiệu / Đánh giá / Bình luận -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
