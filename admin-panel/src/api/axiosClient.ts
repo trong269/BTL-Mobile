@@ -11,6 +11,17 @@ export const axiosClient = axios.create({
   withCredentials: true,
 });
 
+axiosClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -19,6 +30,7 @@ axiosClient.interceptors.response.use(
     const isLoginRequest = typeof requestUrl === 'string' && requestUrl.includes('/auth/login');
 
     if (status === 401 && !isLoginRequest) {
+      localStorage.removeItem('token');
       toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';

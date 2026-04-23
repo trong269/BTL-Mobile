@@ -57,13 +57,15 @@ class LoginActivity : AppCompatActivity() {
 
                         if (response.isSuccessful) {
                             val body = response.body()
+                            val token = body?.token
                             val role = body?.role
                             val user = body?.user
 
                             // Lưu thông tin user vào SharedPreferences
-                            if (user != null) {
+                            if (user != null && token != null) {
                                 val prefs = getSharedPreferences("BookAppPrefs", MODE_PRIVATE)
                                 prefs.edit().apply {
+                                    putString("token", token)
                                     putString("userId", user.id)
                                     putString("username", user.username)
                                     putString("email", user.email)
@@ -73,11 +75,7 @@ class LoginActivity : AppCompatActivity() {
                                 }
                             }
 
-                            if (role == "ADMIN") {
-                                startActivity(Intent(this@LoginActivity, AdminActivity::class.java))
-                            } else {
-                                startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
-                            }
+                            startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
                             finish()
                         } else {
                             val errorText = runCatching { response.errorBody()?.string() }.getOrNull()

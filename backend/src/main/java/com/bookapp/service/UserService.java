@@ -6,6 +6,7 @@ import com.bookapp.dto.UpdateProfileRequest;
 import com.bookapp.model.User;
 import com.bookapp.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -16,9 +17,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
     public List<User> findAll() {
@@ -56,7 +59,7 @@ public class UserService {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
         user.setFullName(valueOrEmpty(request.getFullName()));
         user.setAvatar(valueOrEmpty(request.getAvatar()));
         user.setRole(valueOrDefault(request.getRole(), "USER"));
@@ -91,7 +94,7 @@ public class UserService {
         user.setUsername(username);
         user.setEmail(email);
         if (!password.isEmpty()) {
-            user.setPassword(password);
+            user.setPassword(passwordEncoder.encode(password));
         }
         user.setFullName(valueOrEmpty(request.getFullName()));
         user.setAvatar(valueOrEmpty(request.getAvatar()));
@@ -137,11 +140,11 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters");
         }
 
-        if (!user.getPassword().equals(currentPassword)) {
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
         }
 
-        user.setPassword(newPassword);
+        user.setPassword(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
     }
