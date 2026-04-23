@@ -6,6 +6,8 @@ import operator
 class ExplainAgentState(TypedDict):
     text: str
     book_name: str
+    context_before: str
+    context_after: str
     messages: Annotated[list[BaseMessage], operator.add]
     result: str
 
@@ -13,12 +15,7 @@ class ExplainAgentState(TypedDict):
 class SummarizeAgentState(TypedDict):
     text: str
     book_name: str
-    messages: Annotated[list[BaseMessage], operator.add]
-    result: str
-
-class VisionAgentState(TypedDict):
-    question: str
-    image_url: str
-    book_name: str
+    context_before: str
+    context_after: str
     messages: Annotated[list[BaseMessage], operator.add]
     result: str

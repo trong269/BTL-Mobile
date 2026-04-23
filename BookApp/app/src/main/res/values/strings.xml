@@ -1,1 +1,24 @@
-<resources><string name='app_name'>BookApp</string><string name='favorite_inactive'>Thích</string><string name='favorite_active'>Yêu thích</string></resources>
+<resources>
+    <string name="app_name">BookApp</string>
+    <string name="favorite_inactive">Thích</string>
+    <string name="favorite_active">Yêu thích</string>
+    <string name="reader_ai_action">AI</string>
+    <string name="reader_ai_sheet_subtitle">Xử lý theo ngữ cảnh cuốn sách đang đọc</string>
+    <string name="reader_ai_selection_label">Đoạn bạn đã chọn</string>
+    <string name="reader_ai_result_label">Kết quả</string>
+    <string name="reader_ai_loading_title">AI đang phân tích...</string>
+    <string name="reader_ai_loading_explain_hint">Đang giải thích ngắn gọn đoạn bạn đã chọn</string>
+    <string name="reader_ai_loading_summarize_hint">Đang tóm tắt ý chính của đoạn bạn đã chọn</string>
+    <string name="reader_ai_title_explain">Giải thích nhanh</string>
+    <string name="reader_ai_title_summarize">Tóm tắt nhanh</string>
+    <string name="reader_ai_button_close">Đóng</string>
+    <string name="reader_ai_button_copy">Sao chép</string>
+    <string name="reader_ai_button_retry">Thử lại</string>
+    <string name="reader_ai_no_selection">Hãy chọn chữ hoặc đoạn văn trước khi dùng AI</string>
+    <string name="reader_ai_invalid_selection">Đoạn bôi đen này chưa đủ ngữ cảnh để AI xử lý</string>
+    <string name="reader_ai_error_title">Không thể xử lý yêu cầu</string>
+    <string name="reader_ai_error_network">Không thể kết nối AI service. Kiểm tra mạng hoặc địa chỉ máy chủ rồi thử lại.</string>
+    <string name="reader_ai_error_server">AI đang bận hoặc chưa xử lý được đoạn này. Vui lòng thử lại sau.</string>
+    <string name="reader_ai_error_unknown">Không thể xử lý yêu cầu AI lúc này.</string>
+    <string name="reader_ai_copied">Đã sao chép kết quả AI</string>
+</resources>

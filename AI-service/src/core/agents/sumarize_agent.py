@@ -42,11 +42,20 @@ class SummarizeAgent(BaseBookAgent):
             logger.error("Failed to build SummarizeAgent graph: %s", e)
             raise
 
-    def run(self, text: str, book_name: str = "", **kwargs) -> str:
+    def run(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ) -> str:
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }
@@ -61,11 +70,20 @@ class SummarizeAgent(BaseBookAgent):
             logger.error("SummarizeAgent.run() failed: %s", e)
             raise
 
-    async def arun(self, text: str, book_name: str = "", **kwargs) -> str:
+    async def arun(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ) -> str:
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }
@@ -80,11 +98,20 @@ class SummarizeAgent(BaseBookAgent):
             logger.error("SummarizeAgent.arun() failed: %s", e)
             raise
 
-    async def astream(self, text: str, book_name: str = "", **kwargs):
+    async def astream(
+        self,
+        text: str,
+        book_name: str = "",
+        context_before: str = "",
+        context_after: str = "",
+        **kwargs,
+    ):
         try:
             initial_state = {
                 "text": text,
                 "book_name": book_name,
+                "context_before": context_before,
+                "context_after": context_after,
                 "messages": [],
                 "result": "",
             }

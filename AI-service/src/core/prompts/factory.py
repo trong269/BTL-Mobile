@@ -34,7 +34,6 @@ class PromptFactory:
     _PROMPT_FILES: dict[str, str] = {
         "summarize":      "summarize.md",
         "explain":        "explanation.md",
-        "analyze_image":  "analyze_image.md",
     }
     
     @staticmethod
@@ -56,7 +55,3 @@ class PromptFactory:
     @staticmethod
     def get_explain_prompt() -> SystemMessage:
         return PromptFactory.get("explain")
-
-    @staticmethod
-    def get_analyze_image_prompt() -> SystemMessage:
-        return PromptFactory.get("analyze_image")

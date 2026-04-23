@@ -1,21 +1,31 @@
 package com.bookapp.ui.book
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
 import android.text.Layout
+import android.text.Selection
+import android.text.Spannable
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.ColorUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -23,6 +33,9 @@ import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookapp.R
+import com.bookapp.data.api.AITextRequest
+import com.bookapp.data.api.AITextResponse
+import com.bookapp.data.api.AIRetrofitClient
 import com.bookapp.data.api.EnsureReadingProgressRequest
 import com.bookapp.data.api.RetrofitClient
 import com.bookapp.data.api.UpdateReadingProgressRequest
@@ -31,6 +44,7 @@ import com.bookapp.data.model.ReadingProgress
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.R as MaterialR
+import java.io.IOException
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import retrofit2.Call
@@ -43,15 +57,55 @@ class ReaderActivity : AppCompatActivity() {
         SCROLL, PAGE
     }
 
+    private enum class AiTaskType(
+        val titleRes: Int,
+        val loadingHintRes: Int
+    ) {
+        EXPLAIN(
+            R.string.reader_ai_title_explain,
+            R.string.reader_ai_loading_explain_hint
+        ),
+        SUMMARIZE(
+            R.string.reader_ai_title_summarize,
+            R.string.reader_ai_loading_summarize_hint
+        )
+    }
+
     private data class FontOption(
         val label: String,
         val family: String
+    )
+
+    private data class ReaderAiRequest(
+        val task: AiTaskType,
+        val selectedText: String,
+        val displayText: String,
+        val bookName: String,
+        val contextBefore: String,
+        val contextAfter: String
+    )
+
+    private data class AiSheetViews(
+        val title: TextView,
+        val subtitle: TextView,
+        val selectedText: TextView,
+        val loadingLayout: View,
+        val loadingTitle: TextView,
+        val loadingHint: TextView,
+        val errorLayout: View,
+        val errorMessage: TextView,
+        val resultLayout: View,
+        val resultContent: TextView,
+        val secondaryButton: Button,
+        val primaryButton: Button
     )
 
     companion object {
         const val EXTRA_BOOK_ID = "extra_book_id"
         const val EXTRA_BOOK_TITLE = "extra_book_title"
         const val EXTRA_TARGET_CHAPTER_ID = "extra_target_chapter_id"
+        private const val MENU_ITEM_AI = 7001
+        private const val AI_EXPLAIN_WORD_THRESHOLD = 12
     }
 
     private lateinit var topBar: View
@@ -153,6 +207,8 @@ class ReaderActivity : AppCompatActivity() {
     private var dragDetected = false
     private var pageSwipeHandled = false
     private var pageTurnAnimating = false
+    private var isSelectionModeActive = false
+    private var activeAiCall: Call<AITextResponse>? = null
     private val touchSlop by lazy { ViewConfiguration.get(this).scaledTouchSlop }
 
     private var contentPaddingLeftDefault = 0
@@ -185,6 +241,7 @@ class ReaderActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         stopAutoPlay()
+        activeAiCall?.cancel()
         persistCurrentProgress()
     }
 
@@ -217,6 +274,8 @@ class ReaderActivity : AppCompatActivity() {
         seekChapterProgress.max = 100
         seekChapterProgress.progress = 0
         seekChapterProgress.setOnTouchListener { _, _ -> true }
+        tvContent.setTextIsSelectable(true)
+        setupSelectionActions()
         updatePlayButtonIcon()
     }
 
@@ -250,58 +309,10 @@ class ReaderActivity : AppCompatActivity() {
             toggleAutoPlay()
         }
 
-        val touchListener = View.OnTouchListener { _, event ->
-            if (readingMode == ReadingMode.PAGE) {
-                when (event.actionMasked) {
-                    MotionEvent.ACTION_DOWN -> {
-                        stopAutoPlay()
-                        downX = event.x
-                        downY = event.y
-                        pageSwipeHandled = false
-                        return@OnTouchListener true
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        // Disable vertical scroll in page mode.
-                        return@OnTouchListener true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        if (pageSwipeHandled || pageTurnAnimating) {
-                            return@OnTouchListener true
-                        }
-
-                        val dx = event.x - downX
-                        val dy = event.y - downY
-                        val moved = abs(dx) > touchSlop || abs(dy) > touchSlop
-                        val fromMiddle = downX >= tvContent.width * 0.2f && downX <= tvContent.width * 0.8f
-                        val isHorizontalSwipe = fromMiddle && abs(dx) > (touchSlop * 2) && abs(dx) > abs(dy)
-
-                        if (isHorizontalSwipe) {
-                            pageSwipeHandled = true
-                            if (dx < 0) {
-                                moveToNextPageOrChapterWithAnimation()
-                            } else {
-                                moveToPrevPageOrChapterWithAnimation()
-                            }
-                            if (moved && controlsVisible) {
-                                hideControls()
-                            }
-                        } else if (moved) {
-                            if (controlsVisible) {
-                                hideControls()
-                            }
-                        } else {
-                            if (controlsVisible) {
-                                hideControls()
-                            } else {
-                                showControlsAndRefresh()
-                            }
-                        }
-                        return@OnTouchListener true
-                    }
-                }
-                return@OnTouchListener true
+        readerScroll.setOnTouchListener { _, event ->
+            if (readingMode == ReadingMode.PAGE || isSelectionModeActive) {
+                return@setOnTouchListener false
             }
-
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     stopAutoPlay()
@@ -329,8 +340,65 @@ class ReaderActivity : AppCompatActivity() {
             false
         }
 
-        readerScroll.setOnTouchListener(touchListener)
-        tvContent.setOnTouchListener(touchListener)
+        tvContent.setOnTouchListener { _, event ->
+            if (readingMode != ReadingMode.PAGE || isSelectionModeActive) {
+                return@setOnTouchListener false
+            }
+
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    stopAutoPlay()
+                    downX = event.x
+                    downY = event.y
+                    pageSwipeHandled = false
+                    false
+                }
+
+                MotionEvent.ACTION_MOVE -> false
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (isSelectionModeActive || pageTurnAnimating || pageSwipeHandled) {
+                        return@setOnTouchListener false
+                    }
+
+                    val dx = event.x - downX
+                    val dy = event.y - downY
+                    val moved = abs(dx) > touchSlop || abs(dy) > touchSlop
+                    val fromMiddle = downX >= tvContent.width * 0.2f && downX <= tvContent.width * 0.8f
+                    val isHorizontalSwipe =
+                        fromMiddle && abs(dx) > (touchSlop * 2) && abs(dx) > abs(dy)
+
+                    if (isHorizontalSwipe) {
+                        pageSwipeHandled = true
+                        if (dx < 0) {
+                            moveToNextPageOrChapterWithAnimation()
+                        } else {
+                            moveToPrevPageOrChapterWithAnimation()
+                        }
+                        if (moved && controlsVisible) {
+                            hideControls()
+                        }
+                        return@setOnTouchListener true
+                    }
+
+                    if (moved) {
+                        if (controlsVisible) {
+                            hideControls()
+                        }
+                        return@setOnTouchListener true
+                    }
+
+                    if (controlsVisible) {
+                        hideControls()
+                    } else {
+                        showControlsAndRefresh()
+                    }
+                    true
+                }
+
+                else -> false
+            }
+        }
     }
 
     private fun loadChaptersAndProgress() {
@@ -403,6 +471,7 @@ class ReaderActivity : AppCompatActivity() {
     private fun showChapter(index: Int, initialPercent: Int) {
         if (chapters.isEmpty() || index !in chapters.indices) return
 
+        clearTextSelection()
         currentChapterIndex = index
         val chapter = chapters[index]
         currentChapterRawText = chapter.content?.takeIf { it.isNotBlank() } ?: "(Chương này chưa có nội dung)"
@@ -787,10 +856,12 @@ class ReaderActivity : AppCompatActivity() {
 
     private fun renderCurrentPageOnly() {
         if (chapterPages.isEmpty()) {
+            clearTextSelection()
             tvContent.text = currentChapterRawText
             return
         }
         currentPageIndex = currentPageIndex.coerceIn(0, chapterPages.lastIndex)
+        clearTextSelection()
         tvContent.text = chapterPages[currentPageIndex]
         readerScroll.scrollTo(0, 0)
         refreshProgressUi(calculateCurrentProgressPercent())
@@ -1049,6 +1120,7 @@ class ReaderActivity : AppCompatActivity() {
                 contentPaddingBottomDefault
             )
             readerScroll.isNestedScrollingEnabled = true
+            clearTextSelection()
             tvContent.text = currentChapterRawText
             val percent = percentHint ?: calculateCurrentProgressPercent()
             readerScroll.post {
@@ -1082,5 +1154,292 @@ class ReaderActivity : AppCompatActivity() {
             )
         }
         target.background = drawable
+    }
+
+    private fun setupSelectionActions() {
+        tvContent.customSelectionActionModeCallback = object : ActionMode.Callback {
+            override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+                if (menu == null) return false
+                isSelectionModeActive = true
+                stopAutoPlay()
+                addAiSelectionMenuItem(menu)
+                return true
+            }
+
+            override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+                if (menu != null) {
+                    addAiSelectionMenuItem(menu)
+                }
+                return false
+            }
+
+            override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+                if (item?.itemId != MENU_ITEM_AI) return false
+
+                val request = buildAiRequestFromSelection()
+                if (request == null) {
+                    Toast.makeText(
+                        this@ReaderActivity,
+                        R.string.reader_ai_no_selection,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    mode?.finish()
+                    return true
+                }
+
+                mode?.finish()
+                showAiResultBottomSheet(request)
+                return true
+            }
+
+            override fun onDestroyActionMode(mode: ActionMode?) {
+                isSelectionModeActive = false
+                clearTextSelection()
+            }
+        }
+    }
+
+    private fun addAiSelectionMenuItem(menu: Menu) {
+        val existing = menu.findItem(MENU_ITEM_AI)
+        if (existing != null) return
+
+        val item = menu.add(Menu.NONE, MENU_ITEM_AI, Menu.NONE, getString(R.string.reader_ai_action))
+        item.icon = AppCompatResources.getDrawable(this, R.drawable.ic_ai_spark)
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+    }
+
+    private fun buildAiRequestFromSelection(): ReaderAiRequest? {
+        val text = tvContent.text ?: return null
+        val start = minOf(tvContent.selectionStart, tvContent.selectionEnd)
+        val end = maxOf(tvContent.selectionStart, tvContent.selectionEnd)
+        if (start < 0 || end <= start || end > text.length) return null
+
+        val rawSelection = text.subSequence(start, end).toString().trim()
+        val displayText = rawSelection
+            .replace(Regex("[\\t\\x0B\\f\\r]+"), " ")
+            .replace(Regex("\\n{3,}"), "\n\n")
+            .trim()
+        val compactText = rawSelection.replace(Regex("\\s+"), " ").trim()
+        if (compactText.isBlank()) return null
+
+        val wordCount = compactText.split(Regex("\\s+")).count { it.isNotBlank() }
+        val task = if (wordCount <= AI_EXPLAIN_WORD_THRESHOLD) {
+            AiTaskType.EXPLAIN
+        } else {
+            AiTaskType.SUMMARIZE
+        }
+
+        val safeBookName = tvBookTitle.text?.toString()?.trim().orEmpty().ifEmpty { bookTitle }
+
+        val contextBeforeStart = maxOf(0, start - 300)
+        val contextBefore = text.subSequence(contextBeforeStart, start).toString().trim()
+        
+        val contextAfterEnd = minOf(text.length, end + 300)
+        val contextAfter = text.subSequence(end, contextAfterEnd).toString().trim()
+
+        return ReaderAiRequest(
+            task = task,
+            selectedText = compactText,
+            displayText = displayText,
+            bookName = safeBookName,
+            contextBefore = contextBefore,
+            contextAfter = contextAfter
+        )
+    }
+
+    private fun clearTextSelection() {
+        val current = tvContent.text
+        if (current is Spannable) {
+            Selection.removeSelection(current)
+        }
+    }
+
+    private fun showAiResultBottomSheet(request: ReaderAiRequest) {
+        stopAutoPlay()
+        val dialog = BottomSheetDialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_reader_ai_result, null)
+        dialog.setContentView(content)
+
+        val views = AiSheetViews(
+            title = content.findViewById(R.id.tvAiSheetTitle),
+            subtitle = content.findViewById(R.id.tvAiSheetSubtitle),
+            selectedText = content.findViewById(R.id.tvAiSelectedText),
+            loadingLayout = content.findViewById(R.id.layoutAiLoading),
+            loadingTitle = content.findViewById(R.id.tvAiLoadingTitle),
+            loadingHint = content.findViewById(R.id.tvAiLoadingHint),
+            errorLayout = content.findViewById(R.id.layoutAiError),
+            errorMessage = content.findViewById(R.id.tvAiErrorMessage),
+            resultLayout = content.findViewById(R.id.layoutAiResult),
+            resultContent = content.findViewById(R.id.tvAiResultContent),
+            secondaryButton = content.findViewById(R.id.btnAiSecondary),
+            primaryButton = content.findViewById(R.id.btnAiPrimary)
+        )
+
+        views.title.setText(request.task.titleRes)
+        views.subtitle.setText(R.string.reader_ai_sheet_subtitle)
+        views.selectedText.text = request.displayText
+
+        content.findViewById<ImageButton>(R.id.btnAiSheetClose)?.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        views.secondaryButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        dialog.behavior.skipCollapsed = true
+        dialog.setOnDismissListener {
+            activeAiCall?.cancel()
+            activeAiCall = null
+        }
+        dialog.show()
+        dialog.findViewById<View>(MaterialR.id.design_bottom_sheet)
+            ?.setBackgroundResource(android.R.color.transparent)
+
+        executeAiRequest(dialog, views, request)
+    }
+
+    private fun executeAiRequest(
+        dialog: BottomSheetDialog,
+        views: AiSheetViews,
+        request: ReaderAiRequest
+    ) {
+        renderAiLoadingState(views, request)
+
+        activeAiCall?.cancel()
+        val call = when (request.task) {
+            AiTaskType.EXPLAIN -> AIRetrofitClient.instance.explain(
+                AITextRequest(
+                    text = request.selectedText,
+                    book_name = request.bookName,
+                    context_before = request.contextBefore,
+                    context_after = request.contextAfter
+                )
+            )
+
+            AiTaskType.SUMMARIZE -> AIRetrofitClient.instance.summarize(
+                AITextRequest(
+                    text = request.selectedText,
+                    book_name = request.bookName,
+                    context_before = request.contextBefore,
+                    context_after = request.contextAfter
+                )
+            )
+        }
+
+        activeAiCall = call
+        call.enqueue(object : Callback<AITextResponse> {
+            override fun onResponse(call: Call<AITextResponse>, response: Response<AITextResponse>) {
+                if (activeAiCall !== call) return
+                activeAiCall = null
+                if (!dialog.isShowing || isFinishing) return
+
+                val result = response.body()?.result?.takeIf { it.isNotBlank() }
+                if (response.isSuccessful && result != null) {
+                    renderAiSuccessState(views, normalizeAiResultText(result))
+                } else {
+                    renderAiErrorState(
+                        views,
+                        mapAiErrorMessage(response.code()),
+                        onRetry = { executeAiRequest(dialog, views, request) }
+                    )
+                }
+            }
+
+            override fun onFailure(call: Call<AITextResponse>, t: Throwable) {
+                if (call.isCanceled) return
+                if (activeAiCall === call) {
+                    activeAiCall = null
+                }
+                if (!dialog.isShowing || isFinishing) return
+
+                val message = if (t is IOException) {
+                    getString(R.string.reader_ai_error_network)
+                } else {
+                    getString(R.string.reader_ai_error_unknown)
+                }
+                renderAiErrorState(
+                    views,
+                    message,
+                    onRetry = { executeAiRequest(dialog, views, request) }
+                )
+            }
+        })
+    }
+
+    private fun renderAiLoadingState(
+        views: AiSheetViews,
+        request: ReaderAiRequest
+    ) {
+        views.loadingLayout.isVisible = true
+        views.errorLayout.isVisible = false
+        views.resultLayout.isVisible = false
+        views.loadingTitle.setText(R.string.reader_ai_loading_title)
+        views.loadingHint.setText(request.task.loadingHintRes)
+
+        views.secondaryButton.setText(R.string.reader_ai_button_close)
+        views.secondaryButton.isEnabled = true
+
+        views.primaryButton.setText(R.string.reader_ai_loading_title)
+        views.primaryButton.isEnabled = false
+        views.primaryButton.alpha = 0.55f
+        views.primaryButton.setOnClickListener(null)
+    }
+
+    private fun renderAiSuccessState(
+        views: AiSheetViews,
+        result: String
+    ) {
+        views.loadingLayout.isVisible = false
+        views.errorLayout.isVisible = false
+        views.resultLayout.isVisible = true
+        views.resultContent.text = result
+
+        views.secondaryButton.setText(R.string.reader_ai_button_close)
+        views.secondaryButton.isEnabled = true
+
+        views.primaryButton.alpha = 1f
+        views.primaryButton.isEnabled = true
+        views.primaryButton.setText(R.string.reader_ai_button_copy)
+        views.primaryButton.setOnClickListener {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("AI Result", result))
+            Toast.makeText(this, R.string.reader_ai_copied, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun renderAiErrorState(
+        views: AiSheetViews,
+        message: String,
+        onRetry: () -> Unit
+    ) {
+        views.loadingLayout.isVisible = false
+        views.errorLayout.isVisible = true
+        views.resultLayout.isVisible = false
+        views.errorMessage.text = message
+
+        views.secondaryButton.setText(R.string.reader_ai_button_close)
+        views.secondaryButton.isEnabled = true
+
+        views.primaryButton.alpha = 1f
+        views.primaryButton.isEnabled = true
+        views.primaryButton.setText(R.string.reader_ai_button_retry)
+        views.primaryButton.setOnClickListener { onRetry() }
+    }
+
+    private fun normalizeAiResultText(raw: String): String {
+        return raw
+            .replace("**", "")
+            .replace(Regex("\\n{3,}"), "\n\n")
+            .trim()
+    }
+
+    private fun mapAiErrorMessage(code: Int): String {
+        return when (code) {
+            400, 422 -> getString(R.string.reader_ai_invalid_selection)
+            in 500..599 -> getString(R.string.reader_ai_error_server)
+            else -> getString(R.string.reader_ai_error_unknown)
+        }
     }
 }
