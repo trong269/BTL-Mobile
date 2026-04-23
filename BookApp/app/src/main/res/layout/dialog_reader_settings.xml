@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/dialog_reader_chapters_bg"
+    android:background="@drawable/dialog_reader_rounded_bg"
     android:fillViewport="true">
 
     <LinearLayout
@@ -25,7 +25,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Đóng cài đặt"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:tint="#1F6FB2" />
+                android:tint="@color/reader_primary" />
 
             <TextView
                 android:layout_width="0dp"
@@ -33,7 +33,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Thiết Lập Giao Diện"
-                android:textColor="#222222"
+                android:textColor="@color/reader_text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -126,40 +126,31 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="18"
-                    android:textColor="#23272D"
-                    android:textSize="18sp" />
+                    android:textColor="@color/reader_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="128dp"
-                    android:layout_height="46dp"
-                    android:background="@drawable/reader_stepper_bg"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="8dp">
+                <ImageButton
+                    android:id="@+id/btnSettingFontMinus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Giảm cỡ chữ"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_minus"
+                    android:tint="@color/reader_primary" />
 
-                    <ImageButton
-                        android:id="@+id/btnSettingFontMinus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Giảm cỡ chữ"
-                        android:src="@drawable/ic_step_minus"
-                        android:tint="#1E2227" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="22dp"
-                        android:background="#D6D9DE" />
-
-                    <ImageButton
-                        android:id="@+id/btnSettingFontPlus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Tăng cỡ chữ"
-                        android:src="@drawable/ic_step_plus"
-                        android:tint="#1E2227" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnSettingFontPlus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Tăng cỡ chữ"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_plus"
+                    android:tint="@color/reader_primary" />
             </LinearLayout>
 
             <TextView
@@ -191,40 +182,31 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="1.5"
-                    android:textColor="#23272D"
-                    android:textSize="18sp" />
+                    android:textColor="@color/reader_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="128dp"
-                    android:layout_height="46dp"
-                    android:background="@drawable/reader_stepper_bg"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="8dp">
+                <ImageButton
+                    android:id="@+id/btnSettingLineMinus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Giảm giãn dòng"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_minus"
+                    android:tint="@color/reader_primary" />
 
-                    <ImageButton
-                        android:id="@+id/btnSettingLineMinus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Giảm giãn dòng"
-                        android:src="@drawable/ic_step_minus"
-                        android:tint="#1E2227" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="22dp"
-                        android:background="#D6D9DE" />
-
-                    <ImageButton
-                        android:id="@+id/btnSettingLinePlus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Tăng giãn dòng"
-                        android:src="@drawable/ic_step_plus"
-                        android:tint="#1E2227" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnSettingLinePlus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Tăng giãn dòng"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_plus"
+                    android:tint="@color/reader_primary" />
             </LinearLayout>
 
             <TextView
@@ -293,40 +275,31 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="20"
-                    android:textColor="#23272D"
-                    android:textSize="18sp" />
+                    android:textColor="@color/reader_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="128dp"
-                    android:layout_height="46dp"
-                    android:background="@drawable/reader_stepper_bg"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="8dp">
+                <ImageButton
+                    android:id="@+id/btnSettingSpeedMinus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Giảm tốc độ tự động"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_minus"
+                    android:tint="@color/reader_primary" />
 
-                    <ImageButton
-                        android:id="@+id/btnSettingSpeedMinus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Giảm tốc độ tự động"
-                        android:src="@drawable/ic_step_minus"
-                        android:tint="#1E2227" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="22dp"
-                        android:background="#D6D9DE" />
-
-                    <ImageButton
-                        android:id="@+id/btnSettingSpeedPlus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Tăng tốc độ tự động"
-                        android:src="@drawable/ic_step_plus"
-                        android:tint="#1E2227" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnSettingSpeedPlus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Tăng tốc độ tự động"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_plus"
+                    android:tint="@color/reader_primary" />
             </LinearLayout>
 
             <LinearLayout
@@ -350,40 +323,31 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="20"
-                    android:textColor="#23272D"
-                    android:textSize="18sp" />
+                    android:textColor="@color/reader_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="128dp"
-                    android:layout_height="46dp"
-                    android:background="@drawable/reader_stepper_bg"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="8dp">
+                <ImageButton
+                    android:id="@+id/btnSettingPageTurnMinus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Giảm thời gian lật trang"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_minus"
+                    android:tint="@color/reader_primary" />
 
-                    <ImageButton
-                        android:id="@+id/btnSettingPageTurnMinus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Giảm thời gian lật trang"
-                        android:src="@drawable/ic_step_minus"
-                        android:tint="#1E2227" />
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="22dp"
-                        android:background="#D6D9DE" />
-
-                    <ImageButton
-                        android:id="@+id/btnSettingPageTurnPlus"
-                        android:layout_width="38dp"
-                        android:layout_height="38dp"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Tăng thời gian lật trang"
-                        android:src="@drawable/ic_step_plus"
-                        android:tint="#1E2227" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnSettingPageTurnPlus"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/reader_stepper_btn_bg"
+                    android:contentDescription="Tăng thời gian lật trang"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_step_plus"
+                    android:tint="@color/reader_primary" />
             </LinearLayout>
 
             <TextView
@@ -399,7 +363,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/reader_stepper_bg"
+                android:background="@drawable/reader_spinner_bg"
                 android:paddingHorizontal="12dp" />
         </LinearLayout>
 
