@@ -149,6 +149,18 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void updateFcmToken(String userId, String fcmToken) {
+        User user = getById(userId);
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
+    }
+
+    public void updateLastActiveAt(String userId) {
+        User user = getById(userId);
+        user.setLastActiveAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
     private String valueOrEmpty(String value) {
         return value == null ? "" : value.trim();
     }
