@@ -247,6 +247,12 @@ class HomeActivity : AppCompatActivity() {
         val btnSearchIcon = findViewById<android.widget.ImageButton>(R.id.btnSearchIcon)
         tvFeaturedBookTitle = findViewById(R.id.tvFeaturedBookTitle)
         btnContinueRead = findViewById(R.id.btnContinueRead)
+        val btnNotifications = findViewById<android.widget.ImageButton>(R.id.btnNotifications)
+
+        btnNotifications.setOnClickListener {
+            val intent = Intent(this, com.bookapp.ui.notification.NotificationActivity::class.java)
+            startActivity(intent)
+        }
 
         val performSearch = {
             val query = edtSearch.text.toString().trim()
