@@ -672,7 +672,8 @@ class ReaderActivity : AppCompatActivity() {
         clearTextSelection()
         currentChapterIndex = index
         val chapter = chapters[index]
-        currentChapterRawText = chapter.content?.takeIf { it.isNotBlank() } ?: "(Chương này chưa có nội dung)"
+        val rawContent = chapter.content?.takeIf { it.isNotBlank() } ?: "(Chương này chưa có nội dung)"
+        currentChapterRawText = processContentMergeLonelyChars(rawContent)
 
         val chapterTitle = chapter.title?.takeIf { it.isNotBlank() } ?: "(Không có tiêu đề)"
         tvFooterChapterTitle.text = chapterTitle
@@ -1492,6 +1493,44 @@ class ReaderActivity : AppCompatActivity() {
         if (current is Spannable) {
             Selection.removeSelection(current)
         }
+    }
+
+    private fun processContentMergeLonelyChars(content: String): String {
+        val lines = content.lines()
+        if (lines.isEmpty()) return content
+
+        val processed = mutableListOf<String>()
+        val checkLimit = 10.coerceAtMost(lines.size)
+        var i = 0
+
+        // Xử lý 10 hàng đầu tiên
+        while (i < checkLimit) {
+            val line = lines[i].trim()
+            
+            // Kiểm tra nếu hàng chỉ có 1 ký tự alphabet đứng lẻ
+            if (line.length == 1 && line[0].isLetter()) {
+                // Nếu còn hàng tiếp theo, gộp ký tự này vào hàng sau (không có dấu cách)
+                if (i + 1 < lines.size) {
+                    val nextLine = lines[i + 1]
+                    processed.add("$line$nextLine")
+                    i += 2 // Bỏ qua hàng tiếp theo vì đã gộp rồi
+                } else {
+                    // Nếu đây là hàng cuối cùng, giữ nguyên
+                    processed.add(lines[i])
+                    i++
+                }
+            } else {
+                processed.add(lines[i])
+                i++
+            }
+        }
+
+        // Giữ nguyên các hàng còn lại (sau hàng 10)
+        if (i < lines.size) {
+            processed.addAll(lines.subList(i, lines.size))
+        }
+
+        return processed.joinToString("\n")
     }
 
     private fun showAiResultBottomSheet(request: ReaderAiRequest) {

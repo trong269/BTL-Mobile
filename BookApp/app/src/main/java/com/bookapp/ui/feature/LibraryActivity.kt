@@ -18,6 +18,7 @@ class LibraryActivity : AppCompatActivity() {
 
     private lateinit var tvFavoritesCount: TextView
     private lateinit var tvRecentsCount: TextView
+    private lateinit var tvOfflineCount: TextView
     private lateinit var tvFavoritesEmpty: TextView
     private lateinit var tvRecentsEmpty: TextView
     private lateinit var tvOfflineEmpty: TextView
@@ -47,6 +48,7 @@ class LibraryActivity : AppCompatActivity() {
     private fun bindViews() {
         tvFavoritesCount = findViewById(R.id.tvFavoritesCount)
         tvRecentsCount = findViewById(R.id.tvRecentsCount)
+        tvOfflineCount = findViewById(R.id.tvOfflineCount)
         tvFavoritesEmpty = findViewById(R.id.tvFavoritesEmpty)
         tvRecentsEmpty = findViewById(R.id.tvRecentsEmpty)
         tvOfflineEmpty = findViewById(R.id.tvOfflineEmpty)
@@ -99,10 +101,11 @@ class LibraryActivity : AppCompatActivity() {
             }
             offlineAdapter.submitList(offlineItems)
             tvOfflineEmpty.visibility = if (offlineItems.isEmpty()) View.VISIBLE else View.GONE
+            tvOfflineCount.text = "${offlineItems.size} quyển sách"
         }
 
-        tvFavoritesCount.text = favorites.size.toString()
-        tvRecentsCount.text = recents.size.toString()
+        tvFavoritesCount.text = "${favorites.size} quyển sách"
+        tvRecentsCount.text = "${recents.size} quyển sách"
 
         tvFavoritesEmpty.visibility = if (favorites.isEmpty()) View.VISIBLE else View.GONE
         tvRecentsEmpty.visibility = if (recents.isEmpty()) View.VISIBLE else View.GONE
