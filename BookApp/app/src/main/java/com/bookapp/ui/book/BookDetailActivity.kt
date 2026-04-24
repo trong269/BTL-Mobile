@@ -54,7 +54,6 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var tvCategory: TextView
     private lateinit var tvRatingBadge: TextView
     private lateinit var tvChapters: TextView
-    private lateinit var tvPages: TextView
     private lateinit var tvViews: TextView
     private lateinit var tvDescription: TextView
     private lateinit var btnFavorite: Button
@@ -84,6 +83,7 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var edtCommentInput: EditText
     private lateinit var btnSubmitComment: Button
     private lateinit var tvNoComments: TextView
+    private var commentsList = mutableListOf<Comment>()
 
     private var bookId: String? = null
     private var isFavorited = false
@@ -126,7 +126,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvCategory = findViewById(R.id.tvDetailCategory)
         tvRatingBadge = findViewById(R.id.tvDetailRatingBadge)
         tvChapters = findViewById(R.id.tvDetailChapters)
-        tvPages = findViewById(R.id.tvDetailPages)
         tvViews = findViewById(R.id.tvDetailViews)
         tvDescription = findViewById(R.id.tvDetailDescription)
         btnFavorite = findViewById(R.id.btnFavorite)
@@ -251,7 +250,6 @@ class BookDetailActivity : AppCompatActivity() {
         tvCategory.text = book.categoryId?.take(8) ?: "Chưa phân loại"
         tvRatingBadge.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
         tvChapters.text = "${book.totalChapters ?: 0}"
-        tvPages.text = "${book.totalPages ?: 0}"
         tvViews.text = "${book.views ?: 0}"
         tvDescription.text = book.description?.takeIf { it.isNotBlank() }?.let { decodeHtmlDescription(it) } ?: "(Chưa có mô tả)"
 
@@ -355,9 +353,9 @@ class BookDetailActivity : AppCompatActivity() {
                 .enqueue(object : Callback<List<Comment>> {
                     override fun onResponse(call: Call<List<Comment>>, response: Response<List<Comment>>) {
                         if (response.isSuccessful) {
-                            val comments = response.body().orEmpty()
-                            commentAdapter.submitList(comments)
-                            tvNoComments.visibility = if (comments.isEmpty()) View.VISIBLE else View.GONE
+                            commentsList = response.body()?.toMutableList() ?: mutableListOf()
+                            commentAdapter.submitList(commentsList)
+                            tvNoComments.visibility = if (commentsList.isEmpty()) View.VISIBLE else View.GONE
                         }
                     }
                     override fun onFailure(call: Call<List<Comment>>, t: Throwable) {}
@@ -426,9 +424,15 @@ class BookDetailActivity : AppCompatActivity() {
                     override fun onResponse(call: Call<Comment>, response: Response<Comment>) {
                         btnSubmitComment.isEnabled = true
                         if (response.isSuccessful) {
+                            val newComment = response.body()
+                            if (newComment != null) {
+                                // Thêm comment mới vào danh sách (tránh race condition)
+                                commentsList.add(0, newComment)
+                                commentAdapter.submitList(commentsList.toList())
+                                tvNoComments.visibility = View.GONE
+                            }
                             edtCommentInput.setText("")
                             Toast.makeText(this@BookDetailActivity, "Đã gửi bình luận!", Toast.LENGTH_SHORT).show()
-                            loadComments()
                         } else {
                             Toast.makeText(this@BookDetailActivity, "Lỗi gửi bình luận (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
                         }
@@ -459,17 +463,17 @@ class BookDetailActivity : AppCompatActivity() {
 
         when (tab) {
             "intro" -> {
-                tabIntro.setBackgroundResource(R.drawable.btn_primary_bg)
+                tabIntro.setBackgroundResource(R.drawable.auth_primary_button_bg)
                 tabIntro.setTextColor(activeTabColor)
                 panelIntro.visibility = View.VISIBLE
             }
             "reviews" -> {
-                tabReviews.setBackgroundResource(R.drawable.btn_primary_bg)
+                tabReviews.setBackgroundResource(R.drawable.auth_primary_button_bg)
                 tabReviews.setTextColor(activeTabColor)
                 panelReviews.visibility = View.VISIBLE
             }
             "comments" -> {
-                tabComments.setBackgroundResource(R.drawable.btn_primary_bg)
+                tabComments.setBackgroundResource(R.drawable.auth_primary_button_bg)
                 tabComments.setTextColor(activeTabColor)
                 panelComments.visibility = View.VISIBLE
             }

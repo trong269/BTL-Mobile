@@ -32,12 +32,31 @@ public class ReviewService {
     }
 
     public ReviewResponseDto addReview(String bookId, String userId, int rating, String reviewText) {
-        Review review = new Review();
-        review.setBookId(bookId);
-        review.setUserId(userId);
-        review.setRating(rating);
-        review.setReview(reviewText);
-        review.setCreatedAt(LocalDateTime.now());
+        // Kiểm tra nếu user đã review sách này trước đó
+        Review existingReview = reviewRepository.findByUserIdAndBookId(userId, bookId).orElse(null);
+        
+        Review review;
+        if (existingReview != null) {
+            // Cập nhật review cũ
+            review = existingReview;
+            review.setRating(rating);
+            review.setReview(reviewText);
+            review.setCreatedAt(LocalDateTime.now());
+        } else {
+            // Tạo review mới
+            review = new Review();
+            review.setBookId(bookId);
+            review.setUserId(userId);
+            review.setRating(rating);
+            review.setReview(reviewText);
+            review.setCreatedAt(LocalDateTime.now());
+        }
+
+        // Set userName từ User object
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            review.setUserName(user.getUsername() != null ? user.getUsername() : user.getFullName());
+        }
 
         Review saved = reviewRepository.save(review);
 
