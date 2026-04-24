@@ -1,8 +1,10 @@
 package com.bookapp.service;
 
 import com.bookapp.model.Review;
+import com.bookapp.model.User;
 import com.bookapp.repository.BookRepository;
 import com.bookapp.repository.ReviewRepository;
+import com.bookapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,10 +16,12 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
-    public ReviewService(ReviewRepository reviewRepository, BookRepository bookRepository) {
+    public ReviewService(ReviewRepository reviewRepository, BookRepository bookRepository, UserRepository userRepository) {
         this.reviewRepository = reviewRepository;
         this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     }
 
     public List<Review> getByBookId(String bookId) {
@@ -31,6 +35,12 @@ public class ReviewService {
         review.setRating(rating);
         review.setReview(reviewText);
         review.setCreatedAt(LocalDateTime.now());
+
+        // Set userName từ User object
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            review.setUserName(user.getUsername() != null ? user.getUsername() : user.getFullName());
+        }
 
         Review saved = reviewRepository.save(review);
 
