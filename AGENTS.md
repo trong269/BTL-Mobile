@@ -37,9 +37,23 @@ Recent history mixes short imperative subjects (`add filter`) with typed commits
 ## Security & Configuration Tips
 Do not commit real secrets. Use `AI-service/.env.example` as the template for AI settings and prefer environment variables for MongoDB and server ports in `backend/`. Activate Conda environment `btl-mobile` before installing dependencies, running the API, or executing tests in `AI-service`. Before building the Android app, set `BookApp/app/build.gradle.kts` `BASE_URL` to the emulator or LAN host you are targeting.
 
-## AI Smart Selection Architecture (Long-term Memory)
-- **Feature Overview**: Users can highlight text while reading in the Android app to get instant AI-generated explanations (`explain`) or summaries (`summarize`).
-- **Data Payload**: The Android client automatically extracts up to 300 characters of `context_before` and `context_after` the highlighted text. This ensures the AI accurately understands pronouns, cut-off sentences, and the surrounding plot without guessing.
-- **API Design**: The API at `/api/ai/explain` and `/api/ai/summarize` utilizes a **One-Shot (1 Cục)** response mechanism instead of streaming. This ensures mobile UI stability, rapid rendering for small text snippets (1-1.5s latency), and reliable Markdown parsing.
-- **Prompts (`src/core/prompts/*.md`)**: Prompts strictly enforce a "Mobile-First" output layer: Zero-Yapping (no conversational fillers), max 2-3 short bullet points, and an explicit prohibition of Markdown headings (`#`, `##`) to preserve formatting on mobile screens. We also enforce a "No-Spoiler" rule for literary context. 
-- **Agent Initialization**: The repository utilizes `AgentFactory` in `AI-service/src/core/agents/factory.py` to lazy-load and cache the underlying LangGraph structures based on the `task_type`.
+## AI Reader Assistant Architecture (Long-term Memory)
+- **Feature Overview**: Reader hiện có 2 lớp AI chính:
+- `Smart Selection` cho đoạn bôi đen (`/api/ai/explain`, `/api/ai/summarize`, one-shot).
+- `Chatbot-QA` trong chế độ đọc (`/api/ai/qa`, `/api/ai/qa/stream`) với session chat in-memory.
+- **Context Strategy**:
+- Với Smart Selection: Android gửi `text` + `context_before` + `context_after` (mỗi bên tối đa ~300 ký tự).
+- Với QA: Android gửi `question`, `context_chunks`, `current_chapter_title`, `chat_history`.
+- **Streaming Policy**:
+- QA ưu tiên streaming qua `POST /api/ai/qa/stream` (SSE/chunked) để render token theo thời gian thực.
+- One-shot `POST /api/ai/qa` vẫn giữ như fallback.
+- **Chapter-based Suggestions**:
+- Android gọi `POST /api/ai/suggestions` để sinh ~5 câu hỏi gợi ý cho chương đang đọc.
+- Trigger khi vào/chuyển chương, chạy nền, cache theo chapter, có fallback câu generic khi timeout/lỗi.
+- **Mobile UX Constraints**:
+- BottomSheet chat phải keyboard-safe (IME không che ô nhập).
+- Output ngắn gọn, dễ quét nhanh; ưu tiên Markdown đơn giản phù hợp Markwon.
+- **Prompt Rules (`AI-service/src/core/prompts/*.md`)**:
+- Mobile-First, Zero-Yapping, No-Spoiler, không bịa dữ kiện ngoài ngữ liệu đã cung cấp.
+- **Agent Initialization**:
+- `AgentFactory` lazy-load + cache theo `task_type` (`summarize`, `explain`, `qa`, `suggestions`).
