@@ -2,11 +2,14 @@ package com.bookapp.service;
 
 import com.bookapp.dto.BookCategoryDto;
 import com.bookapp.dto.BookResponseDto;
+import com.bookapp.dto.TopBookIdDto;
 import com.bookapp.model.Book;
 import com.bookapp.model.BookCategory;
 import com.bookapp.model.Category;
+import com.bookapp.model.BookViewLog;
 import com.bookapp.repository.BookCategoryRepository;
 import com.bookapp.repository.BookRepository;
+import com.bookapp.repository.BookViewLogRepository;
 import com.bookapp.repository.CategoryRepository;
 import com.bookapp.repository.ChapterRepository;
 import org.bson.types.ObjectId;
@@ -35,18 +38,21 @@ public class BookService {
     private final CategoryRepository categoryRepository;
     private final BookCategoryRepository bookCategoryRepository;
     private final ChapterRepository chapterRepository;
+    private final BookViewLogRepository bookViewLogRepository;
     private static final int TOP_LIMIT = 5;
 
     public BookService(
             BookRepository bookRepository,
             CategoryRepository categoryRepository,
             BookCategoryRepository bookCategoryRepository,
-            ChapterRepository chapterRepository
+            ChapterRepository chapterRepository,
+            BookViewLogRepository bookViewLogRepository
     ) {
         this.bookRepository = bookRepository;
         this.categoryRepository = categoryRepository;
         this.bookCategoryRepository = bookCategoryRepository;
         this.chapterRepository = chapterRepository;
+        this.bookViewLogRepository = bookViewLogRepository;
     }
 
     public List<BookResponseDto> findAll() {
@@ -212,35 +218,60 @@ public class BookService {
 
     public List<BookResponseDto> findTopWeek() {
         LocalDateTime fromDate = LocalDateTime.now().minusDays(7);
-        List<Book> topWeek = bookRepository.findByUpdatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(
-                fromDate,
-                PageRequest.of(0, TOP_LIMIT)
-        );
-
-        if (topWeek.isEmpty()) {
+        List<String> topBookIds = bookViewLogRepository.findTopBookIdsByViewCount(fromDate, TOP_LIMIT)
+                .stream()
+                .map(TopBookIdDto::getId)
+                .toList();
+        
+        if (topBookIds.isEmpty()) {
             return toResponseList(bookRepository.findAllByOrderByViewsDescAvgRatingDesc(PageRequest.of(0, TOP_LIMIT)));
         }
-        return toResponseList(topWeek);
+        
+        List<Book> books = bookRepository.findAllById(topBookIds);
+        // Maintain the order from the aggregation
+        Map<String, Integer> orderMap = new java.util.HashMap<>();
+        for (int i = 0; i < topBookIds.size(); i++) {
+            orderMap.put(topBookIds.get(i), i);
+        }
+        books.sort(Comparator.comparingInt(b -> orderMap.getOrDefault(b.getId(), Integer.MAX_VALUE)));
+        
+        return toResponseList(books);
     }
 
     public List<BookResponseDto> findTopMonth() {
         LocalDateTime fromDate = LocalDateTime.now().minusDays(30);
-        List<Book> topMonth = bookRepository.findByUpdatedAtGreaterThanEqualOrderByViewsDescAvgRatingDesc(
-                fromDate,
-                PageRequest.of(0, TOP_LIMIT)
-        );
-
-        if (topMonth.isEmpty()) {
+        List<String> topBookIds = bookViewLogRepository.findTopBookIdsByViewCount(fromDate, TOP_LIMIT)
+                .stream()
+                .map(TopBookIdDto::getId)
+                .toList();
+        
+        if (topBookIds.isEmpty()) {
             return toResponseList(bookRepository.findAllByOrderByViewsDescAvgRatingDesc(PageRequest.of(0, TOP_LIMIT)));
         }
-        return toResponseList(topMonth);
+        
+        List<Book> books = bookRepository.findAllById(topBookIds);
+        Map<String, Integer> orderMap = new java.util.HashMap<>();
+        for (int i = 0; i < topBookIds.size(); i++) {
+            orderMap.put(topBookIds.get(i), i);
+        }
+        books.sort(Comparator.comparingInt(b -> orderMap.getOrDefault(b.getId(), Integer.MAX_VALUE)));
+        
+        return toResponseList(books);
     }
 
-    public void incrementViews(String bookId) {
+    public void incrementViews(String bookId, String userId) {
         Book book = getById(bookId);
         book.setViews(Math.max(0, book.getViews()) + 1);
         book.setUpdatedAt(LocalDateTime.now());
         bookRepository.save(book);
+
+        // Log the view
+        BookViewLog log = BookViewLog.builder()
+                .bookId(bookId)
+                .userId(userId)
+                .viewedAt(LocalDateTime.now())
+                .build();
+        bookViewLogRepository.save(log);
     }
 
     private List<BookResponseDto> toResponseList(List<Book> books) {
