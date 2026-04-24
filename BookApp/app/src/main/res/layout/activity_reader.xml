@@ -30,7 +30,7 @@
     <LinearLayout
         android:id="@+id/readerTopBar"
         android:layout_width="match_parent"
-        android:layout_height="86dp"
+        android:layout_height="72dp"
         android:background="@color/reader_bg_cream"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -47,7 +47,7 @@
             android:contentDescription="Đóng"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:tint="@color/reader_primary" />
+            app:tint="#7F3104" />
 
         <TextView
             android:id="@+id/tvReaderBookTitle"
@@ -162,7 +162,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Setting"
                 android:src="@android:drawable/ic_menu_manage"
-                app:tint="@color/reader_primary" />
+                app:tint="#7F3104" />
 
             <ImageButton
                 android:id="@+id/btnReaderPlay"
@@ -182,7 +182,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Danh sách chương"
                 android:src="@android:drawable/ic_menu_sort_by_size"
-                app:tint="@color/reader_primary" />
+                app:tint="#7F3104" />
 
             <ImageButton
                 android:id="@+id/btnReaderQa"

@@ -264,7 +264,7 @@
                     android:fontFamily="serif"
                     android:text="Sách mới"
                     android:textColor="@color/text_primary"
-                    android:textSize="34sp"
+                    android:textSize="28sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -356,7 +356,7 @@
                     android:fontFamily="serif"
                     android:text="Bảng xếp hạng"
                     android:textColor="@color/text_primary"
-                    android:textSize="30sp"
+                    android:textSize="28sp"
                     android:textStyle="bold" />
 
                 <LinearLayout
