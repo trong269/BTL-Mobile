@@ -1,5 +1,6 @@
 package com.bookapp.service;
 
+import com.bookapp.dto.ReviewResponseDto;
 import com.bookapp.model.Review;
 import com.bookapp.model.User;
 import com.bookapp.repository.BookRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.OptionalDouble;
+import java.util.stream.Collectors;
 
 @Service
 public class ReviewService {
@@ -24,8 +26,9 @@ public class ReviewService {
         this.userRepository = userRepository;
     }
 
-    public List<Review> getByBookId(String bookId) {
-        return reviewRepository.findByBookIdOrderByCreatedAtDesc(bookId);
+    public List<ReviewResponseDto> getByBookId(String bookId) {
+        List<Review> reviews = reviewRepository.findByBookIdOrderByCreatedAtDesc(bookId);
+        return reviews.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     public Review addReview(String bookId, String userId, int rating, String reviewText) {
@@ -67,7 +70,25 @@ public class ReviewService {
             });
         }
 
-        return saved;
+        return convertToDto(saved);
+    }
+
+    private ReviewResponseDto convertToDto(Review review) {
+        ReviewResponseDto dto = new ReviewResponseDto();
+        dto.setId(review.getId());
+        dto.setUserId(review.getUserId());
+        dto.setBookId(review.getBookId());
+        dto.setRating(review.getRating());
+        dto.setReview(review.getReview());
+        dto.setCreatedAt(review.getCreatedAt());
+
+        userRepository.findById(review.getUserId()).ifPresent(user -> {
+            dto.setUsername(user.getUsername());
+            dto.setFullName(user.getFullName());
+            dto.setAvatar(user.getAvatar());
+        });
+
+        return dto;
     }
 
     public void deleteReview(String reviewId) {

@@ -9,84 +9,132 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:layout_marginBottom="8dp"
             android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/btnLibraryBack"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="@drawable/back_round_bg"
                 android:contentDescription="Quay lại"
-                android:padding="5dp"
+                android:padding="6dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_back_arrow" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
                 android:fontFamily="serif"
                 android:text="Thư viện của bạn"
-                android:textColor="#6E3D0D"
-                android:textSize="34sp"
-                android:textStyle="bold" />
+                android:textColor="@color/text_primary"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.01" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="o"
                 android:textColor="@color/text_accent"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Yêu thích"
-                android:textColor="#24190F"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:text="Đã đọc"
-                android:textColor="#6A5A47"
-                android:textSize="16sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:text="Lịch sử"
-                android:textColor="#6A5A47"
                 android:textSize="16sp" />
         </LinearLayout>
 
         <View
-            android:layout_width="60dp"
-            android:layout_height="2dp"
-            android:layout_marginTop="6dp"
+            android:layout_width="50dp"
+            android:layout_height="3dp"
+            android:layout_marginBottom="28dp"
             android:background="@color/text_accent" />
 
+        <!-- Section: Offline Books -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="serif"
+                    android:text="Sách đã tải offline"
+                    android:textColor="@color/text_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.01" />
+
+                <TextView
+                    android:id="@+id/tvOfflineCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="0 quyển sách"
+                    android:textColor="@color/text_accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnViewAllOffline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/home_chip_bg"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp"
+                android:text="Xem tất cả"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sectionOffline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerOfflineBooks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:id="@+id/tvOfflineEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Chưa có sách tải về máy."
+                android:textColor="@color/text_muted"
+                android:textSize="14sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Section: Favorite Books -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -101,42 +149,32 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="serif"
                     android:text="Sách yêu thích"
-                    android:textColor="#24190F"
-                    android:textSize="40sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.01" />
 
                 <TextView
                     android:id="@+id/tvFavoritesCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="0"
+                    android:layout_marginTop="6dp"
+                    android:text="0 quyển sách"
                     android:textColor="@color/text_accent"
-                    android:textSize="18sp"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TUYỂN CHỌN"
-                    android:textAllCaps="true"
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/btnViewAllFavorites"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
                 android:background="@drawable/home_chip_bg"
-                android:paddingLeft="12dp"
-                android:paddingTop="6dp"
-                android:paddingRight="12dp"
-                android:paddingBottom="6dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp"
                 android:text="Xem tất cả"
-                android:textColor="#6B3C10"
-                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -144,76 +182,84 @@
             android:id="@+id/recyclerFavoriteBooks"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
             android:nestedScrollingEnabled="false" />
 
         <TextView
             android:id="@+id/tvFavoritesEmpty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="24dp"
             android:text="Chưa có sách yêu thích. Hãy bấm yêu thích trong chi tiết sách để thêm vào đây."
-            android:textColor="#886B4B"
-            android:textSize="13sp" />
+            android:textColor="@color/text_muted"
+            android:textSize="14sp" />
 
+        <!-- Section: Recent Books -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/sectionRecents"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:fontFamily="serif"
-                android:text="Đọc gần đây"
-                android:textColor="#24190F"
-                android:textSize="36sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/sectionRecents"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="serif"
+                    android:text="Đọc gần đây"
+                    android:textColor="@color/text_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.01" />
+
+                <TextView
+                    android:id="@+id/tvRecentsCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="0 quyển sách"
+                    android:textColor="@color/text_accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/btnViewAllHistory"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/home_chip_bg"
-                android:paddingLeft="12dp"
-                android:paddingTop="6dp"
-                android:paddingRight="12dp"
-                android:paddingBottom="6dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp"
                 android:text="Xem tất cả"
-                android:textColor="#6B3C10"
-                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvRecentsCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="0"
-            android:textColor="@color/text_accent"
-            android:textSize="16sp"
-            android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerRecentBooks"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:nestedScrollingEnabled="false" />
 
         <TextView
             android:id="@+id/tvRecentsEmpty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:text="Chưa có lịch sử đọc. Hay mở một chương để bắt đầu."
-            android:textColor="#886B4B"
-            android:textSize="13sp" />
+            android:textColor="@color/text_muted"
+            android:textSize="14sp" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

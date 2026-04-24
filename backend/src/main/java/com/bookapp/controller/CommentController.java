@@ -1,6 +1,6 @@
 package com.bookapp.controller;
 
-import com.bookapp.model.Comment;
+import com.bookapp.dto.CommentResponseDto;
 import com.bookapp.service.CommentService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +19,14 @@ public class CommentController {
 
     // GET /api/comments/book/{bookId}
     @GetMapping("/book/{bookId}")
-    public List<Comment> getByBook(@PathVariable String bookId) {
+    public List<CommentResponseDto> getByBook(@PathVariable String bookId) {
         return commentService.getByBookId(bookId);
     }
 
     // POST /api/comments
     // Body: { "bookId": "...", "userId": "...", "content": "..." }
     @PostMapping
-    public Comment addComment(@RequestBody Map<String, String> body) {
+    public CommentResponseDto addComment(@RequestBody Map<String, String> body) {
         String bookId = body.get("bookId");
         String userId = body.get("userId");
         String content = body.get("content");

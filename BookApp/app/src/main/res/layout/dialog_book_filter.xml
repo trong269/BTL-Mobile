@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Thể loại"
-            android:textColor="#3F4A57"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
             android:layout_marginBottom="10dp" />
@@ -81,7 +81,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Năm phát hành"
-            android:textColor="#3F4A57"
+            android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold"
             android:layout_marginBottom="10dp" />
@@ -114,7 +114,7 @@
                 android:background="@drawable/home_chip_bg"
                 android:text="Clear"
                 android:textAllCaps="false"
-                android:textColor="#23408E"
+                android:textColor="@color/text_accent"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginEnd="8dp" />

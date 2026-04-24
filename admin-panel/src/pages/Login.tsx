@@ -38,6 +38,12 @@ export default function Login() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const profile = await login(values);
+
+      if (profile.role !== 'ADMIN') {
+        toast.error('Bạn không có quyền truy cập vào trang quản trị.');
+        return;
+      }
+
       setAuthState({ isAuthenticated: true, userProfile: profile });
       toast.success('Đăng nhập thành công!');
       navigate("/");

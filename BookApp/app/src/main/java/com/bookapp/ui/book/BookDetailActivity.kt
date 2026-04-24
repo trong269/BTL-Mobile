@@ -36,6 +36,9 @@ import com.google.android.material.R as MaterialR
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import androidx.lifecycle.lifecycleScope
+import com.bookapp.data.local.OfflineManager
+import kotlinx.coroutines.launch
 
 class BookDetailActivity : AppCompatActivity() {
 
@@ -56,6 +59,7 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var btnFavorite: Button
     private lateinit var btnReadNow: Button
     private lateinit var btnChapterList: Button
+    private lateinit var btnDownload: Button
 
     // Tabs
     private lateinit var tabIntro: Button
@@ -83,6 +87,7 @@ class BookDetailActivity : AppCompatActivity() {
     private var bookId: String? = null
     private var isFavorited = false
     private var currentBook: Book? = null
+    private lateinit var offlineManager: OfflineManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,6 +114,8 @@ class BookDetailActivity : AppCompatActivity() {
 
         loadBookDetail()
         checkFavoriteStatus()
+        offlineManager = OfflineManager(this)
+        checkDownloadStatus()
     }
 
     private fun bindViews() {
@@ -123,6 +130,7 @@ class BookDetailActivity : AppCompatActivity() {
         btnFavorite = findViewById(R.id.btnFavorite)
         btnReadNow = findViewById(R.id.btnReadNow)
         btnChapterList = findViewById(R.id.btnChapterList)
+        btnDownload = findViewById(R.id.btnDownload)
 
         tabIntro = findViewById(R.id.tabIntro)
         tabReviews = findViewById(R.id.tabReviews)
@@ -189,6 +197,8 @@ class BookDetailActivity : AppCompatActivity() {
 
         // Submit comment
         btnSubmitComment.setOnClickListener { submitComment() }
+
+        btnDownload.setOnClickListener { handleDownload() }
     }
 
     private fun loadBookDetail() {
@@ -200,15 +210,35 @@ class BookDetailActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             response.body()?.let { bindBook(it) }
                         } else {
-                            Toast.makeText(this@BookDetailActivity, "Không tải được thông tin sách", Toast.LENGTH_SHORT).show()
+                            tryLoadingLocal(id)
                         }
                     }
                     override fun onFailure(call: Call<Book>, t: Throwable) {
-                        Toast.makeText(this@BookDetailActivity, "Lỗi kết nối: ${t.message}", Toast.LENGTH_SHORT).show()
+                        tryLoadingLocal(id)
                     }
                 })
         }.onFailure {
-            Toast.makeText(this, "Không thể tải chi tiết sách", Toast.LENGTH_SHORT).show()
+            tryLoadingLocal(id)
+        }
+    }
+
+    private fun tryLoadingLocal(id: String) {
+        lifecycleScope.launch {
+            val localBook = offlineManager.getLocalBook(id)
+            if (localBook != null) {
+                val book = Book(
+                    id = localBook.id,
+                    title = localBook.title,
+                    author = localBook.author,
+                    description = localBook.description,
+                    coverImage = localBook.coverImage,
+                    totalChapters = localBook.totalChapters
+                )
+                bindBook(book)
+                Toast.makeText(this@BookDetailActivity, "Đang xem ở chế độ ngoại tuyến", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@BookDetailActivity, "Lỗi kết nối máy chủ", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -454,118 +484,141 @@ class BookDetailActivity : AppCompatActivity() {
         RetrofitClient.instance.getChaptersByBook(id)
             .enqueue(object : Callback<List<Chapter>> {
                 override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
-                    if (!response.isSuccessful) {
-                        Toast.makeText(this@BookDetailActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
-                        return
-                    }
-
-                    val chapters = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
-                    if (chapters.isEmpty()) {
-                        Toast.makeText(this@BookDetailActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
-                        return
-                    }
-
-                    val dialog = BottomSheetDialog(this@BookDetailActivity)
-                    val content = layoutInflater.inflate(R.layout.dialog_reader_chapters, null)
-                    dialog.setContentView(content)
-
-                    val pageSize = 15
-                    content.findViewById<TextView>(R.id.tvDialogChapterTitle)?.text = tvTitle.text
-                    content.findViewById<ImageButton>(R.id.btnDialogChapterClose)?.setOnClickListener {
-                        dialog.dismiss()
-                    }
-
-                    val recycler = content.findViewById<RecyclerView>(R.id.recyclerReaderChapters)
-                    val tvPageIndicator = content.findViewById<TextView>(R.id.tvPageIndicator)
-                    val btnPageFirst = content.findViewById<ImageButton>(R.id.btnPageFirst)
-                    val btnPagePrev = content.findViewById<ImageButton>(R.id.btnPagePrev)
-                    val btnPageNext = content.findViewById<ImageButton>(R.id.btnPageNext)
-                    val btnPageLast = content.findViewById<ImageButton>(R.id.btnPageLast)
-
-                    val adapter = ReaderChapterAdapter { selectedChapter ->
-                        dialog.dismiss()
-                        val chapterId = selectedChapter.id ?: return@ReaderChapterAdapter
-                        addToRecentLibrary(id)
-                        val intent = Intent(this@BookDetailActivity, ReaderActivity::class.java).apply {
-                            putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
-                            putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
-                            putExtra(ReaderActivity.EXTRA_TARGET_CHAPTER_ID, chapterId)
+                    if (response.isSuccessful) {
+                        val chapters = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
+                        if (chapters.isEmpty()) {
+                            Toast.makeText(this@BookDetailActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
+                        } else {
+                            showChapterDialogWithData(chapters)
                         }
-                        startActivity(intent)
+                    } else {
+                        tryLoadingLocalChapters(id)
                     }
-
-                    recycler.layoutManager = LinearLayoutManager(this@BookDetailActivity)
-                    recycler.adapter = adapter
-
-                    val totalPages = ((chapters.size + pageSize - 1) / pageSize).coerceAtLeast(1)
-                    var currentPage = 0
-
-                    fun updatePagerButtons() {
-                        val canGoPrev = currentPage > 0
-                        val canGoNext = currentPage < totalPages - 1
-
-                        btnPageFirst.isEnabled = canGoPrev
-                        btnPagePrev.isEnabled = canGoPrev
-                        btnPageNext.isEnabled = canGoNext
-                        btnPageLast.isEnabled = canGoNext
-
-                        btnPageFirst.alpha = if (canGoPrev) 1f else 0.35f
-                        btnPagePrev.alpha = if (canGoPrev) 1f else 0.35f
-                        btnPageNext.alpha = if (canGoNext) 1f else 0.35f
-                        btnPageLast.alpha = if (canGoNext) 1f else 0.35f
-                    }
-
-                    fun renderPage() {
-                        val start = currentPage * pageSize
-                        val end = (start + pageSize).coerceAtMost(chapters.size)
-                        val pageItems = chapters.subList(start, end)
-
-                        adapter.submitList(pageItems, null)
-                        tvPageIndicator.text = "${currentPage + 1}/$totalPages"
-                        updatePagerButtons()
-                    }
-
-                    btnPageFirst.setOnClickListener {
-                        if (currentPage != 0) {
-                            currentPage = 0
-                            renderPage()
-                        }
-                    }
-
-                    btnPagePrev.setOnClickListener {
-                        if (currentPage > 0) {
-                            currentPage -= 1
-                            renderPage()
-                        }
-                    }
-
-                    btnPageNext.setOnClickListener {
-                        if (currentPage < totalPages - 1) {
-                            currentPage += 1
-                            renderPage()
-                        }
-                    }
-
-                    btnPageLast.setOnClickListener {
-                        if (currentPage != totalPages - 1) {
-                            currentPage = totalPages - 1
-                            renderPage()
-                        }
-                    }
-
-                    renderPage()
-
-                    dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                    dialog.behavior.skipCollapsed = true
-                    dialog.show()
-                    dialog.findViewById<View>(MaterialR.id.design_bottom_sheet)
-                        ?.setBackgroundResource(android.R.color.transparent)
                 }
 
                 override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
-                    Toast.makeText(this@BookDetailActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
+                    tryLoadingLocalChapters(id)
                 }
             })
+    }
+
+    private fun tryLoadingLocalChapters(id: String) {
+        lifecycleScope.launch {
+            val localChapters = offlineManager.getLocalChapters(id)
+            if (localChapters.isNotEmpty()) {
+                val chapters = localChapters.map { 
+                    Chapter(
+                        id = it.id,
+                        bookId = it.bookId,
+                        chapterNumber = it.chapterNumber,
+                        title = it.title,
+                        content = it.content
+                    )
+                }
+                showChapterDialogWithData(chapters)
+            } else {
+                Toast.makeText(this@BookDetailActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showChapterDialogWithData(chapters: List<Chapter>) {
+        val id = bookId ?: return
+        val dialog = BottomSheetDialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_reader_chapters, null)
+        dialog.setContentView(content)
+
+        val pageSize = 15
+        content.findViewById<TextView>(R.id.tvDialogChapterTitle)?.text = tvTitle.text
+        content.findViewById<ImageButton>(R.id.btnDialogChapterClose)?.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        val recycler = content.findViewById<RecyclerView>(R.id.recyclerReaderChapters)
+        val tvPageIndicator = content.findViewById<TextView>(R.id.tvPageIndicator)
+        val btnPageFirst = content.findViewById<ImageButton>(R.id.btnPageFirst)
+        val btnPagePrev = content.findViewById<ImageButton>(R.id.btnPagePrev)
+        val btnPageNext = content.findViewById<ImageButton>(R.id.btnPageNext)
+        val btnPageLast = content.findViewById<ImageButton>(R.id.btnPageLast)
+
+        val adapter = ReaderChapterAdapter { selectedChapter ->
+            dialog.dismiss()
+            val chapterId = selectedChapter.id ?: return@ReaderChapterAdapter
+            addToRecentLibrary(id)
+            val intent = Intent(this, ReaderActivity::class.java).apply {
+                putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
+                putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
+                putExtra(ReaderActivity.EXTRA_TARGET_CHAPTER_ID, chapterId)
+            }
+            startActivity(intent)
+        }
+
+        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.adapter = adapter
+
+        val totalPages = ((chapters.size + pageSize - 1) / pageSize).coerceAtLeast(1)
+        var currentPage = 0
+
+        fun updatePagerButtons() {
+            val canGoPrev = currentPage > 0
+            val canGoNext = currentPage < totalPages - 1
+
+            btnPageFirst.isEnabled = canGoPrev
+            btnPagePrev.isEnabled = canGoPrev
+            btnPageNext.isEnabled = canGoNext
+            btnPageLast.isEnabled = canGoNext
+
+            btnPageFirst.alpha = if (canGoPrev) 1f else 0.35f
+            btnPagePrev.alpha = if (canGoPrev) 1f else 0.35f
+            btnPageNext.alpha = if (canGoNext) 1f else 0.35f
+            btnPageLast.alpha = if (canGoNext) 1f else 0.35f
+        }
+
+        fun renderPage() {
+            val start = currentPage * pageSize
+            val end = (start + pageSize).coerceAtMost(chapters.size)
+            val pageItems = chapters.subList(start, end)
+
+            adapter.submitList(pageItems, null)
+            tvPageIndicator.text = "${currentPage + 1}/$totalPages"
+            updatePagerButtons()
+        }
+
+        btnPageFirst.setOnClickListener {
+            if (currentPage != 0) {
+                currentPage = 0
+                renderPage()
+            }
+        }
+
+        btnPagePrev.setOnClickListener {
+            if (currentPage > 0) {
+                currentPage -= 1
+                renderPage()
+            }
+        }
+
+        btnPageNext.setOnClickListener {
+            if (currentPage < totalPages - 1) {
+                currentPage += 1
+                renderPage()
+            }
+        }
+
+        btnPageLast.setOnClickListener {
+            if (currentPage != totalPages - 1) {
+                currentPage = totalPages - 1
+                renderPage()
+            }
+        }
+
+        renderPage()
+
+        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        dialog.behavior.skipCollapsed = true
+        dialog.show()
+        dialog.findViewById<View>(MaterialR.id.design_bottom_sheet)
+            ?.setBackgroundResource(android.R.color.transparent)
     }
 
     private fun addToRecentLibrary(bookId: String) {
@@ -600,5 +653,46 @@ class BookDetailActivity : AppCompatActivity() {
             .replace("&#\\d+;".toRegex(), "")         // Remove numeric entities
             .replace("&#x[0-9a-fA-F]+;".toRegex(), "")  // Remove hex entities
             .trim()
+    }
+
+    private fun checkDownloadStatus() {
+        val id = bookId ?: return
+        lifecycleScope.launch {
+            if (offlineManager.isBookDownloaded(id)) {
+                btnDownload.text = "Đã Tải Offline (Xóa)"
+                btnDownload.setTextColor(0xFFE53935.toInt())
+            } else {
+                btnDownload.text = "Tải Đọc Offline"
+                btnDownload.setTextColor(ContextCompat.getColor(this@BookDetailActivity, R.color.text_accent))
+            }
+        }
+    }
+
+    private fun handleDownload() {
+        val id = bookId ?: return
+        val book = currentBook ?: return
+
+        lifecycleScope.launch {
+            if (offlineManager.isBookDownloaded(id)) {
+                offlineManager.deleteDownloadedBook(id)
+                Toast.makeText(this@BookDetailActivity, "Đã xóa bản offline", Toast.LENGTH_SHORT).show()
+                checkDownloadStatus()
+            } else {
+                btnDownload.isEnabled = false
+                btnDownload.text = "Đang tải..."
+                
+                try {
+                    offlineManager.downloadBook(book) { current, total ->
+                        // Progress update if needed
+                    }
+                    Toast.makeText(this@BookDetailActivity, "Tải sách thành công!", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this@BookDetailActivity, "Lỗi tải sách: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    btnDownload.isEnabled = true
+                    checkDownloadStatus()
+                }
+            }
+        }
     }
 }

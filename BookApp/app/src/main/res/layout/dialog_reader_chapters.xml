@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/dialog_reader_chapters_bg"
+    android:background="@drawable/dialog_reader_rounded_bg"
     android:orientation="vertical">
 
     <LinearLayout
@@ -19,7 +19,7 @@
             android:background="@android:color/transparent"
             android:contentDescription="Đóng danh sách chương"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="#1F6FB2" />
+            android:tint="@color/reader_primary" />
 
         <TextView
             android:id="@+id/tvDialogChapterTitle"
@@ -29,7 +29,7 @@
             android:gravity="center"
             android:maxLines="1"
             android:text="Danh sách chương"
-            android:textColor="#111111"
+            android:textColor="@color/reader_text_primary"
             android:textSize="19sp"
             android:textStyle="bold" />
 
@@ -85,7 +85,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:text="1/1"
-            android:textColor="#A1A6AD"
+            android:textColor="@color/text_muted"
             android:textSize="17sp" />
 
         <ImageButton

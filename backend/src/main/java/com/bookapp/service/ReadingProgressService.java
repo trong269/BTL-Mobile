@@ -7,6 +7,7 @@ import com.bookapp.model.Chapter;
 import com.bookapp.model.ReadingProgress;
 import com.bookapp.repository.ChapterRepository;
 import com.bookapp.repository.ReadingProgressRepository;
+import com.bookapp.repository.UserRepository;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,25 +21,30 @@ public class ReadingProgressService {
     private final ReadingProgressRepository readingProgressRepository;
     private final ChapterRepository chapterRepository;
     private final BookService bookService;
+    private final UserRepository userRepository;
 
     public ReadingProgressService(
             ReadingProgressRepository readingProgressRepository,
             ChapterRepository chapterRepository,
-            BookService bookService
+            BookService bookService,
+            UserRepository userRepository
     ) {
         this.readingProgressRepository = readingProgressRepository;
         this.chapterRepository = chapterRepository;
         this.bookService = bookService;
+        this.userRepository = userRepository;
     }
 
     public ReadingProgressResponseDto ensure(EnsureReadingProgressRequest payload) {
         validateIdentity(payload.getUserId(), payload.getBookId());
         bookService.getById(payload.getBookId());
-        bookService.incrementViews(payload.getBookId().trim());
+        bookService.incrementViews(payload.getBookId().trim(), payload.getUserId().trim());
 
         ReadingProgress existing = readingProgressRepository
                 .findByUserIdAndBookId(payload.getUserId(), payload.getBookId())
                 .orElse(null);
+
+        updateUserActivity(payload.getUserId());
 
         if (existing != null) {
             return toResponse(existing);
@@ -94,7 +100,16 @@ public class ReadingProgressService {
         existing.setChapterProgressPercent(progress);
         existing.setUpdatedAt(LocalDateTime.now());
 
+        updateUserActivity(payload.getUserId());
+
         return toResponse(readingProgressRepository.save(existing));
+    }
+
+    private void updateUserActivity(String userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setLastActiveAt(LocalDateTime.now());
+            userRepository.save(user);
+        });
     }
 
     private void validateIdentity(String userId, String bookId) {

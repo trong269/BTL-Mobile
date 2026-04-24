@@ -7,6 +7,7 @@ import {
   Tags,
   Settings,
   Users,
+  Bell,
   HelpCircle,
   LogOut,
   X,
@@ -185,6 +186,13 @@ export default function Layout() {
           </div>
 
           <div className="flex items-center gap-4 ml-auto">
+            <Link
+              to="/notifications"
+              className="relative p-2 rounded-full hover:bg-surface-container transition-colors"
+              title="Gửi thông báo"
+            >
+              <Bell className="w-5 h-5 text-on-surface-variant hover:text-primary transition-colors" />
+            </Link>
             <div className="relative flex items-center pl-2" ref={adminMenuRef}>
               <img
                 src={userProfile?.avatar || "https://i.pravatar.cc/150?img=32"}
