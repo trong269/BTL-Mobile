@@ -44,7 +44,7 @@
     <string name="reader_qa_error_server">AI đang bận, thử lại sau ít phút.</string>
     <string name="reader_qa_error_unknown">Không thể xử lý câu hỏi lúc này.</string>
 
-    <!-- Google Login -->
+    <!-- Google Login (chỉ giữ 1 cái) -->
     <string name="default_web_client_id">565355262450-fam9e356pmsc817opbcjsdlnh7fpfobf.apps.googleusercontent.com</string>
 
 </resources>

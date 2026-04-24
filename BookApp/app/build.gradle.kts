@@ -17,7 +17,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // ✅ chọn 1 IP đúng (sửa lại theo máy bạn nếu cần)
+        // Backend API
         buildConfigField("String", "BASE_URL", "\"http://192.168.1.23:8080/\"")
         buildConfigField("String", "AI_BASE_URL", "\"http://192.168.1.23:8000/\"")
 
@@ -33,10 +33,12 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         buildConfig = true
         compose = true
