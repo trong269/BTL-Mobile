@@ -71,6 +71,9 @@ import kotlin.math.roundToInt
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import androidx.lifecycle.lifecycleScope
+import com.bookapp.data.local.OfflineManager
+import kotlinx.coroutines.launch
 
 class ReaderActivity : AppCompatActivity() {
 
@@ -162,6 +165,7 @@ class ReaderActivity : AppCompatActivity() {
     private var bookId: String? = null
     private var bookTitle: String = "Đọc sách"
     private var targetChapterId: String? = null
+    private lateinit var offlineManager: OfflineManager
 
     private var chapters: List<Chapter> = emptyList()
     private var currentChapterIndex: Int = 0
@@ -275,6 +279,7 @@ class ReaderActivity : AppCompatActivity() {
             return
         }
 
+        offlineManager = OfflineManager(this)
         loadReaderSettings()
         bindViews()
         applyReaderAppearance()
@@ -515,33 +520,58 @@ class ReaderActivity : AppCompatActivity() {
 
     private fun loadChaptersAndProgress() {
         val safeBookId = bookId ?: return
-        RetrofitClient.instance.getChaptersByBook(safeBookId)
-            .enqueue(object : Callback<List<Chapter>> {
-                override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
-                    if (!response.isSuccessful) {
-                        Toast.makeText(this@ReaderActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
-                        finish()
-                        return
+        
+        lifecycleScope.launch {
+            if (offlineManager.isBookDownloaded(safeBookId)) {
+                val localChapters = offlineManager.getLocalChapters(safeBookId)
+                if (localChapters.isNotEmpty()) {
+                    chapters = localChapters.map { 
+                        Chapter(it.id, it.bookId, it.chapterNumber, it.title, it.content) 
+                    }
+                    // Still try to sync progress if online, but don't block
+                    ensureReadingProgress(silent = true)
+                    
+                    // If we haven't switched to a chapter yet (from ensureReadingProgress), 
+                    // show the first one or target
+                    if (currentChapterIndex == 0 && targetChapterId == null) {
+                        showChapter(0, 0)
+                    } else if (targetChapterId != null) {
+                        val idx = chapters.indexOfFirst { it.id == targetChapterId }
+                        if (idx >= 0) showChapter(idx, 0)
+                    }
+                    return@launch
+                }
+            }
+
+            // Fallback to network
+            RetrofitClient.instance.getChaptersByBook(safeBookId)
+                .enqueue(object : Callback<List<Chapter>> {
+                    override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
+                        if (!response.isSuccessful) {
+                            Toast.makeText(this@ReaderActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
+                            finish()
+                            return
+                        }
+
+                        val loaded = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
+                        if (loaded.isEmpty()) {
+                            Toast.makeText(this@ReaderActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
+                            finish()
+                            return
+                        }
+                        chapters = loaded
+                        ensureReadingProgress()
                     }
 
-                    val loaded = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
-                    if (loaded.isEmpty()) {
-                        Toast.makeText(this@ReaderActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
+                    override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
+                        Toast.makeText(this@ReaderActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
                         finish()
-                        return
                     }
-                    chapters = loaded
-                    ensureReadingProgress()
-                }
-
-                override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
-                    Toast.makeText(this@ReaderActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-            })
+                })
+        }
     }
 
-    private fun ensureReadingProgress() {
+    private fun ensureReadingProgress(silent: Boolean = false) {
         val safeUserId = userId ?: return
         val safeBookId = bookId ?: return
 
@@ -549,35 +579,51 @@ class ReaderActivity : AppCompatActivity() {
             EnsureReadingProgressRequest(safeUserId, safeBookId)
         ).enqueue(object : Callback<ReadingProgress> {
             override fun onResponse(call: Call<ReadingProgress>, response: Response<ReadingProgress>) {
-                if (!response.isSuccessful) {
-                    Toast.makeText(this@ReaderActivity, "Không tạo được tiến trình đọc", Toast.LENGTH_SHORT).show()
-                    finish()
-                    return
+                if (response.isSuccessful) {
+                    val progress = response.body()
+                    handleReadingProgress(progress)
+                } else if (!silent) {
+                    tryLoadingLocalProgress(safeBookId)
                 }
-
-                val progress = response.body()
-                val requestedChapter = targetChapterId
-                if (!requestedChapter.isNullOrBlank()) {
-                    val requestedIndex = chapters.indexOfFirst { it.id == requestedChapter }
-                    if (requestedIndex >= 0) {
-                        targetChapterId = null
-                        switchToChapter(requestedIndex)
-                        return
-                    }
-                }
-
-                val targetChapterId = progress?.chapterId
-                val targetIndex = chapters.indexOfFirst { it.id == targetChapterId }.takeIf { it >= 0 } ?: 0
-                currentChapterIndex = targetIndex
-                val percent = (progress?.chapterProgressPercent ?: 0).coerceIn(0, 100)
-                showChapter(targetIndex, percent)
             }
 
             override fun onFailure(call: Call<ReadingProgress>, t: Throwable) {
-                Toast.makeText(this@ReaderActivity, "Lỗi tiến trình: ${t.message}", Toast.LENGTH_SHORT).show()
-                finish()
+                if (!silent) {
+                    tryLoadingLocalProgress(safeBookId)
+                }
             }
         })
+    }
+
+    private fun handleReadingProgress(progress: ReadingProgress?) {
+        val requestedChapter = targetChapterId
+        if (!requestedChapter.isNullOrBlank()) {
+            val requestedIndex = chapters.indexOfFirst { it.id == requestedChapter }
+            if (requestedIndex >= 0) {
+                targetChapterId = null
+                switchToChapter(requestedIndex)
+                return
+            }
+        }
+
+        val targetChapterId = progress?.chapterId
+        val targetIndex = chapters.indexOfFirst { it.id == targetChapterId }.takeIf { it >= 0 } ?: 0
+        currentChapterIndex = targetIndex
+        val percent = (progress?.chapterProgressPercent ?: 0).coerceIn(0, 100)
+        showChapter(targetIndex, percent)
+    }
+
+    private fun tryLoadingLocalProgress(bookId: String) {
+        val chapterId = prefs.getString("last_chapter_$bookId", null)
+        val percent = prefs.getInt("last_percent_$bookId", 0)
+        
+        val targetIndex = if (chapterId != null) {
+            chapters.indexOfFirst { it.id == chapterId }.takeIf { it >= 0 } ?: 0
+        } else 0
+        
+        currentChapterIndex = targetIndex
+        showChapter(targetIndex, percent)
+        Toast.makeText(this, "Đang xem ở chế độ ngoại tuyến", Toast.LENGTH_SHORT).show()
     }
 
     private fun showChapter(index: Int, initialPercent: Int) {
@@ -630,9 +676,8 @@ class ReaderActivity : AppCompatActivity() {
         currentChapterIndex = targetIndex
         val chapterId = chapters[targetIndex].id ?: return
 
-        updateReadingProgress(chapterId, 0, onSuccess = {
-            showChapter(targetIndex, 0)
-        })
+        showChapter(targetIndex, 0)
+        updateReadingProgress(chapterId, 0)
     }
 
     private fun showChapterBottomSheet() {
@@ -961,6 +1006,12 @@ class ReaderActivity : AppCompatActivity() {
         val safeUserId = userId ?: return
         val safeBookId = bookId ?: return
 
+        // Always save locally first
+        prefs.edit()
+            .putString("last_chapter_$safeBookId", chapterId)
+            .putInt("last_percent_$safeBookId", percent)
+            .apply()
+
         RetrofitClient.instance.updateReadingProgress(
             UpdateReadingProgressRequest(
                 userId = safeUserId,
@@ -1056,9 +1107,9 @@ class ReaderActivity : AppCompatActivity() {
             stopAutoPlay()
             currentChapterIndex -= 1
             val chapterId = chapters[currentChapterIndex].id ?: return
-            updateReadingProgress(chapterId, 100, onSuccess = {
-                showChapter(currentChapterIndex, 100)
-            })
+            
+            showChapter(currentChapterIndex, 100)
+            updateReadingProgress(chapterId, 100)
         }
     }
 

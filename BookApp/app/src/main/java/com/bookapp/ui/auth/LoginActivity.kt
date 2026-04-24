@@ -48,6 +48,17 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Kiểm tra phiên đăng nhập hiện tại
+        val prefs = getSharedPreferences("BookAppPrefs", MODE_PRIVATE)
+        val savedUserId = prefs.getString("userId", null)
+        if (savedUserId != null) {
+            // Đã đăng nhập, vào thẳng trang chủ (Hỗ trợ offline)
+            startActivity(Intent(this, HomeActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_login)
 
         val username = findViewById<EditText>(R.id.edtUsername)
