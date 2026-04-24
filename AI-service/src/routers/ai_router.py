@@ -1,5 +1,6 @@
 import json
 import re
+import unicodedata
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, HTTPException
@@ -212,6 +213,131 @@ def _extract_suggestions(raw: str, max_questions: int) -> list[str]:
     return deduped
 
 
+def _strip_accents(text: str) -> str:
+    if not text:
+        return ""
+    return "".join(
+        ch for ch in unicodedata.normalize("NFD", text)
+        if unicodedata.category(ch) != "Mn"
+    )
+
+
+def _normalize_text_for_match(text: str) -> str:
+    if not text:
+        return ""
+    normalized = _strip_accents(text).lower()
+    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def _tokenize_for_match(text: str) -> set[str]:
+    normalized = _normalize_text_for_match(text)
+    if not normalized:
+        return set()
+    return {token for token in normalized.split(" ") if len(token) >= 2}
+
+
+def _extract_evidence_lines(answer: str) -> list[str]:
+    if not answer or not answer.strip():
+        return []
+
+    evidences: list[str] = []
+    in_evidence_section = False
+    lines = answer.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    for line in lines:
+        stripped = line.strip()
+        normalized = _normalize_text_for_match(stripped)
+        if normalized.startswith("bang chung"):
+            in_evidence_section = True
+            continue
+
+        if not in_evidence_section:
+            continue
+
+        if not stripped:
+            if evidences:
+                break
+            continue
+
+        cleaned = re.sub(r"^\s*(?:[-*•]+|[0-9]+[.)])\s*", "", stripped).strip(" \t\"'")
+        if not cleaned:
+            continue
+        evidences.append(cleaned)
+        if len(evidences) >= 2:
+            break
+
+    if evidences:
+        return evidences
+
+    quoted_spans = re.findall(r"[\"“](.{20,220}?)[\"”]", answer)
+    for quoted in quoted_spans:
+        candidate = quoted.strip()
+        if candidate:
+            evidences.append(candidate)
+        if len(evidences) >= 2:
+            break
+    return evidences
+
+
+def _is_evidence_grounded(evidence: str, context_chunks: list[str]) -> bool:
+    if not evidence or not context_chunks:
+        return False
+
+    evidence_norm = _normalize_text_for_match(evidence)
+    evidence_tokens = _tokenize_for_match(evidence)
+    if not evidence_norm or not evidence_tokens:
+        return False
+
+    for chunk in context_chunks:
+        chunk_norm = _normalize_text_for_match(chunk)
+        if not chunk_norm:
+            continue
+
+        if len(evidence_norm) >= 20 and evidence_norm in chunk_norm:
+            return True
+        if len(chunk_norm) >= 20 and chunk_norm in evidence_norm:
+            return True
+
+        chunk_tokens = _tokenize_for_match(chunk)
+        if not chunk_tokens:
+            continue
+
+        overlap = evidence_tokens.intersection(chunk_tokens)
+        overlap_ratio = len(overlap) / max(len(evidence_tokens), 1)
+        if len(overlap) >= 3 and overlap_ratio >= 0.38:
+            return True
+
+    return False
+
+
+def _validate_qa_grounding(raw_result: str, context_chunks: list[str]) -> str:
+    fallback = "Mình chưa đủ dữ kiện trong phần đã đọc để trả lời chắc chắn câu này."
+    sanitized = sanitize_reader_ai_output(raw_result, mode="qa")
+    if not context_chunks:
+        return fallback
+
+    evidence_lines = _extract_evidence_lines(sanitized)
+    if not evidence_lines:
+        return fallback
+
+    grounded_count = sum(
+        1 for evidence in evidence_lines
+        if _is_evidence_grounded(evidence, context_chunks)
+    )
+    if grounded_count < 1:
+        return fallback
+
+    return sanitized
+
+
+def _iter_stream_tokens(text: str):
+    chunks = re.findall(r"\S+\s*", text or "")
+    if not chunks and text:
+        chunks = [text]
+    for chunk in chunks:
+        yield chunk
+
+
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.post(
@@ -267,14 +393,14 @@ async def explain(body: TextRequest) -> AIResponse:
 async def qa(body: QARequest) -> AIResponse:
     try:
         agent = AgentFactory.get_agent("qa")
-        result = await agent.arun(
+        raw_result = await agent.arun(
             text=body.question,
             book_name=body.book_name,
             current_chapter_title=body.current_chapter_title,
             context_chunks=body.context_chunks,
             chat_history=[item.model_dump() for item in body.chat_history],
         )
-        result = sanitize_reader_ai_output(result, mode="qa")
+        result = _validate_qa_grounding(raw_result, body.context_chunks)
         logger.info("QA request successful")
         return AIResponse(result=result, task="qa")
     except Exception as error:
@@ -291,6 +417,7 @@ async def qa_stream(body: QARequest) -> StreamingResponse:
 
     async def stream_generator() -> AsyncGenerator[str, None]:
         try:
+            collected_tokens: list[str] = []
             async for token in agent.astream(
                 text=body.question,
                 book_name=body.book_name,
@@ -299,7 +426,13 @@ async def qa_stream(body: QARequest) -> StreamingResponse:
                 chat_history=[item.model_dump() for item in body.chat_history],
             ):
                 if token:
-                    yield _format_sse_event({"token": token})
+                    collected_tokens.append(token)
+
+            raw_result = "".join(collected_tokens)
+            final_result = _validate_qa_grounding(raw_result, body.context_chunks)
+
+            for token in _iter_stream_tokens(final_result):
+                yield _format_sse_event({"token": token})
             yield _format_sse_event({"done": True})
         except Exception as error:
             logger.error("POST /qa/stream internal error: %s", error)

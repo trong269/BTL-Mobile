@@ -35,6 +35,16 @@ class MockAgent:
                 "- Nếu tóm nhanh, 3 ý quan trọng là gì?"
             )
 
+        if context_chunks is not None:
+            evidence_source = (context_chunks[0] if context_chunks else "Không có ngữ liệu").strip()
+            return (
+                "Trả lời:\n"
+                f"- {text}\n"
+                "\n"
+                "Bằng chứng:\n"
+                f"- {evidence_source}"
+            )
+
         return (
             f"## Mocked result\n"
             f"- text:{text}\n"
@@ -57,7 +67,10 @@ class MockAgent:
         chat_history: list[dict] | None = None,
         **kwargs,
     ):
-        words = ["Mocked", "stream", "result", "for:", text]
+        evidence_source = (context_chunks[0] if context_chunks else "Không có ngữ liệu").strip()
+        words = [
+            "Trả", "lời:\n-", text, "\n\nBằng", "chứng:\n-", evidence_source
+        ]
         for word in words:
             yield word + " "
 
@@ -149,7 +162,7 @@ def test_qa_success(client, mock_agent_factory):
     assert response.status_code == 200
     data = response.json()
     assert data["task"] == "qa"
-    assert "Mocked result" in data["result"]
+    assert "Bằng chứng" in data["result"]
     mock_agent_factory.assert_called_once_with("qa")
 
 
@@ -168,15 +181,38 @@ def test_qa_stream_success(client, mock_agent_factory):
         "question": "Giải thích mâu thuẫn ở đoạn này",
         "book_name": "Lão Hạc",
         "current_chapter_title": "Chương 2",
-        "context_chunks": ["Đoạn 1", "Đoạn 2"],
+        "context_chunks": [
+            "Lão Hạc nhìn con chó Vàng rất lâu rồi thở dài vì mặc cảm.",
+            "Ông giáo nhận ra lão đang giấu một nỗi dằn vặt rất sâu."
+        ],
         "chat_history": [],
     }
     response = client.post("/api/ai/qa/stream", json=payload)
     assert response.status_code == 200
     assert "data:" in response.text
-    assert "Mocked" in response.text
+    assert "Bằng" in response.text
     assert '"done": true' in response.text
     mock_agent_factory.assert_called_once_with("qa")
+
+
+def test_qa_grounding_fallback_when_missing_evidence(client):
+    class WeakMockAgent:
+        async def arun(self, **kwargs) -> str:
+            return "Trả lời:\n- Mình đoán nhân vật đang lo lắng."
+
+    payload = {
+        "question": "Nhân vật đang cảm thấy gì?",
+        "book_name": "Lão Hạc",
+        "current_chapter_title": "Chương 2",
+        "context_chunks": ["Lão Hạc nhìn con chó Vàng rất lâu rồi thở dài."],
+        "chat_history": [],
+    }
+
+    with patch("src.routers.ai_router.AgentFactory.get_agent", return_value=WeakMockAgent()):
+        response = client.post("/api/ai/qa", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["result"] == "Mình chưa đủ dữ kiện trong phần đã đọc để trả lời chắc chắn câu này."
 
 
 def test_suggestions_success(client, mock_agent_factory):
@@ -202,4 +238,3 @@ def test_suggestions_empty_chapter_text(client):
     }
     response = client.post("/api/ai/suggestions", json=payload)
     assert response.status_code == 422
-

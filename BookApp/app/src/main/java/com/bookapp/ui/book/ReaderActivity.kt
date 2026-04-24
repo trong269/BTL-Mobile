@@ -65,7 +65,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response as OkHttpResponse
 import org.json.JSONObject
 import java.io.IOException
+import java.text.Normalizer
 import kotlin.math.abs
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.roundToInt
 import retrofit2.Call
@@ -114,6 +116,23 @@ class ReaderActivity : AppCompatActivity() {
         val content: String
     )
 
+    private data class QaRetrievalChunk(
+        val id: String,
+        val text: String,
+        val chapterIndex: Int,
+        val orderInChapter: Int,
+        val orderRatio: Double,
+        val tokenCounts: Map<String, Int>,
+        val tokenSet: Set<String>,
+        val hasEntity: Boolean
+    )
+
+    private data class QaScoredChunk(
+        val chunk: QaRetrievalChunk,
+        val relevanceScore: Double,
+        val conversationScore: Double
+    )
+
     private data class AiSheetViews(
         val title: TextView,
         val subtitle: TextView,
@@ -138,6 +157,13 @@ class ReaderActivity : AppCompatActivity() {
         private const val QA_MAX_CHAT_HISTORY = 6
         private const val QA_MAX_CONTEXT_CHUNKS = 4
         private const val QA_MAX_CHUNK_LENGTH = 420
+        private const val QA_MIN_TOTAL_CONTEXT_CHARS = 900
+        private const val QA_MAX_TOTAL_CONTEXT_CHARS = 1800
+        private const val QA_BM25_K1 = 1.2
+        private const val QA_BM25_B = 0.75
+        private const val QA_MMR_LAMBDA = 0.72
+        private const val QA_SENTENCE_WINDOW = 2
+        private const val QA_SENTENCE_STEP = 1
         private const val QA_SUGGESTIONS_COUNT = 5
     }
 
@@ -234,6 +260,15 @@ class ReaderActivity : AppCompatActivity() {
     private val prefs by lazy {
         getSharedPreferences("ReaderSettings", MODE_PRIVATE)
     }
+
+    private val qaStopWords = setOf(
+        "la", "là", "cua", "của", "cho", "voi", "với", "mot", "một", "nhung", "những",
+        "trong", "nay", "này", "doan", "đoạn", "phan", "phần", "nguoi", "người", "nhan",
+        "vat", "vật", "gi", "gì", "nao", "nào", "the", "thế", "toi", "tôi", "ban", "bạn",
+        "cac", "các", "roi", "rồi", "neu", "nếu", "duoc", "được", "nhu", "như", "hay",
+        "va", "và", "co", "có", "khong", "không", "tai", "tại", "sao", "theo", "khi", "nay",
+        "kia", "day", "đây", "đó", "di", "đi", "sach", "sách", "chuong", "chương"
+    )
 
     private var downX = 0f
     private var downY = 0f
@@ -2130,107 +2165,515 @@ class ReaderActivity : AppCompatActivity() {
             question = question,
             book_name = safeBookName,
             current_chapter_title = chapterTitle,
-            context_chunks = buildQaContextChunks(question),
+            context_chunks = buildQaContextChunks(question, historySnapshot),
             chat_history = chatHistory
         )
     }
 
-    private fun buildQaContextChunks(question: String): List<String> {
+    private fun buildQaContextChunks(
+        question: String,
+        historySnapshot: List<ReaderQaMessage>
+    ): List<String> {
         if (chapters.isEmpty()) return emptyList()
 
-        data class ChunkCandidate(
-            val chunk: String,
-            val score: Int,
-            val chapterIndex: Int
+        val safeCurrentIndex = currentChapterIndex.coerceIn(0, chapters.lastIndex)
+        val rewrittenQuestion = rewriteQaQuestion(question, historySnapshot)
+        val queryTokens = extractQueryTokens(rewrittenQuestion)
+        val historyTokens = extractHistoryTokens(historySnapshot)
+        val retrievalChunks = buildRetrievalChunks(safeCurrentIndex)
+        if (retrievalChunks.isEmpty()) {
+            return fallbackContextChunks(safeCurrentIndex)
+        }
+
+        val rankedCandidates = rankRetrievalChunks(
+            retrievalChunks = retrievalChunks,
+            queryText = rewrittenQuestion,
+            queryTokens = queryTokens,
+            historyTokens = historyTokens,
+            currentChapterIndex = safeCurrentIndex
+        )
+        if (rankedCandidates.isEmpty()) {
+            return fallbackContextChunks(safeCurrentIndex, retrievalChunks)
+        }
+
+        val selected = assembleContextChunks(
+            rankedCandidates = rankedCandidates,
+            queryTokens = queryTokens,
+            currentChapterIndex = safeCurrentIndex
+        )
+        if (selected.isEmpty()) {
+            return fallbackContextChunks(safeCurrentIndex, retrievalChunks)
+        }
+
+        val budgetFromQuestion = 700 + rewrittenQuestion.length * 6
+        val budgetFromHistory = historySnapshot
+            .takeLast(2)
+            .sumOf { it.content.length.coerceAtMost(180) }
+        val maxTotalChars = (budgetFromQuestion + budgetFromHistory)
+            .coerceIn(QA_MIN_TOTAL_CONTEXT_CHARS, QA_MAX_TOTAL_CONTEXT_CHARS)
+
+        val contextChunks = trimChunksToBudget(
+            chunks = selected.map { it.chunk.text },
+            maxTotalChars = maxTotalChars
         )
 
-        val safeCurrentIndex = currentChapterIndex.coerceIn(0, chapters.lastIndex)
-        val questionLower = question.lowercase()
-        val keywords = extractQaKeywords(questionLower)
-        val candidates = mutableListOf<ChunkCandidate>()
+        return contextChunks.ifEmpty { fallbackContextChunks(safeCurrentIndex, retrievalChunks) }
+    }
 
-        for (chapterIndex in 0..safeCurrentIndex) {
+    private fun rewriteQaQuestion(question: String, historySnapshot: List<ReaderQaMessage>): String {
+        val trimmedQuestion = question.trim()
+        if (trimmedQuestion.isBlank()) return trimmedQuestion
+
+        val referencePattern = Regex(
+            "\\b(đoạn này|phần này|chỗ này|điều này|nhân vật này|ông ấy|cô ấy|anh ấy|chị ấy|họ|người này)\\b",
+            RegexOption.IGNORE_CASE
+        )
+        if (!referencePattern.containsMatchIn(trimmedQuestion)) {
+            return trimmedQuestion
+        }
+
+        val referenceContext = historySnapshot
+            .takeLast(3)
+            .map { it.content.trim() }
+            .filter { it.isNotBlank() }
+            .joinToString(" | ")
+            .take(280)
+
+        return if (referenceContext.isBlank()) {
+            trimmedQuestion
+        } else {
+            "$trimmedQuestion. Ngữ cảnh tham chiếu: $referenceContext"
+        }
+    }
+
+    private fun buildRetrievalChunks(currentChapterLimit: Int): List<QaRetrievalChunk> {
+        val retrievalChunks = mutableListOf<QaRetrievalChunk>()
+        for (chapterIndex in 0..currentChapterLimit) {
             val rawContent = chapters.getOrNull(chapterIndex)?.content.orEmpty()
             if (rawContent.isBlank()) continue
 
-            val chunks = splitChapterIntoChunks(rawContent)
-            chunks.forEach { chunk ->
-                val lowerChunk = chunk.lowercase()
-                var score = 0
+            val chapterChunkTexts = splitChapterIntoChunks(rawContent)
+            if (chapterChunkTexts.isEmpty()) continue
 
-                keywords.forEach { token ->
-                    if (lowerChunk.contains(token)) {
-                        score += 2
-                    }
-                }
+            val chunkCount = chapterChunkTexts.size.coerceAtLeast(1)
+            chapterChunkTexts.forEachIndexed { order, chunkText ->
+                val normalizedChunkText = chunkText.take(QA_MAX_CHUNK_LENGTH).trim()
+                if (normalizedChunkText.isBlank()) return@forEachIndexed
 
-                if (questionLower.length >= 10 && lowerChunk.contains(questionLower.take(10))) {
-                    score += 1
-                }
+                val tokens = tokenizeForMatch(normalizedChunkText)
+                if (tokens.isEmpty()) return@forEachIndexed
 
-                if (chapterIndex == safeCurrentIndex) {
-                    score += 2
-                }
-
-                if (score > 0) {
-                    candidates.add(
-                        ChunkCandidate(
-                            chunk = chunk.take(QA_MAX_CHUNK_LENGTH),
-                            score = score,
-                            chapterIndex = chapterIndex
-                        )
+                val tokenCounts = tokens.groupingBy { it }.eachCount()
+                retrievalChunks.add(
+                    QaRetrievalChunk(
+                        id = "$chapterIndex-$order-${normalizedChunkText.length}",
+                        text = normalizedChunkText,
+                        chapterIndex = chapterIndex,
+                        orderInChapter = order,
+                        orderRatio = if (chunkCount == 1) 0.0 else order.toDouble() / (chunkCount - 1).toDouble(),
+                        tokenCounts = tokenCounts,
+                        tokenSet = tokenCounts.keys,
+                        hasEntity = containsNamedEntity(chunkText)
                     )
-                }
+                )
             }
         }
-
-        val ranked = candidates
-            .sortedWith(
-                compareByDescending<ChunkCandidate> { it.score }
-                    .thenByDescending { it.chapterIndex }
-                    .thenByDescending { it.chunk.length }
-            )
-            .distinctBy { it.chunk }
-            .take(QA_MAX_CONTEXT_CHUNKS)
-            .map { it.chunk }
-
-        if (ranked.isNotEmpty()) return ranked
-
-        val fallback = mutableListOf<String>()
-        splitChapterIntoChunks(chapters[safeCurrentIndex].content.orEmpty())
-            .take(2)
-            .forEach { fallback.add(it.take(QA_MAX_CHUNK_LENGTH)) }
-
-        if (safeCurrentIndex > 0) {
-            splitChapterIntoChunks(chapters[safeCurrentIndex - 1].content.orEmpty())
-                .take(1)
-                .forEach { fallback.add(it.take(QA_MAX_CHUNK_LENGTH)) }
-        }
-        return fallback.take(QA_MAX_CONTEXT_CHUNKS)
+        return retrievalChunks
     }
 
     private fun splitChapterIntoChunks(rawContent: String): List<String> {
-        return rawContent
+        val paragraphs = rawContent
             .replace("\r\n", "\n")
             .replace("\r", "\n")
-            .split(Regex("\\n\\s*\\n|\\n"))
+            .split(Regex("\\n\\s*\\n+"))
             .map { it.replace(Regex("\\s+"), " ").trim() }
-            .filter { it.length >= 25 }
+            .filter { it.isNotBlank() }
+
+        val chunks = mutableListOf<String>()
+        paragraphs.forEach { paragraph ->
+            val sentences = splitParagraphIntoSentences(paragraph)
+            if (sentences.isEmpty()) return@forEach
+
+            if (sentences.size <= QA_SENTENCE_WINDOW) {
+                val merged = sentences.joinToString(" ").trim()
+                if (merged.length >= 20 || containsNamedEntity(merged)) {
+                    chunks.add(merged)
+                }
+                return@forEach
+            }
+
+            var cursor = 0
+            while (cursor < sentences.size) {
+                val end = (cursor + QA_SENTENCE_WINDOW).coerceAtMost(sentences.size)
+                val merged = sentences.subList(cursor, end)
+                    .joinToString(" ")
+                    .replace(Regex("\\s+"), " ")
+                    .trim()
+
+                if (merged.length >= 20 || containsNamedEntity(merged)) {
+                    chunks.add(merged)
+                }
+                cursor += QA_SENTENCE_STEP
+            }
+        }
+
+        return chunks
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
     }
 
-    private fun extractQaKeywords(questionLower: String): List<String> {
-        val stopWords = setOf(
-            "la", "là", "cua", "của", "cho", "voi", "với", "mot", "một", "nhung", "những",
-            "trong", "nay", "này", "doan", "đoạn", "phan", "phần", "nguoi", "người", "nhan",
-            "vat", "vật", "gi", "gì", "nao", "nào", "the", "thế", "toi", "tôi", "ban", "bạn"
+    private fun splitParagraphIntoSentences(paragraph: String): List<String> {
+        val normalizedParagraph = paragraph.replace(Regex("\\s+"), " ").trim()
+        if (normalizedParagraph.isBlank()) return emptyList()
+
+        val roughSentences = normalizedParagraph
+            .split(Regex("(?<=[.!?…])\\s+"))
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        val refined = mutableListOf<String>()
+        roughSentences.forEach { sentence ->
+            if (sentence.length <= QA_MAX_CHUNK_LENGTH) {
+                refined.add(sentence)
+                return@forEach
+            }
+
+            val phraseParts = sentence
+                .split(Regex("(?<=[,;:])\\s+"))
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+            if (phraseParts.isEmpty()) {
+                refined.add(sentence.take(QA_MAX_CHUNK_LENGTH))
+                return@forEach
+            }
+
+            val builder = StringBuilder()
+            phraseParts.forEach { part ->
+                val candidate = if (builder.isEmpty()) part else "${builder} $part"
+                if (candidate.length <= QA_MAX_CHUNK_LENGTH) {
+                    builder.clear()
+                    builder.append(candidate)
+                } else {
+                    if (builder.isNotEmpty()) {
+                        refined.add(builder.toString().trim())
+                        builder.clear()
+                    }
+                    if (part.length > QA_MAX_CHUNK_LENGTH) {
+                        refined.add(part.take(QA_MAX_CHUNK_LENGTH))
+                    } else {
+                        builder.append(part)
+                    }
+                }
+            }
+            if (builder.isNotEmpty()) {
+                refined.add(builder.toString().trim())
+            }
+        }
+
+        return refined.filter { it.isNotBlank() }
+    }
+
+    private fun rankRetrievalChunks(
+        retrievalChunks: List<QaRetrievalChunk>,
+        queryText: String,
+        queryTokens: List<String>,
+        historyTokens: Set<String>,
+        currentChapterIndex: Int
+    ): List<QaScoredChunk> {
+        if (retrievalChunks.isEmpty()) return emptyList()
+        if (queryTokens.isEmpty()) return emptyList()
+
+        val queryTokenSet = queryTokens.toSet()
+        val queryTextNormalized = normalizeForMatch(queryText)
+        val queryPrefix = queryTextNormalized.take(36).trim()
+        val queryEntityTokens = queryTokens.filter { it.length >= 5 }.toSet()
+        val readingRatio = calculateCurrentProgressPercent().coerceIn(0, 100) / 100.0
+
+        val totalDocs = retrievalChunks.size.toDouble().coerceAtLeast(1.0)
+        val avgDocLength = retrievalChunks
+            .map { it.tokenCounts.values.sum().toDouble() }
+            .average()
+            .coerceAtLeast(1.0)
+
+        val docFrequency = mutableMapOf<String, Int>()
+        queryTokenSet.forEach { token ->
+            val df = retrievalChunks.count { it.tokenSet.contains(token) }
+            if (df > 0) {
+                docFrequency[token] = df
+            }
+        }
+
+        return retrievalChunks.mapNotNull { chunk ->
+            val docLen = chunk.tokenCounts.values.sum().toDouble().coerceAtLeast(1.0)
+            var bm25 = 0.0
+
+            queryTokenSet.forEach { token ->
+                val tf = chunk.tokenCounts[token]?.toDouble() ?: 0.0
+                if (tf <= 0.0) return@forEach
+
+                val df = docFrequency[token]?.toDouble() ?: return@forEach
+                val idf = ln(((totalDocs - df + 0.5) / (df + 0.5)) + 1.0)
+                val denominator = tf + QA_BM25_K1 * (1 - QA_BM25_B + QA_BM25_B * (docLen / avgDocLength))
+                bm25 += idf * ((tf * (QA_BM25_K1 + 1)) / denominator)
+            }
+
+            val normalizedChunkText = normalizeForMatch(chunk.text)
+            var phraseScore = 0.0
+            if (queryTextNormalized.length >= 12 && normalizedChunkText.contains(queryTextNormalized)) {
+                phraseScore += 1.2
+            } else if (queryPrefix.length >= 12 && normalizedChunkText.contains(queryPrefix)) {
+                phraseScore += 0.6
+            }
+
+            val entityOverlap = lexicalOverlapRatio(queryEntityTokens, chunk.tokenSet)
+            val entityScore = entityOverlap * 1.1 + if (chunk.hasEntity && entityOverlap > 0.0) 0.4 else 0.0
+
+            val recencyBoost = when (currentChapterIndex - chunk.chapterIndex) {
+                0 -> 1.0
+                1 -> 0.35
+                else -> 0.0
+            }
+
+            val localPositionBoost = if (chunk.chapterIndex == currentChapterIndex) {
+                (1.0 - abs(chunk.orderRatio - readingRatio).coerceIn(0.0, 1.0)) * 0.45
+            } else {
+                0.0
+            }
+
+            val conversationScore = lexicalOverlapRatio(historyTokens, chunk.tokenSet)
+            val totalScore = bm25 + phraseScore + entityScore + recencyBoost + localPositionBoost + conversationScore * 0.8
+            if (totalScore <= 0.0) {
+                null
+            } else {
+                QaScoredChunk(
+                    chunk = chunk,
+                    relevanceScore = totalScore,
+                    conversationScore = conversationScore
+                )
+            }
+        }.sortedByDescending { it.relevanceScore }
+    }
+
+    private fun assembleContextChunks(
+        rankedCandidates: List<QaScoredChunk>,
+        queryTokens: List<String>,
+        currentChapterIndex: Int
+    ): List<QaScoredChunk> {
+        if (rankedCandidates.isEmpty()) return emptyList()
+        val queryTokenSet = queryTokens.toSet()
+        val selected = mutableListOf<QaScoredChunk>()
+
+        val localPool = rankedCandidates.filter { it.chunk.chapterIndex == currentChapterIndex }
+        selected += selectWithMmr(
+            candidates = localPool,
+            limit = 2,
+            queryTokenSet = queryTokenSet,
+            alreadySelected = selected
         )
-        return questionLower
-            .replace(Regex("[^\\p{L}\\p{N}\\s]"), " ")
+
+        val backgroundPool = rankedCandidates.filter {
+            it.chunk.chapterIndex < currentChapterIndex &&
+                selected.none { chosen -> chosen.chunk.id == it.chunk.id }
+        }
+        selected += selectWithMmr(
+            candidates = backgroundPool,
+            limit = 1,
+            queryTokenSet = queryTokenSet,
+            alreadySelected = selected
+        )
+
+        val conversationalPool = rankedCandidates.filter {
+            it.conversationScore > 0.12 &&
+                selected.none { chosen -> chosen.chunk.id == it.chunk.id }
+        }
+        selected += selectWithMmr(
+            candidates = conversationalPool,
+            limit = 1,
+            queryTokenSet = queryTokenSet,
+            alreadySelected = selected
+        )
+
+        if (selected.size < QA_MAX_CONTEXT_CHUNKS) {
+            val remaining = rankedCandidates.filter {
+                selected.none { chosen -> chosen.chunk.id == it.chunk.id }
+            }
+            selected += selectWithMmr(
+                candidates = remaining,
+                limit = QA_MAX_CONTEXT_CHUNKS - selected.size,
+                queryTokenSet = queryTokenSet,
+                alreadySelected = selected
+            )
+        }
+
+        return selected
+            .distinctBy { it.chunk.id }
+            .take(QA_MAX_CONTEXT_CHUNKS)
+            .sortedByDescending { it.relevanceScore + it.conversationScore * 0.2 }
+    }
+
+    private fun selectWithMmr(
+        candidates: List<QaScoredChunk>,
+        limit: Int,
+        queryTokenSet: Set<String>,
+        alreadySelected: List<QaScoredChunk> = emptyList()
+    ): List<QaScoredChunk> {
+        if (limit <= 0 || candidates.isEmpty()) return emptyList()
+
+        val selected = mutableListOf<QaScoredChunk>()
+        val pool = candidates
+            .distinctBy { it.chunk.id }
+            .toMutableList()
+        val maxRelevance = pool.maxOfOrNull { it.relevanceScore }?.coerceAtLeast(1e-6) ?: 1.0
+
+        while (selected.size < limit && pool.isNotEmpty()) {
+            val best = pool.maxByOrNull { candidate ->
+                val normalizedRelevance = (candidate.relevanceScore / maxRelevance).coerceIn(0.0, 1.0)
+                val similarityPenalty = (selected + alreadySelected)
+                    .asSequence()
+                    .filter { it.chunk.id != candidate.chunk.id }
+                    .map { chosen -> chunkSimilarity(candidate.chunk, chosen.chunk, queryTokenSet) }
+                    .maxOrNull() ?: 0.0
+
+                QA_MMR_LAMBDA * normalizedRelevance - (1 - QA_MMR_LAMBDA) * similarityPenalty
+            } ?: break
+
+            selected.add(best)
+            pool.removeAll { it.chunk.id == best.chunk.id }
+        }
+
+        return selected
+    }
+
+    private fun chunkSimilarity(
+        first: QaRetrievalChunk,
+        second: QaRetrievalChunk,
+        queryTokenSet: Set<String>
+    ): Double {
+        val overlap = first.tokenSet.intersect(second.tokenSet).size.toDouble()
+        val union = (first.tokenSet.size + second.tokenSet.size).toDouble() - overlap
+        val jaccard = if (union <= 0.0) 0.0 else overlap / union
+
+        val queryOverlap = minOf(
+            lexicalOverlapRatio(queryTokenSet, first.tokenSet),
+            lexicalOverlapRatio(queryTokenSet, second.tokenSet)
+        )
+
+        return (jaccard * 0.7 + queryOverlap * 0.3).coerceIn(0.0, 1.0)
+    }
+
+    private fun trimChunksToBudget(
+        chunks: List<String>,
+        maxTotalChars: Int
+    ): List<String> {
+        val normalizedChunks = chunks
+            .map { it.replace(Regex("\\s+"), " ").trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+
+        val output = mutableListOf<String>()
+        var usedChars = 0
+        for (chunk in normalizedChunks) {
+            if (usedChars >= maxTotalChars) break
+            val remaining = maxTotalChars - usedChars
+            if (remaining < 80) break
+
+            val limited = chunk.take(QA_MAX_CHUNK_LENGTH)
+            val finalChunk = if (limited.length <= remaining) {
+                limited
+            } else {
+                limited.take(remaining).trimEnd()
+            }
+
+            if (finalChunk.length >= 40 || containsNamedEntity(finalChunk)) {
+                output.add(finalChunk)
+                usedChars += finalChunk.length
+            }
+        }
+        return output
+    }
+
+    private fun fallbackContextChunks(
+        currentChapterIndex: Int,
+        retrievalChunks: List<QaRetrievalChunk> = emptyList()
+    ): List<String> {
+        val sourceChunks = if (retrievalChunks.isNotEmpty()) {
+            retrievalChunks
+        } else {
+            buildRetrievalChunks(currentChapterIndex)
+        }
+
+        val fallback = mutableListOf<String>()
+        fallback += sourceChunks
+            .filter { it.chapterIndex == currentChapterIndex }
+            .sortedBy { it.orderInChapter }
+            .take(2)
+            .map { it.text }
+
+        if (currentChapterIndex > 0) {
+            fallback += sourceChunks
+                .filter { it.chapterIndex == currentChapterIndex - 1 }
+                .sortedBy { it.orderInChapter }
+                .take(1)
+                .map { it.text }
+        }
+
+        return fallback
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .take(QA_MAX_CONTEXT_CHUNKS)
+    }
+
+    private fun extractQueryTokens(question: String): List<String> {
+        val normalized = tokenizeForMatch(question)
+        if (normalized.isNotEmpty()) {
+            return normalized.distinct().take(14)
+        }
+        return normalizeForMatch(question)
             .split(Regex("\\s+"))
             .map { it.trim() }
-            .filter { it.length >= 3 && it !in stopWords }
+            .filter { it.length >= 2 }
             .distinct()
             .take(10)
+    }
+
+    private fun extractHistoryTokens(historySnapshot: List<ReaderQaMessage>): Set<String> {
+        return historySnapshot
+            .takeLast(4)
+            .flatMap { tokenizeForMatch(it.content) }
+            .filter { it.length >= 3 }
+            .toSet()
+    }
+
+    private fun tokenizeForMatch(text: String): List<String> {
+        return normalizeForMatch(text)
+            .split(Regex("\\s+"))
+            .map { it.trim() }
+            .filter { token ->
+                token.length >= 2 && token !in qaStopWords
+            }
+    }
+
+    private fun normalizeForMatch(text: String): String {
+        if (text.isBlank()) return ""
+        val decomposed = Normalizer.normalize(text, Normalizer.Form.NFD)
+        return decomposed
+            .replace(Regex("\\p{Mn}+"), "")
+            .lowercase()
+            .replace(Regex("[^\\p{L}\\p{N}\\s]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
+
+    private fun containsNamedEntity(text: String): Boolean {
+        return Regex("\\b[\\p{Lu}][\\p{L}\\p{M}]{2,}\\b").containsMatchIn(text)
+    }
+
+    private fun lexicalOverlapRatio(referenceTokens: Set<String>, targetTokens: Set<String>): Double {
+        if (referenceTokens.isEmpty() || targetTokens.isEmpty()) return 0.0
+        val overlap = referenceTokens.intersect(targetTokens).size.toDouble()
+        return overlap / referenceTokens.size.toDouble()
     }
 
     private fun normalizeAiResultText(raw: String): String {
