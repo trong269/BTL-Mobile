@@ -18,7 +18,7 @@ android {
         versionName = "1.0"
 
         // Backend API
-        buildConfigField("String", "BASE_URL", "\"http://192.168.2.19:8080/\"")
+        buildConfigField("String", "BASE_URL", "\"http://192.168.88.162:8080/\"")
         buildConfigField("String", "AI_BASE_URL", "\"http://192.168.2.19:8000/\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

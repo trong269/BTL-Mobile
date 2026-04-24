@@ -31,7 +31,7 @@ public class ReviewService {
         return reviews.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
-    public Review addReview(String bookId, String userId, int rating, String reviewText) {
+    public ReviewResponseDto addReview(String bookId, String userId, int rating, String reviewText) {
         // Kiểm tra nếu user đã review sách này trước đó
         Review existingReview = reviewRepository.findByUserIdAndBookId(userId, bookId).orElse(null);
         

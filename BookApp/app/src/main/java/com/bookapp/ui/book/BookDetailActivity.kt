@@ -83,6 +83,7 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var edtCommentInput: EditText
     private lateinit var btnSubmitComment: Button
     private lateinit var tvNoComments: TextView
+    private var commentsList = mutableListOf<Comment>()
 
     private var bookId: String? = null
     private var isFavorited = false
@@ -352,9 +353,9 @@ class BookDetailActivity : AppCompatActivity() {
                 .enqueue(object : Callback<List<Comment>> {
                     override fun onResponse(call: Call<List<Comment>>, response: Response<List<Comment>>) {
                         if (response.isSuccessful) {
-                            val comments = response.body().orEmpty()
-                            commentAdapter.submitList(comments)
-                            tvNoComments.visibility = if (comments.isEmpty()) View.VISIBLE else View.GONE
+                            commentsList = response.body()?.toMutableList() ?: mutableListOf()
+                            commentAdapter.submitList(commentsList)
+                            tvNoComments.visibility = if (commentsList.isEmpty()) View.VISIBLE else View.GONE
                         }
                     }
                     override fun onFailure(call: Call<List<Comment>>, t: Throwable) {}
@@ -423,9 +424,15 @@ class BookDetailActivity : AppCompatActivity() {
                     override fun onResponse(call: Call<Comment>, response: Response<Comment>) {
                         btnSubmitComment.isEnabled = true
                         if (response.isSuccessful) {
+                            val newComment = response.body()
+                            if (newComment != null) {
+                                // Thêm comment mới vào danh sách (tránh race condition)
+                                commentsList.add(0, newComment)
+                                commentAdapter.submitList(commentsList.toList())
+                                tvNoComments.visibility = View.GONE
+                            }
                             edtCommentInput.setText("")
                             Toast.makeText(this@BookDetailActivity, "Đã gửi bình luận!", Toast.LENGTH_SHORT).show()
-                            loadComments()
                         } else {
                             Toast.makeText(this@BookDetailActivity, "Lỗi gửi bình luận (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
                         }
