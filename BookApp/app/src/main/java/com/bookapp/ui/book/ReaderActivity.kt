@@ -14,6 +14,7 @@ import android.text.Spannable
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.view.ActionMode
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
@@ -21,7 +22,10 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
@@ -30,10 +34,18 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.ColorUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bookapp.BuildConfig
 import com.bookapp.R
+import com.bookapp.data.api.AIQaChatMessage
+import com.bookapp.data.api.AIQaRequest
+import com.bookapp.data.api.AIQaSuggestionsRequest
+import com.bookapp.data.api.AIQaSuggestionsResponse
 import com.bookapp.data.api.AITextRequest
 import com.bookapp.data.api.AITextResponse
 import com.bookapp.data.api.AIRetrofitClient
@@ -45,12 +57,25 @@ import com.bookapp.data.model.ReadingProgress
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.R as MaterialR
+import okhttp3.Call as OkHttpCall
+import okhttp3.Callback as OkHttpCallback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response as OkHttpResponse
+import org.json.JSONObject
 import java.io.IOException
+import java.text.Normalizer
 import kotlin.math.abs
+import kotlin.math.ln
+import kotlin.math.max
 import kotlin.math.roundToInt
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import androidx.lifecycle.lifecycleScope
+import com.bookapp.data.local.OfflineManager
+import kotlinx.coroutines.launch
 
 class ReaderActivity : AppCompatActivity() {
 
@@ -86,6 +111,28 @@ class ReaderActivity : AppCompatActivity() {
         val contextAfter: String
     )
 
+    private data class ReaderQaMessage(
+        val role: String,
+        val content: String
+    )
+
+    private data class QaRetrievalChunk(
+        val id: String,
+        val text: String,
+        val chapterIndex: Int,
+        val orderInChapter: Int,
+        val orderRatio: Double,
+        val tokenCounts: Map<String, Int>,
+        val tokenSet: Set<String>,
+        val hasEntity: Boolean
+    )
+
+    private data class QaScoredChunk(
+        val chunk: QaRetrievalChunk,
+        val relevanceScore: Double,
+        val conversationScore: Double
+    )
+
     private data class AiSheetViews(
         val title: TextView,
         val subtitle: TextView,
@@ -107,6 +154,17 @@ class ReaderActivity : AppCompatActivity() {
         const val EXTRA_TARGET_CHAPTER_ID = "extra_target_chapter_id"
         private const val MENU_ITEM_AI = 7001
         private const val AI_EXPLAIN_WORD_THRESHOLD = 12
+        private const val QA_MAX_CHAT_HISTORY = 6
+        private const val QA_MAX_CONTEXT_CHUNKS = 4
+        private const val QA_MAX_CHUNK_LENGTH = 420
+        private const val QA_MIN_TOTAL_CONTEXT_CHARS = 900
+        private const val QA_MAX_TOTAL_CONTEXT_CHARS = 1800
+        private const val QA_BM25_K1 = 1.2
+        private const val QA_BM25_B = 0.75
+        private const val QA_MMR_LAMBDA = 0.72
+        private const val QA_SENTENCE_WINDOW = 2
+        private const val QA_SENTENCE_STEP = 1
+        private const val QA_SUGGESTIONS_COUNT = 5
     }
 
     private lateinit var topBar: View
@@ -126,12 +184,14 @@ class ReaderActivity : AppCompatActivity() {
     private lateinit var btnSettings: ImageButton
     private lateinit var btnPlay: ImageButton
     private lateinit var btnChapterList: ImageButton
+    private lateinit var btnQaChat: ImageButton
     private lateinit var btnNextChapter: ImageButton
 
     private var userId: String? = null
     private var bookId: String? = null
     private var bookTitle: String = "Đọc sách"
     private var targetChapterId: String? = null
+    private lateinit var offlineManager: OfflineManager
 
     private var chapters: List<Chapter> = emptyList()
     private var currentChapterIndex: Int = 0
@@ -201,6 +261,15 @@ class ReaderActivity : AppCompatActivity() {
         getSharedPreferences("ReaderSettings", MODE_PRIVATE)
     }
 
+    private val qaStopWords = setOf(
+        "la", "là", "cua", "của", "cho", "voi", "với", "mot", "một", "nhung", "những",
+        "trong", "nay", "này", "doan", "đoạn", "phan", "phần", "nguoi", "người", "nhan",
+        "vat", "vật", "gi", "gì", "nao", "nào", "the", "thế", "toi", "tôi", "ban", "bạn",
+        "cac", "các", "roi", "rồi", "neu", "nếu", "duoc", "được", "nhu", "như", "hay",
+        "va", "và", "co", "có", "khong", "không", "tai", "tại", "sao", "theo", "khi", "nay",
+        "kia", "day", "đây", "đó", "di", "đi", "sach", "sách", "chuong", "chương"
+    )
+
     private var downX = 0f
     private var downY = 0f
     private var downEventTime = 0L
@@ -209,6 +278,12 @@ class ReaderActivity : AppCompatActivity() {
     private var pageTurnAnimating = false
     private var isSelectionModeActive = false
     private var activeAiCall: Call<AITextResponse>? = null
+    private var activeQaStreamCall: OkHttpCall? = null
+    private var activeQaSuggestionCall: Call<AIQaSuggestionsResponse>? = null
+    private val qaSessionMessages = mutableListOf<ReaderQaMessage>()
+    private val qaSuggestionsByChapterId = mutableMapOf<String, List<String>>()
+    private var qaSuggestionInFlightChapterId: String? = null
+    private var qaSuggestionsObserver: ((List<String>) -> Unit)? = null
     private val touchSlop by lazy { ViewConfiguration.get(this).scaledTouchSlop }
     private val longPressTimeoutMs by lazy { ViewConfiguration.getLongPressTimeout().toLong() }
 
@@ -239,6 +314,7 @@ class ReaderActivity : AppCompatActivity() {
             return
         }
 
+        offlineManager = OfflineManager(this)
         loadReaderSettings()
         bindViews()
         applyReaderAppearance()
@@ -250,6 +326,8 @@ class ReaderActivity : AppCompatActivity() {
         super.onPause()
         stopAutoPlay()
         activeAiCall?.cancel()
+        activeQaStreamCall?.cancel()
+        activeQaSuggestionCall?.cancel()
         persistCurrentProgress()
     }
 
@@ -271,6 +349,7 @@ class ReaderActivity : AppCompatActivity() {
         btnSettings = findViewById(R.id.btnReaderSettings)
         btnPlay = findViewById(R.id.btnReaderPlay)
         btnChapterList = findViewById(R.id.btnReaderList)
+        btnQaChat = findViewById(R.id.btnReaderQa)
         btnNextChapter = findViewById(R.id.btnReaderNext)
 
         contentPaddingLeftDefault = tvContent.paddingLeft
@@ -307,6 +386,10 @@ class ReaderActivity : AppCompatActivity() {
 
         btnChapterList.setOnClickListener {
             showChapterBottomSheet()
+        }
+
+        btnQaChat.setOnClickListener {
+            showQaChatBottomSheet()
         }
 
         btnSettings.setOnClickListener {
@@ -472,33 +555,58 @@ class ReaderActivity : AppCompatActivity() {
 
     private fun loadChaptersAndProgress() {
         val safeBookId = bookId ?: return
-        RetrofitClient.instance.getChaptersByBook(safeBookId)
-            .enqueue(object : Callback<List<Chapter>> {
-                override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
-                    if (!response.isSuccessful) {
-                        Toast.makeText(this@ReaderActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
-                        finish()
-                        return
+        
+        lifecycleScope.launch {
+            if (offlineManager.isBookDownloaded(safeBookId)) {
+                val localChapters = offlineManager.getLocalChapters(safeBookId)
+                if (localChapters.isNotEmpty()) {
+                    chapters = localChapters.map { 
+                        Chapter(it.id, it.bookId, it.chapterNumber, it.title, it.content) 
+                    }
+                    // Still try to sync progress if online, but don't block
+                    ensureReadingProgress(silent = true)
+                    
+                    // If we haven't switched to a chapter yet (from ensureReadingProgress), 
+                    // show the first one or target
+                    if (currentChapterIndex == 0 && targetChapterId == null) {
+                        showChapter(0, 0)
+                    } else if (targetChapterId != null) {
+                        val idx = chapters.indexOfFirst { it.id == targetChapterId }
+                        if (idx >= 0) showChapter(idx, 0)
+                    }
+                    return@launch
+                }
+            }
+
+            // Fallback to network
+            RetrofitClient.instance.getChaptersByBook(safeBookId)
+                .enqueue(object : Callback<List<Chapter>> {
+                    override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
+                        if (!response.isSuccessful) {
+                            Toast.makeText(this@ReaderActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
+                            finish()
+                            return
+                        }
+
+                        val loaded = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
+                        if (loaded.isEmpty()) {
+                            Toast.makeText(this@ReaderActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
+                            finish()
+                            return
+                        }
+                        chapters = loaded
+                        ensureReadingProgress()
                     }
 
-                    val loaded = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
-                    if (loaded.isEmpty()) {
-                        Toast.makeText(this@ReaderActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
+                    override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
+                        Toast.makeText(this@ReaderActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
                         finish()
-                        return
                     }
-                    chapters = loaded
-                    ensureReadingProgress()
-                }
-
-                override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
-                    Toast.makeText(this@ReaderActivity, "Lỗi tải chương: ${t.message}", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-            })
+                })
+        }
     }
 
-    private fun ensureReadingProgress() {
+    private fun ensureReadingProgress(silent: Boolean = false) {
         val safeUserId = userId ?: return
         val safeBookId = bookId ?: return
 
@@ -506,35 +614,51 @@ class ReaderActivity : AppCompatActivity() {
             EnsureReadingProgressRequest(safeUserId, safeBookId)
         ).enqueue(object : Callback<ReadingProgress> {
             override fun onResponse(call: Call<ReadingProgress>, response: Response<ReadingProgress>) {
-                if (!response.isSuccessful) {
-                    Toast.makeText(this@ReaderActivity, "Không tạo được tiến trình đọc", Toast.LENGTH_SHORT).show()
-                    finish()
-                    return
+                if (response.isSuccessful) {
+                    val progress = response.body()
+                    handleReadingProgress(progress)
+                } else if (!silent) {
+                    tryLoadingLocalProgress(safeBookId)
                 }
-
-                val progress = response.body()
-                val requestedChapter = targetChapterId
-                if (!requestedChapter.isNullOrBlank()) {
-                    val requestedIndex = chapters.indexOfFirst { it.id == requestedChapter }
-                    if (requestedIndex >= 0) {
-                        targetChapterId = null
-                        switchToChapter(requestedIndex)
-                        return
-                    }
-                }
-
-                val targetChapterId = progress?.chapterId
-                val targetIndex = chapters.indexOfFirst { it.id == targetChapterId }.takeIf { it >= 0 } ?: 0
-                currentChapterIndex = targetIndex
-                val percent = (progress?.chapterProgressPercent ?: 0).coerceIn(0, 100)
-                showChapter(targetIndex, percent)
             }
 
             override fun onFailure(call: Call<ReadingProgress>, t: Throwable) {
-                Toast.makeText(this@ReaderActivity, "Lỗi tiến trình: ${t.message}", Toast.LENGTH_SHORT).show()
-                finish()
+                if (!silent) {
+                    tryLoadingLocalProgress(safeBookId)
+                }
             }
         })
+    }
+
+    private fun handleReadingProgress(progress: ReadingProgress?) {
+        val requestedChapter = targetChapterId
+        if (!requestedChapter.isNullOrBlank()) {
+            val requestedIndex = chapters.indexOfFirst { it.id == requestedChapter }
+            if (requestedIndex >= 0) {
+                targetChapterId = null
+                switchToChapter(requestedIndex)
+                return
+            }
+        }
+
+        val targetChapterId = progress?.chapterId
+        val targetIndex = chapters.indexOfFirst { it.id == targetChapterId }.takeIf { it >= 0 } ?: 0
+        currentChapterIndex = targetIndex
+        val percent = (progress?.chapterProgressPercent ?: 0).coerceIn(0, 100)
+        showChapter(targetIndex, percent)
+    }
+
+    private fun tryLoadingLocalProgress(bookId: String) {
+        val chapterId = prefs.getString("last_chapter_$bookId", null)
+        val percent = prefs.getInt("last_percent_$bookId", 0)
+        
+        val targetIndex = if (chapterId != null) {
+            chapters.indexOfFirst { it.id == chapterId }.takeIf { it >= 0 } ?: 0
+        } else 0
+        
+        currentChapterIndex = targetIndex
+        showChapter(targetIndex, percent)
+        Toast.makeText(this, "Đang xem ở chế độ ngoại tuyến", Toast.LENGTH_SHORT).show()
     }
 
     private fun showChapter(index: Int, initialPercent: Int) {
@@ -578,6 +702,7 @@ class ReaderActivity : AppCompatActivity() {
                 showControlsAndRefresh()
             }
         }
+        prefetchQaSuggestionsForChapter(index)
     }
 
     private fun switchToChapter(targetIndex: Int) {
@@ -587,9 +712,8 @@ class ReaderActivity : AppCompatActivity() {
         currentChapterIndex = targetIndex
         val chapterId = chapters[targetIndex].id ?: return
 
-        updateReadingProgress(chapterId, 0, onSuccess = {
-            showChapter(targetIndex, 0)
-        })
+        showChapter(targetIndex, 0)
+        updateReadingProgress(chapterId, 0)
     }
 
     private fun showChapterBottomSheet() {
@@ -918,6 +1042,12 @@ class ReaderActivity : AppCompatActivity() {
         val safeUserId = userId ?: return
         val safeBookId = bookId ?: return
 
+        // Always save locally first
+        prefs.edit()
+            .putString("last_chapter_$safeBookId", chapterId)
+            .putInt("last_percent_$safeBookId", percent)
+            .apply()
+
         RetrofitClient.instance.updateReadingProgress(
             UpdateReadingProgressRequest(
                 userId = safeUserId,
@@ -1013,9 +1143,9 @@ class ReaderActivity : AppCompatActivity() {
             stopAutoPlay()
             currentChapterIndex -= 1
             val chapterId = chapters[currentChapterIndex].id ?: return
-            updateReadingProgress(chapterId, 100, onSuccess = {
-                showChapter(currentChapterIndex, 100)
-            })
+            
+            showChapter(currentChapterIndex, 100)
+            updateReadingProgress(chapterId, 100)
         }
     }
 
@@ -1504,7 +1634,7 @@ class ReaderActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<AITextResponse>, t: Throwable) {
-                if (call.isCanceled) return
+                if (call.isCanceled()) return
                 if (activeAiCall === call) {
                     activeAiCall = null
                 }
@@ -1593,6 +1723,998 @@ class ReaderActivity : AppCompatActivity() {
         views.primaryButton.setOnClickListener { onRetry() }
     }
 
+    private fun showQaChatBottomSheet() {
+        stopAutoPlay()
+        val dialog = BottomSheetDialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_reader_ai_chat, null)
+        dialog.setContentView(content)
+
+        val root = content.findViewById<View>(R.id.layoutQaSheetRoot)
+        val messageScroll = content.findViewById<NestedScrollView>(R.id.scrollQaMessages)
+        val messageContainer = content.findViewById<LinearLayout>(R.id.layoutQaMessages)
+        val quickContainer = content.findViewById<LinearLayout>(R.id.layoutQaQuickQuestions)
+        val input = content.findViewById<EditText>(R.id.etQaQuestion)
+        val btnSend = content.findViewById<Button>(R.id.btnQaSend)
+        val composer = content.findViewById<View>(R.id.layoutQaComposer)
+        val progress = content.findViewById<ProgressBar>(R.id.progressQa)
+        val tvStatus = content.findViewById<TextView>(R.id.tvQaStatus)
+        val markwon = Markwon.create(this)
+        val chapterIndexAtOpen = currentChapterIndex
+        val chapterKeyAtOpen = chapterKeyForIndex(chapterIndexAtOpen)
+        var streamingAssistantBuffer: String? = null
+        val composerBasePaddingBottom = composer.paddingBottom
+
+        fun scrollToBottom() {
+            messageScroll.post { messageScroll.fullScroll(View.FOCUS_DOWN) }
+        }
+
+        fun setLoadingState(isLoading: Boolean, status: String? = null) {
+            progress.isVisible = isLoading
+            btnSend.isEnabled = !isLoading
+            input.isEnabled = !isLoading
+            tvStatus.isVisible = isLoading || !status.isNullOrBlank()
+            tvStatus.text = status ?: ""
+        }
+
+        fun renderSuggestionChips(questions: List<String>) {
+            quickContainer.removeAllViews()
+            questions.forEachIndexed { index, question ->
+                val chip = TextView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        if (index > 0) {
+                            marginStart = (8f * resources.displayMetrics.density).roundToInt()
+                        }
+                    }
+                    setBackgroundResource(R.drawable.reader_btn_outline_bg)
+                    setPadding(
+                        (12f * resources.displayMetrics.density).roundToInt(),
+                        (8f * resources.displayMetrics.density).roundToInt(),
+                        (12f * resources.displayMetrics.density).roundToInt(),
+                        (8f * resources.displayMetrics.density).roundToInt()
+                    )
+                    text = question
+                    setTextColor(0xFF9A5D1C.toInt())
+                    textSize = 13f
+                    setOnClickListener {
+                        input.setText(question)
+                        input.setSelection(input.text.length)
+                    }
+                }
+                quickContainer.addView(chip)
+            }
+        }
+
+        fun renderMessages() {
+            messageContainer.removeAllViews()
+            if (qaSessionMessages.isEmpty()) {
+                val placeholder = TextView(this).apply {
+                    text = getString(R.string.reader_qa_subtitle)
+                    textSize = 13f
+                    setTextColor(0xFF667085.toInt())
+                    setPadding(8, 8, 8, 8)
+                }
+                messageContainer.addView(placeholder)
+            } else {
+                qaSessionMessages.forEach { message ->
+                    messageContainer.addView(buildQaMessageBubble(message, markwon))
+                }
+            }
+
+            if (!streamingAssistantBuffer.isNullOrBlank()) {
+                messageContainer.addView(
+                    buildQaMessageBubble(
+                        ReaderQaMessage(role = "assistant", content = streamingAssistantBuffer.orEmpty()),
+                        markwon
+                    )
+                )
+            }
+            scrollToBottom()
+        }
+
+        fun commitStreamBufferToSession(onInterrupted: Boolean = false) {
+            val buffer = streamingAssistantBuffer?.trim().orEmpty()
+            if (buffer.isBlank()) {
+                streamingAssistantBuffer = null
+                return
+            }
+
+            val finalized = if (onInterrupted) {
+                "${normalizeAiResultText(buffer)}\n\n_${getString(R.string.reader_qa_stream_interrupted)}_"
+            } else {
+                normalizeAiResultText(buffer)
+            }
+            appendQaMessage("assistant", finalized)
+            streamingAssistantBuffer = null
+        }
+
+        fun sendQuestion(rawQuestion: String) {
+            val question = rawQuestion.trim()
+            if (question.isBlank()) {
+                Toast.makeText(this, R.string.reader_qa_empty_question, Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val historySnapshot = qaSessionMessages.toList()
+            appendQaMessage("user", question)
+            input.setText("")
+            input.clearFocus()
+            streamingAssistantBuffer = ""
+            renderMessages()
+            setLoadingState(true, getString(R.string.reader_qa_loading))
+
+            val request = buildQaRequest(question, historySnapshot)
+            streamQaAnswer(
+                request = request,
+                onToken = { token ->
+                    if (!dialog.isShowing || isFinishing) return@streamQaAnswer
+                    streamingAssistantBuffer = (streamingAssistantBuffer ?: "") + token
+                    renderMessages()
+                },
+                onCompleted = {
+                    if (!dialog.isShowing || isFinishing) return@streamQaAnswer
+                    commitStreamBufferToSession(onInterrupted = false)
+                    setLoadingState(false)
+                    renderMessages()
+                },
+                onError = { message ->
+                    if (!dialog.isShowing || isFinishing) return@streamQaAnswer
+                    if (!streamingAssistantBuffer.isNullOrBlank()) {
+                        commitStreamBufferToSession(onInterrupted = true)
+                    } else {
+                        appendQaMessage("assistant", message)
+                    }
+                    setLoadingState(false, message)
+                    renderMessages()
+                }
+            )
+        }
+
+        content.findViewById<ImageButton>(R.id.btnQaSheetClose)?.setOnClickListener {
+            dialog.dismiss()
+        }
+        btnSend.setOnClickListener {
+            sendQuestion(input.text?.toString().orEmpty())
+        }
+
+        qaSuggestionsObserver = { questions ->
+            if (dialog.isShowing && chapterKeyForIndex(currentChapterIndex) == chapterKeyAtOpen) {
+                renderSuggestionChips(questions)
+                if (!progress.isVisible) {
+                    setLoadingState(false)
+                }
+            }
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            val systemInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val bottomInset = max(imeInsets.bottom, systemInsets.bottom)
+            composer.updatePadding(bottom = composerBasePaddingBottom + bottomInset)
+            insets
+        }
+
+        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        dialog.behavior.skipCollapsed = true
+        dialog.behavior.isFitToContents = false
+        dialog.behavior.expandedOffset = 0
+        dialog.setOnDismissListener {
+            activeQaStreamCall?.cancel()
+            activeQaStreamCall = null
+            qaSuggestionsObserver = null
+        }
+        dialog.window?.setSoftInputMode(
+            android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
+        dialog.show()
+        dialog.findViewById<View>(MaterialR.id.design_bottom_sheet)?.let { bottomSheet ->
+            bottomSheet.setBackgroundResource(android.R.color.transparent)
+            bottomSheet.layoutParams.height = LinearLayout.LayoutParams.MATCH_PARENT
+            bottomSheet.requestLayout()
+        }
+        ViewCompat.requestApplyInsets(root)
+
+        setLoadingState(false)
+        renderSuggestionChips(getQaSuggestionsForChapter(chapterIndexAtOpen))
+        if (!qaSuggestionsByChapterId.containsKey(chapterKeyAtOpen)) {
+            setLoadingState(false, getString(R.string.reader_qa_loading_suggestions))
+            prefetchQaSuggestionsForChapter(chapterIndexAtOpen)
+        }
+        renderMessages()
+    }
+
+    private fun buildQaMessageBubble(
+        message: ReaderQaMessage,
+        markwon: Markwon
+    ): TextView {
+        val isUser = message.role == "user"
+        return TextView(this).apply {
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = (8f * resources.displayMetrics.density).roundToInt()
+                gravity = if (isUser) Gravity.END else Gravity.START
+            }
+            layoutParams = params
+            maxWidth = (resources.displayMetrics.widthPixels * 0.72f).roundToInt()
+            setPadding(
+                (12f * resources.displayMetrics.density).roundToInt(),
+                (10f * resources.displayMetrics.density).roundToInt(),
+                (12f * resources.displayMetrics.density).roundToInt(),
+                (10f * resources.displayMetrics.density).roundToInt()
+            )
+            textSize = 14f
+            if (isUser) {
+                setBackgroundResource(R.drawable.reader_ai_selection_card_bg)
+                setTextColor(0xFF24324B.toInt())
+                text = message.content
+            } else {
+                setBackgroundResource(R.drawable.reader_ai_result_card_bg)
+                setTextColor(0xFF1D2939.toInt())
+                markwon.setMarkdown(this, message.content)
+            }
+        }
+    }
+
+    private fun appendQaMessage(role: String, content: String) {
+        val normalizedRole = if (role == "assistant") "assistant" else "user"
+        val normalizedContent = content.trim()
+        if (normalizedContent.isBlank()) return
+
+        qaSessionMessages.add(ReaderQaMessage(normalizedRole, normalizedContent))
+        val maxSessionMessages = 30
+        if (qaSessionMessages.size > maxSessionMessages) {
+            qaSessionMessages.removeAt(0)
+        }
+    }
+
+    private fun chapterKeyForIndex(index: Int): String {
+        val chapter = chapters.getOrNull(index)
+        val chapterId = chapter?.id?.trim().orEmpty()
+        if (chapterId.isNotBlank()) return chapterId
+        return "chapter-$index"
+    }
+
+    private fun fallbackQaSuggestions(): List<String> {
+        return listOf(
+            getString(R.string.reader_qa_quick_1),
+            getString(R.string.reader_qa_quick_2),
+            getString(R.string.reader_qa_quick_3),
+            getString(R.string.reader_qa_quick_4),
+            getString(R.string.reader_qa_quick_5)
+        )
+    }
+
+    private fun getQaSuggestionsForChapter(chapterIndex: Int): List<String> {
+        val chapterKey = chapterKeyForIndex(chapterIndex)
+        return qaSuggestionsByChapterId[chapterKey] ?: fallbackQaSuggestions()
+    }
+
+    private fun prefetchQaSuggestionsForChapter(chapterIndex: Int) {
+        if (chapterIndex !in chapters.indices) return
+
+        val chapter = chapters[chapterIndex]
+        val chapterKey = chapterKeyForIndex(chapterIndex)
+        val chapterTitle = chapter.title?.trim().orEmpty()
+        val chapterText = chapter.content?.trim().orEmpty()
+        if (chapterText.isBlank()) {
+            qaSuggestionsByChapterId[chapterKey] = fallbackQaSuggestions()
+            if (chapterIndex == currentChapterIndex) {
+                qaSuggestionsObserver?.invoke(qaSuggestionsByChapterId[chapterKey].orEmpty())
+            }
+            return
+        }
+
+        if (qaSuggestionsByChapterId.containsKey(chapterKey)) {
+            if (chapterIndex == currentChapterIndex) {
+                qaSuggestionsObserver?.invoke(qaSuggestionsByChapterId[chapterKey].orEmpty())
+            }
+            return
+        }
+
+        if (qaSuggestionInFlightChapterId == chapterKey) {
+            return
+        }
+
+        qaSuggestionInFlightChapterId = chapterKey
+        activeQaSuggestionCall?.cancel()
+
+        val request = AIQaSuggestionsRequest(
+            book_name = tvBookTitle.text?.toString()?.trim().orEmpty().ifEmpty { bookTitle },
+            current_chapter_title = chapterTitle,
+            chapter_text = chapterText,
+            max_questions = QA_SUGGESTIONS_COUNT
+        )
+        val call = AIRetrofitClient.instance.suggestions(request)
+        activeQaSuggestionCall = call
+
+        call.enqueue(object : Callback<AIQaSuggestionsResponse> {
+            override fun onResponse(
+                call: Call<AIQaSuggestionsResponse>,
+                response: Response<AIQaSuggestionsResponse>
+            ) {
+                if (activeQaSuggestionCall !== call) return
+                activeQaSuggestionCall = null
+                qaSuggestionInFlightChapterId = null
+
+                val suggestions = if (response.isSuccessful) {
+                    response.body()?.questions
+                        .orEmpty()
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+                        .distinct()
+                        .take(QA_SUGGESTIONS_COUNT)
+                        .ifEmpty { fallbackQaSuggestions() }
+                } else {
+                    fallbackQaSuggestions()
+                }
+
+                qaSuggestionsByChapterId[chapterKey] = suggestions
+                if (chapterIndex == currentChapterIndex) {
+                    qaSuggestionsObserver?.invoke(suggestions)
+                }
+            }
+
+            override fun onFailure(call: Call<AIQaSuggestionsResponse>, t: Throwable) {
+                if (call.isCanceled()) return
+                if (activeQaSuggestionCall === call) {
+                    activeQaSuggestionCall = null
+                }
+                qaSuggestionInFlightChapterId = null
+
+                val fallback = fallbackQaSuggestions()
+                qaSuggestionsByChapterId[chapterKey] = fallback
+                if (chapterIndex == currentChapterIndex) {
+                    qaSuggestionsObserver?.invoke(fallback)
+                }
+            }
+        })
+    }
+
+    private fun streamQaAnswer(
+        request: AIQaRequest,
+        onToken: (String) -> Unit,
+        onCompleted: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val url = "${BuildConfig.AI_BASE_URL}api/ai/qa/stream"
+        val payload = JSONObject().apply {
+            put("question", request.question)
+            put("book_name", request.book_name)
+            put("current_chapter_title", request.current_chapter_title)
+            put("context_chunks", org.json.JSONArray(request.context_chunks))
+            val historyJson = org.json.JSONArray()
+            request.chat_history.forEach { history ->
+                historyJson.put(
+                    JSONObject().apply {
+                        put("role", history.role)
+                        put("content", history.content)
+                    }
+                )
+            }
+            put("chat_history", historyJson)
+        }.toString()
+
+        val httpRequest = Request.Builder()
+            .url(url)
+            .post(payload.toRequestBody("application/json; charset=utf-8".toMediaType()))
+            .build()
+
+        activeQaStreamCall?.cancel()
+        val call = AIRetrofitClient.streamClient.newCall(httpRequest)
+        activeQaStreamCall = call
+
+        call.enqueue(object : OkHttpCallback {
+            override fun onFailure(call: OkHttpCall, e: IOException) {
+                if (call.isCanceled()) return
+                if (activeQaStreamCall === call) {
+                    activeQaStreamCall = null
+                }
+                runOnUiThread {
+                    onError(getString(R.string.reader_qa_error_network))
+                }
+            }
+
+            override fun onResponse(call: OkHttpCall, response: OkHttpResponse) {
+                if (activeQaStreamCall !== call) {
+                    response.close()
+                    return
+                }
+
+                if (!response.isSuccessful) {
+                    if (activeQaStreamCall === call) {
+                        activeQaStreamCall = null
+                    }
+                    val code = response.code
+                    response.close()
+                    runOnUiThread {
+                        onError(mapQaErrorMessage(code))
+                    }
+                    return
+                }
+
+                val source = response.body?.source()
+                if (source == null) {
+                    if (activeQaStreamCall === call) {
+                        activeQaStreamCall = null
+                    }
+                    response.close()
+                    runOnUiThread {
+                        onError(getString(R.string.reader_qa_error_unknown))
+                    }
+                    return
+                }
+
+                try {
+                    while (!source.exhausted()) {
+                        if (call.isCanceled()) {
+                            return
+                        }
+                        val line = source.readUtf8Line() ?: break
+                        if (!line.startsWith("data:")) {
+                            continue
+                        }
+                        val jsonPayload = line.removePrefix("data:").trim()
+                        if (jsonPayload.isBlank()) {
+                            continue
+                        }
+                        val json = JSONObject(jsonPayload)
+                        if (json.optBoolean("done", false)) {
+                            break
+                        }
+                        val error = json.optString("error", "")
+                        if (error.isNotBlank()) {
+                            runOnUiThread { onError(error) }
+                            return
+                        }
+                        val token = json.optString("token", "")
+                        if (token.isNotBlank()) {
+                            runOnUiThread { onToken(token) }
+                        }
+                    }
+                    runOnUiThread { onCompleted() }
+                } catch (_: Exception) {
+                    runOnUiThread {
+                        onError(getString(R.string.reader_qa_error_unknown))
+                    }
+                } finally {
+                    if (activeQaStreamCall === call) {
+                        activeQaStreamCall = null
+                    }
+                    response.close()
+                }
+            }
+        })
+    }
+
+    private fun buildQaRequest(
+        question: String,
+        historySnapshot: List<ReaderQaMessage>
+    ): AIQaRequest {
+        val safeBookName = tvBookTitle.text?.toString()?.trim().orEmpty().ifEmpty { bookTitle }
+        val chapterTitle = chapters.getOrNull(currentChapterIndex)?.title?.trim().orEmpty()
+        val chatHistory = historySnapshot
+            .takeLast(QA_MAX_CHAT_HISTORY)
+            .map { AIQaChatMessage(role = it.role, content = it.content) }
+
+        return AIQaRequest(
+            question = question,
+            book_name = safeBookName,
+            current_chapter_title = chapterTitle,
+            context_chunks = buildQaContextChunks(question, historySnapshot),
+            chat_history = chatHistory
+        )
+    }
+
+    private fun buildQaContextChunks(
+        question: String,
+        historySnapshot: List<ReaderQaMessage>
+    ): List<String> {
+        if (chapters.isEmpty()) return emptyList()
+
+        val safeCurrentIndex = currentChapterIndex.coerceIn(0, chapters.lastIndex)
+        val rewrittenQuestion = rewriteQaQuestion(question, historySnapshot)
+        val queryTokens = extractQueryTokens(rewrittenQuestion)
+        val historyTokens = extractHistoryTokens(historySnapshot)
+        val retrievalChunks = buildRetrievalChunks(safeCurrentIndex)
+        if (retrievalChunks.isEmpty()) {
+            return fallbackContextChunks(safeCurrentIndex)
+        }
+
+        val rankedCandidates = rankRetrievalChunks(
+            retrievalChunks = retrievalChunks,
+            queryText = rewrittenQuestion,
+            queryTokens = queryTokens,
+            historyTokens = historyTokens,
+            currentChapterIndex = safeCurrentIndex
+        )
+        if (rankedCandidates.isEmpty()) {
+            return fallbackContextChunks(safeCurrentIndex, retrievalChunks)
+        }
+
+        val selected = assembleContextChunks(
+            rankedCandidates = rankedCandidates,
+            queryTokens = queryTokens,
+            currentChapterIndex = safeCurrentIndex
+        )
+        if (selected.isEmpty()) {
+            return fallbackContextChunks(safeCurrentIndex, retrievalChunks)
+        }
+
+        val budgetFromQuestion = 700 + rewrittenQuestion.length * 6
+        val budgetFromHistory = historySnapshot
+            .takeLast(2)
+            .sumOf { it.content.length.coerceAtMost(180) }
+        val maxTotalChars = (budgetFromQuestion + budgetFromHistory)
+            .coerceIn(QA_MIN_TOTAL_CONTEXT_CHARS, QA_MAX_TOTAL_CONTEXT_CHARS)
+
+        val contextChunks = trimChunksToBudget(
+            chunks = selected.map { it.chunk.text },
+            maxTotalChars = maxTotalChars
+        )
+
+        return contextChunks.ifEmpty { fallbackContextChunks(safeCurrentIndex, retrievalChunks) }
+    }
+
+    private fun rewriteQaQuestion(question: String, historySnapshot: List<ReaderQaMessage>): String {
+        val trimmedQuestion = question.trim()
+        if (trimmedQuestion.isBlank()) return trimmedQuestion
+
+        val referencePattern = Regex(
+            "\\b(đoạn này|phần này|chỗ này|điều này|nhân vật này|ông ấy|cô ấy|anh ấy|chị ấy|họ|người này)\\b",
+            RegexOption.IGNORE_CASE
+        )
+        if (!referencePattern.containsMatchIn(trimmedQuestion)) {
+            return trimmedQuestion
+        }
+
+        val referenceContext = historySnapshot
+            .takeLast(3)
+            .map { it.content.trim() }
+            .filter { it.isNotBlank() }
+            .joinToString(" | ")
+            .take(280)
+
+        return if (referenceContext.isBlank()) {
+            trimmedQuestion
+        } else {
+            "$trimmedQuestion. Ngữ cảnh tham chiếu: $referenceContext"
+        }
+    }
+
+    private fun buildRetrievalChunks(currentChapterLimit: Int): List<QaRetrievalChunk> {
+        val retrievalChunks = mutableListOf<QaRetrievalChunk>()
+        for (chapterIndex in 0..currentChapterLimit) {
+            val rawContent = chapters.getOrNull(chapterIndex)?.content.orEmpty()
+            if (rawContent.isBlank()) continue
+
+            val chapterChunkTexts = splitChapterIntoChunks(rawContent)
+            if (chapterChunkTexts.isEmpty()) continue
+
+            val chunkCount = chapterChunkTexts.size.coerceAtLeast(1)
+            chapterChunkTexts.forEachIndexed { order, chunkText ->
+                val normalizedChunkText = chunkText.take(QA_MAX_CHUNK_LENGTH).trim()
+                if (normalizedChunkText.isBlank()) return@forEachIndexed
+
+                val tokens = tokenizeForMatch(normalizedChunkText)
+                if (tokens.isEmpty()) return@forEachIndexed
+
+                val tokenCounts = tokens.groupingBy { it }.eachCount()
+                retrievalChunks.add(
+                    QaRetrievalChunk(
+                        id = "$chapterIndex-$order-${normalizedChunkText.length}",
+                        text = normalizedChunkText,
+                        chapterIndex = chapterIndex,
+                        orderInChapter = order,
+                        orderRatio = if (chunkCount == 1) 0.0 else order.toDouble() / (chunkCount - 1).toDouble(),
+                        tokenCounts = tokenCounts,
+                        tokenSet = tokenCounts.keys,
+                        hasEntity = containsNamedEntity(chunkText)
+                    )
+                )
+            }
+        }
+        return retrievalChunks
+    }
+
+    private fun splitChapterIntoChunks(rawContent: String): List<String> {
+        val paragraphs = rawContent
+            .replace("\r\n", "\n")
+            .replace("\r", "\n")
+            .split(Regex("\\n\\s*\\n+"))
+            .map { it.replace(Regex("\\s+"), " ").trim() }
+            .filter { it.isNotBlank() }
+
+        val chunks = mutableListOf<String>()
+        paragraphs.forEach { paragraph ->
+            val sentences = splitParagraphIntoSentences(paragraph)
+            if (sentences.isEmpty()) return@forEach
+
+            if (sentences.size <= QA_SENTENCE_WINDOW) {
+                val merged = sentences.joinToString(" ").trim()
+                if (merged.length >= 20 || containsNamedEntity(merged)) {
+                    chunks.add(merged)
+                }
+                return@forEach
+            }
+
+            var cursor = 0
+            while (cursor < sentences.size) {
+                val end = (cursor + QA_SENTENCE_WINDOW).coerceAtMost(sentences.size)
+                val merged = sentences.subList(cursor, end)
+                    .joinToString(" ")
+                    .replace(Regex("\\s+"), " ")
+                    .trim()
+
+                if (merged.length >= 20 || containsNamedEntity(merged)) {
+                    chunks.add(merged)
+                }
+                cursor += QA_SENTENCE_STEP
+            }
+        }
+
+        return chunks
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+    }
+
+    private fun splitParagraphIntoSentences(paragraph: String): List<String> {
+        val normalizedParagraph = paragraph.replace(Regex("\\s+"), " ").trim()
+        if (normalizedParagraph.isBlank()) return emptyList()
+
+        val roughSentences = normalizedParagraph
+            .split(Regex("(?<=[.!?…])\\s+"))
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        val refined = mutableListOf<String>()
+        roughSentences.forEach { sentence ->
+            if (sentence.length <= QA_MAX_CHUNK_LENGTH) {
+                refined.add(sentence)
+                return@forEach
+            }
+
+            val phraseParts = sentence
+                .split(Regex("(?<=[,;:])\\s+"))
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+            if (phraseParts.isEmpty()) {
+                refined.add(sentence.take(QA_MAX_CHUNK_LENGTH))
+                return@forEach
+            }
+
+            val builder = StringBuilder()
+            phraseParts.forEach { part ->
+                val candidate = if (builder.isEmpty()) part else "${builder} $part"
+                if (candidate.length <= QA_MAX_CHUNK_LENGTH) {
+                    builder.clear()
+                    builder.append(candidate)
+                } else {
+                    if (builder.isNotEmpty()) {
+                        refined.add(builder.toString().trim())
+                        builder.clear()
+                    }
+                    if (part.length > QA_MAX_CHUNK_LENGTH) {
+                        refined.add(part.take(QA_MAX_CHUNK_LENGTH))
+                    } else {
+                        builder.append(part)
+                    }
+                }
+            }
+            if (builder.isNotEmpty()) {
+                refined.add(builder.toString().trim())
+            }
+        }
+
+        return refined.filter { it.isNotBlank() }
+    }
+
+    private fun rankRetrievalChunks(
+        retrievalChunks: List<QaRetrievalChunk>,
+        queryText: String,
+        queryTokens: List<String>,
+        historyTokens: Set<String>,
+        currentChapterIndex: Int
+    ): List<QaScoredChunk> {
+        if (retrievalChunks.isEmpty()) return emptyList()
+        if (queryTokens.isEmpty()) return emptyList()
+
+        val queryTokenSet = queryTokens.toSet()
+        val queryTextNormalized = normalizeForMatch(queryText)
+        val queryPrefix = queryTextNormalized.take(36).trim()
+        val queryEntityTokens = queryTokens.filter { it.length >= 5 }.toSet()
+        val readingRatio = calculateCurrentProgressPercent().coerceIn(0, 100) / 100.0
+
+        val totalDocs = retrievalChunks.size.toDouble().coerceAtLeast(1.0)
+        val avgDocLength = retrievalChunks
+            .map { it.tokenCounts.values.sum().toDouble() }
+            .average()
+            .coerceAtLeast(1.0)
+
+        val docFrequency = mutableMapOf<String, Int>()
+        queryTokenSet.forEach { token ->
+            val df = retrievalChunks.count { it.tokenSet.contains(token) }
+            if (df > 0) {
+                docFrequency[token] = df
+            }
+        }
+
+        return retrievalChunks.mapNotNull { chunk ->
+            val docLen = chunk.tokenCounts.values.sum().toDouble().coerceAtLeast(1.0)
+            var bm25 = 0.0
+
+            queryTokenSet.forEach { token ->
+                val tf = chunk.tokenCounts[token]?.toDouble() ?: 0.0
+                if (tf <= 0.0) return@forEach
+
+                val df = docFrequency[token]?.toDouble() ?: return@forEach
+                val idf = ln(((totalDocs - df + 0.5) / (df + 0.5)) + 1.0)
+                val denominator = tf + QA_BM25_K1 * (1 - QA_BM25_B + QA_BM25_B * (docLen / avgDocLength))
+                bm25 += idf * ((tf * (QA_BM25_K1 + 1)) / denominator)
+            }
+
+            val normalizedChunkText = normalizeForMatch(chunk.text)
+            var phraseScore = 0.0
+            if (queryTextNormalized.length >= 12 && normalizedChunkText.contains(queryTextNormalized)) {
+                phraseScore += 1.2
+            } else if (queryPrefix.length >= 12 && normalizedChunkText.contains(queryPrefix)) {
+                phraseScore += 0.6
+            }
+
+            val entityOverlap = lexicalOverlapRatio(queryEntityTokens, chunk.tokenSet)
+            val entityScore = entityOverlap * 1.1 + if (chunk.hasEntity && entityOverlap > 0.0) 0.4 else 0.0
+
+            val recencyBoost = when (currentChapterIndex - chunk.chapterIndex) {
+                0 -> 1.0
+                1 -> 0.35
+                else -> 0.0
+            }
+
+            val localPositionBoost = if (chunk.chapterIndex == currentChapterIndex) {
+                (1.0 - abs(chunk.orderRatio - readingRatio).coerceIn(0.0, 1.0)) * 0.45
+            } else {
+                0.0
+            }
+
+            val conversationScore = lexicalOverlapRatio(historyTokens, chunk.tokenSet)
+            val totalScore = bm25 + phraseScore + entityScore + recencyBoost + localPositionBoost + conversationScore * 0.8
+            if (totalScore <= 0.0) {
+                null
+            } else {
+                QaScoredChunk(
+                    chunk = chunk,
+                    relevanceScore = totalScore,
+                    conversationScore = conversationScore
+                )
+            }
+        }.sortedByDescending { it.relevanceScore }
+    }
+
+    private fun assembleContextChunks(
+        rankedCandidates: List<QaScoredChunk>,
+        queryTokens: List<String>,
+        currentChapterIndex: Int
+    ): List<QaScoredChunk> {
+        if (rankedCandidates.isEmpty()) return emptyList()
+        val queryTokenSet = queryTokens.toSet()
+        val selected = mutableListOf<QaScoredChunk>()
+
+        val localPool = rankedCandidates.filter { it.chunk.chapterIndex == currentChapterIndex }
+        selected += selectWithMmr(
+            candidates = localPool,
+            limit = 2,
+            queryTokenSet = queryTokenSet,
+            alreadySelected = selected
+        )
+
+        val backgroundPool = rankedCandidates.filter {
+            it.chunk.chapterIndex < currentChapterIndex &&
+                selected.none { chosen -> chosen.chunk.id == it.chunk.id }
+        }
+        selected += selectWithMmr(
+            candidates = backgroundPool,
+            limit = 1,
+            queryTokenSet = queryTokenSet,
+            alreadySelected = selected
+        )
+
+        val conversationalPool = rankedCandidates.filter {
+            it.conversationScore > 0.12 &&
+                selected.none { chosen -> chosen.chunk.id == it.chunk.id }
+        }
+        selected += selectWithMmr(
+            candidates = conversationalPool,
+            limit = 1,
+            queryTokenSet = queryTokenSet,
+            alreadySelected = selected
+        )
+
+        if (selected.size < QA_MAX_CONTEXT_CHUNKS) {
+            val remaining = rankedCandidates.filter {
+                selected.none { chosen -> chosen.chunk.id == it.chunk.id }
+            }
+            selected += selectWithMmr(
+                candidates = remaining,
+                limit = QA_MAX_CONTEXT_CHUNKS - selected.size,
+                queryTokenSet = queryTokenSet,
+                alreadySelected = selected
+            )
+        }
+
+        return selected
+            .distinctBy { it.chunk.id }
+            .take(QA_MAX_CONTEXT_CHUNKS)
+            .sortedByDescending { it.relevanceScore + it.conversationScore * 0.2 }
+    }
+
+    private fun selectWithMmr(
+        candidates: List<QaScoredChunk>,
+        limit: Int,
+        queryTokenSet: Set<String>,
+        alreadySelected: List<QaScoredChunk> = emptyList()
+    ): List<QaScoredChunk> {
+        if (limit <= 0 || candidates.isEmpty()) return emptyList()
+
+        val selected = mutableListOf<QaScoredChunk>()
+        val pool = candidates
+            .distinctBy { it.chunk.id }
+            .toMutableList()
+        val maxRelevance = pool.maxOfOrNull { it.relevanceScore }?.coerceAtLeast(1e-6) ?: 1.0
+
+        while (selected.size < limit && pool.isNotEmpty()) {
+            val best = pool.maxByOrNull { candidate ->
+                val normalizedRelevance = (candidate.relevanceScore / maxRelevance).coerceIn(0.0, 1.0)
+                val similarityPenalty = (selected + alreadySelected)
+                    .asSequence()
+                    .filter { it.chunk.id != candidate.chunk.id }
+                    .map { chosen -> chunkSimilarity(candidate.chunk, chosen.chunk, queryTokenSet) }
+                    .maxOrNull() ?: 0.0
+
+                QA_MMR_LAMBDA * normalizedRelevance - (1 - QA_MMR_LAMBDA) * similarityPenalty
+            } ?: break
+
+            selected.add(best)
+            pool.removeAll { it.chunk.id == best.chunk.id }
+        }
+
+        return selected
+    }
+
+    private fun chunkSimilarity(
+        first: QaRetrievalChunk,
+        second: QaRetrievalChunk,
+        queryTokenSet: Set<String>
+    ): Double {
+        val overlap = first.tokenSet.intersect(second.tokenSet).size.toDouble()
+        val union = (first.tokenSet.size + second.tokenSet.size).toDouble() - overlap
+        val jaccard = if (union <= 0.0) 0.0 else overlap / union
+
+        val queryOverlap = minOf(
+            lexicalOverlapRatio(queryTokenSet, first.tokenSet),
+            lexicalOverlapRatio(queryTokenSet, second.tokenSet)
+        )
+
+        return (jaccard * 0.7 + queryOverlap * 0.3).coerceIn(0.0, 1.0)
+    }
+
+    private fun trimChunksToBudget(
+        chunks: List<String>,
+        maxTotalChars: Int
+    ): List<String> {
+        val normalizedChunks = chunks
+            .map { it.replace(Regex("\\s+"), " ").trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+
+        val output = mutableListOf<String>()
+        var usedChars = 0
+        for (chunk in normalizedChunks) {
+            if (usedChars >= maxTotalChars) break
+            val remaining = maxTotalChars - usedChars
+            if (remaining < 80) break
+
+            val limited = chunk.take(QA_MAX_CHUNK_LENGTH)
+            val finalChunk = if (limited.length <= remaining) {
+                limited
+            } else {
+                limited.take(remaining).trimEnd()
+            }
+
+            if (finalChunk.length >= 40 || containsNamedEntity(finalChunk)) {
+                output.add(finalChunk)
+                usedChars += finalChunk.length
+            }
+        }
+        return output
+    }
+
+    private fun fallbackContextChunks(
+        currentChapterIndex: Int,
+        retrievalChunks: List<QaRetrievalChunk> = emptyList()
+    ): List<String> {
+        val sourceChunks = if (retrievalChunks.isNotEmpty()) {
+            retrievalChunks
+        } else {
+            buildRetrievalChunks(currentChapterIndex)
+        }
+
+        val fallback = mutableListOf<String>()
+        fallback += sourceChunks
+            .filter { it.chapterIndex == currentChapterIndex }
+            .sortedBy { it.orderInChapter }
+            .take(2)
+            .map { it.text }
+
+        if (currentChapterIndex > 0) {
+            fallback += sourceChunks
+                .filter { it.chapterIndex == currentChapterIndex - 1 }
+                .sortedBy { it.orderInChapter }
+                .take(1)
+                .map { it.text }
+        }
+
+        return fallback
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .take(QA_MAX_CONTEXT_CHUNKS)
+    }
+
+    private fun extractQueryTokens(question: String): List<String> {
+        val normalized = tokenizeForMatch(question)
+        if (normalized.isNotEmpty()) {
+            return normalized.distinct().take(14)
+        }
+        return normalizeForMatch(question)
+            .split(Regex("\\s+"))
+            .map { it.trim() }
+            .filter { it.length >= 2 }
+            .distinct()
+            .take(10)
+    }
+
+    private fun extractHistoryTokens(historySnapshot: List<ReaderQaMessage>): Set<String> {
+        return historySnapshot
+            .takeLast(4)
+            .flatMap { tokenizeForMatch(it.content) }
+            .filter { it.length >= 3 }
+            .toSet()
+    }
+
+    private fun tokenizeForMatch(text: String): List<String> {
+        return normalizeForMatch(text)
+            .split(Regex("\\s+"))
+            .map { it.trim() }
+            .filter { token ->
+                token.length >= 2 && token !in qaStopWords
+            }
+    }
+
+    private fun normalizeForMatch(text: String): String {
+        if (text.isBlank()) return ""
+        val decomposed = Normalizer.normalize(text, Normalizer.Form.NFD)
+        return decomposed
+            .replace(Regex("\\p{Mn}+"), "")
+            .lowercase()
+            .replace(Regex("[^\\p{L}\\p{N}\\s]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
+
+    private fun containsNamedEntity(text: String): Boolean {
+        return Regex("\\b[\\p{Lu}][\\p{L}\\p{M}]{2,}\\b").containsMatchIn(text)
+    }
+
+    private fun lexicalOverlapRatio(referenceTokens: Set<String>, targetTokens: Set<String>): Double {
+        if (referenceTokens.isEmpty() || targetTokens.isEmpty()) return 0.0
+        val overlap = referenceTokens.intersect(targetTokens).size.toDouble()
+        return overlap / referenceTokens.size.toDouble()
+    }
+
     private fun normalizeAiResultText(raw: String): String {
         // We no longer strip formatting, let Markwon render it.
         return raw
@@ -1605,6 +2727,14 @@ class ReaderActivity : AppCompatActivity() {
             400, 422 -> getString(R.string.reader_ai_invalid_selection)
             in 500..599 -> getString(R.string.reader_ai_error_server)
             else -> getString(R.string.reader_ai_error_unknown)
+        }
+    }
+
+    private fun mapQaErrorMessage(code: Int): String {
+        return when (code) {
+            400, 422 -> getString(R.string.reader_qa_error_invalid)
+            in 500..599 -> getString(R.string.reader_qa_error_server)
+            else -> getString(R.string.reader_qa_error_unknown)
         }
     }
 }

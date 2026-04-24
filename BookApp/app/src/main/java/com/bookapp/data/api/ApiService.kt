@@ -15,10 +15,15 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Header
 
 data class LoginRequest(
     val username: String,
     val password: String
+)
+
+data class GoogleLoginRequest(
+    val idToken: String
 )
 
 data class LoginResponse(
@@ -106,6 +111,9 @@ interface ApiService {
     // ========== AUTH ==========
     @POST("api/auth/login")
     fun login(@Body request: LoginRequest): Call<LoginResponse>
+
+    @POST("api/auth/google-login")
+    fun googleLogin(@Body request: GoogleLoginRequest): Call<LoginResponse>
 
     @POST("api/auth/register")
     fun register(@Body request: RegisterRequest): Call<User>

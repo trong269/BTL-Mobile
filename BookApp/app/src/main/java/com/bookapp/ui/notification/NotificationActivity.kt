@@ -35,6 +35,7 @@ class NotificationActivity : AppCompatActivity() {
             if (!notification.read) {
                 markAsRead(notification)
             }
+            showNotificationDetail(notification)
         }
 
         recyclerNotifications.layoutManager = LinearLayoutManager(this)
@@ -90,5 +91,13 @@ class NotificationActivity : AppCompatActivity() {
                     // Ignore background failure
                 }
             })
+    }
+
+    private fun showNotificationDetail(notification: Notification) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(notification.title)
+            .setMessage(notification.body)
+            .setPositiveButton("Đóng", null)
+            .show()
     }
 }

@@ -22,12 +22,48 @@ data class AITextResponse(
     val task: String
 )
 
+data class AIQaChatMessage(
+    val role: String,
+    val content: String
+)
+
+data class AIQaRequest(
+    val question: String,
+    val book_name: String = "",
+    val current_chapter_title: String = "",
+    val context_chunks: List<String> = emptyList(),
+    val chat_history: List<AIQaChatMessage> = emptyList()
+)
+
+data class AIQaResponse(
+    val result: String,
+    val task: String
+)
+
+data class AIQaSuggestionsRequest(
+    val book_name: String = "",
+    val current_chapter_title: String = "",
+    val chapter_text: String,
+    val max_questions: Int = 5
+)
+
+data class AIQaSuggestionsResponse(
+    val questions: List<String>,
+    val task: String
+)
+
 interface AIService {
     @POST("api/ai/explain")
     fun explain(@Body request: AITextRequest): Call<AITextResponse>
 
     @POST("api/ai/summarize")
     fun summarize(@Body request: AITextRequest): Call<AITextResponse>
+
+    @POST("api/ai/qa")
+    fun qa(@Body request: AIQaRequest): Call<AIQaResponse>
+
+    @POST("api/ai/suggestions")
+    fun suggestions(@Body request: AIQaSuggestionsRequest): Call<AIQaSuggestionsResponse>
 }
 
 object AIRetrofitClient {
@@ -55,4 +91,7 @@ object AIRetrofitClient {
             .build()
             .create(AIService::class.java)
     }
+
+    val streamClient: OkHttpClient
+        get() = okHttpClient
 }

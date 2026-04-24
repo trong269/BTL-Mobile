@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Tất cả sách bạn đã đánh dấu yêu thích"
-                android:textColor="#FFEED9C0"
+                android:textColor="@color/text_muted"
                 android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
@@ -61,7 +61,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tổng sách yêu thích"
-            android:textColor="#7A5A39"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 
         <TextView
@@ -70,7 +70,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="0"
-            android:textColor="#6B3C10"
+            android:textColor="@color/text_secondary"
             android:textSize="26sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -93,7 +93,7 @@
         android:layout_marginTop="10dp"
         android:gravity="center"
         android:text="Danh sách yêu thích đang trống. Bạn hãy thêm sách yêu thích từ trang chi tiết sách."
-        android:textColor="#886B4B"
+        android:textColor="@color/text_muted"
         android:textSize="13sp"
         android:visibility="gone" />
 

@@ -20,12 +20,40 @@ class MockAgent:
         book_name: str = "",
         context_before: str = "",
         context_after: str = "",
+        current_chapter_title: str = "",
+        context_chunks: list[str] | None = None,
+        chat_history: list[dict] | None = None,
+        max_questions: int = 5,
+        **kwargs,
     ) -> str:
+        if kwargs.get("task_type") == "suggestions" or "max_questions" in kwargs:
+            return (
+                "- Đoạn này tập trung vào mâu thuẫn nào?\n"
+                "- Nhân vật chính đang theo đuổi điều gì?\n"
+                "- Chi tiết nào báo hiệu thay đổi sắp tới?\n"
+                "- Tâm trạng nhân vật biến chuyển ra sao?\n"
+                "- Nếu tóm nhanh, 3 ý quan trọng là gì?"
+            )
+
+        if context_chunks is not None:
+            evidence_source = (context_chunks[0] if context_chunks else "Không có ngữ liệu").strip()
+            return (
+                "Trả lời:\n"
+                f"- {text}\n"
+                "\n"
+                "Bằng chứng:\n"
+                f"- {evidence_source}"
+            )
+
         return (
             f"## Mocked result\n"
-            f"- before:{context_before}\n"
             f"- text:{text}\n"
-            f"- after:{context_after}"
+            f"- book:{book_name}\n"
+            f"- chapter:{current_chapter_title}\n"
+            f"- before:{context_before}\n"
+            f"- after:{context_after}\n"
+            f"- chunks:{len(context_chunks or [])}\n"
+            f"- history:{len(chat_history or [])}"
         )
 
     async def astream(
@@ -34,8 +62,15 @@ class MockAgent:
         book_name: str = "",
         context_before: str = "",
         context_after: str = "",
+        current_chapter_title: str = "",
+        context_chunks: list[str] | None = None,
+        chat_history: list[dict] | None = None,
+        **kwargs,
     ):
-        words = ["Mocked", "stream", "result", "for:", text]
+        evidence_source = (context_chunks[0] if context_chunks else "Không có ngữ liệu").strip()
+        words = [
+            "Trả", "lời:\n-", text, "\n\nBằng", "chứng:\n-", evidence_source
+        ]
         for word in words:
             yield word + " "
 
@@ -73,8 +108,7 @@ def test_summarize_success(client, mock_agent_factory):
     assert response.status_code == 200
     data = response.json()
     assert data["task"] == "summarize"
-    assert data["result"].startswith("- ")
-    assert "#" not in data["result"]
+    assert "Mocked result" in data["result"]
     mock_agent_factory.assert_called_once_with("summarize")
 
 
@@ -99,8 +133,7 @@ def test_explain_success(client, mock_agent_factory):
     assert response.status_code == 200
     data = response.json()
     assert data["task"] == "explain"
-    assert data["result"].startswith("- ")
-    assert "#" not in data["result"]
+    assert "Mocked result" in data["result"]
     mock_agent_factory.assert_called_once_with("explain")
 
 
@@ -111,4 +144,97 @@ def test_explain_empty_text(client):
     assert response.status_code == 422
 
 
+def test_qa_success(client, mock_agent_factory):
+    payload = {
+        "question": "Nhân vật này đang muốn gì?",
+        "book_name": "Lão Hạc",
+        "current_chapter_title": "Chương 3",
+        "context_chunks": [
+            "Lão Hạc nhìn con chó Vàng rất lâu rồi thở dài.",
+            "Ông giáo nhận ra lão đang giấu một nỗi dằn vặt rất sâu.",
+        ],
+        "chat_history": [
+            {"role": "user", "content": "Đoạn này có gì đáng chú ý?"},
+            {"role": "assistant", "content": "- Trọng tâm là sự giằng xé nội tâm của lão Hạc."},
+        ],
+    }
+    response = client.post("/api/ai/qa", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["task"] == "qa"
+    assert "Bằng chứng" in data["result"]
+    mock_agent_factory.assert_called_once_with("qa")
 
+
+def test_qa_empty_question(client):
+    payload = {
+        "question": "   ",
+        "context_chunks": [],
+        "chat_history": [],
+    }
+    response = client.post("/api/ai/qa", json=payload)
+    assert response.status_code == 422
+
+
+def test_qa_stream_success(client, mock_agent_factory):
+    payload = {
+        "question": "Giải thích mâu thuẫn ở đoạn này",
+        "book_name": "Lão Hạc",
+        "current_chapter_title": "Chương 2",
+        "context_chunks": [
+            "Lão Hạc nhìn con chó Vàng rất lâu rồi thở dài vì mặc cảm.",
+            "Ông giáo nhận ra lão đang giấu một nỗi dằn vặt rất sâu."
+        ],
+        "chat_history": [],
+    }
+    response = client.post("/api/ai/qa/stream", json=payload)
+    assert response.status_code == 200
+    assert "data:" in response.text
+    assert "Bằng" in response.text
+    assert '"done": true' in response.text
+    mock_agent_factory.assert_called_once_with("qa")
+
+
+def test_qa_grounding_fallback_when_missing_evidence(client):
+    class WeakMockAgent:
+        async def arun(self, **kwargs) -> str:
+            return "Trả lời:\n- Mình đoán nhân vật đang lo lắng."
+
+    payload = {
+        "question": "Nhân vật đang cảm thấy gì?",
+        "book_name": "Lão Hạc",
+        "current_chapter_title": "Chương 2",
+        "context_chunks": ["Lão Hạc nhìn con chó Vàng rất lâu rồi thở dài."],
+        "chat_history": [],
+    }
+
+    with patch("src.routers.ai_router.AgentFactory.get_agent", return_value=WeakMockAgent()):
+        response = client.post("/api/ai/qa", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["result"] == "Mình chưa đủ dữ kiện trong phần đã đọc để trả lời chắc chắn câu này."
+
+
+def test_suggestions_success(client, mock_agent_factory):
+    payload = {
+        "book_name": "Lão Hạc",
+        "current_chapter_title": "Chương 2",
+        "chapter_text": "Lão Hạc nhìn con chó Vàng và thở dài.",
+        "max_questions": 5,
+    }
+    response = client.post("/api/ai/suggestions", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["task"] == "suggestions"
+    assert len(data["questions"]) == 5
+    mock_agent_factory.assert_called_once_with("suggestions")
+
+
+def test_suggestions_empty_chapter_text(client):
+    payload = {
+        "book_name": "Lão Hạc",
+        "current_chapter_title": "Chương 2",
+        "chapter_text": "   ",
+    }
+    response = client.post("/api/ai/suggestions", json=payload)
+    assert response.status_code == 422

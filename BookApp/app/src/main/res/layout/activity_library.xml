@@ -34,7 +34,7 @@
                 android:layout_weight="1"
                 android:fontFamily="serif"
                 android:text="Thư viện của bạn"
-                android:textColor="#6E3D0D"
+                android:textColor="@color/text_secondary"
                 android:textSize="34sp"
                 android:textStyle="bold" />
 
@@ -55,6 +55,63 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="serif"
+                android:text="Sách đã tải offline"
+                android:textColor="@color/text_primary"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btnViewAllOffline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/home_chip_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="Xem tất cả"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sectionOffline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerOfflineBooks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:id="@+id/tvOfflineEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Chưa có sách tải về máy."
+                android:textColor="@color/text_muted"
+                android:textSize="13sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:orientation="horizontal">
 
@@ -70,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="serif"
                     android:text="Sách yêu thích"
-                    android:textColor="#24190F"
+                    android:textColor="@color/text_primary"
                     android:textSize="40sp"
                     android:textStyle="bold" />
 
@@ -104,7 +161,7 @@
                 android:paddingRight="12dp"
                 android:paddingBottom="6dp"
                 android:text="Xem tất cả"
-                android:textColor="#6B3C10"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -122,7 +179,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Chưa có sách yêu thích. Hãy bấm yêu thích trong chi tiết sách để thêm vào đây."
-            android:textColor="#886B4B"
+            android:textColor="@color/text_muted"
             android:textSize="13sp" />
 
         <LinearLayout
@@ -139,7 +196,7 @@
                 android:layout_weight="1"
                 android:fontFamily="serif"
                 android:text="Đọc gần đây"
-                android:textColor="#24190F"
+                android:textColor="@color/text_primary"
                 android:textSize="36sp"
                 android:textStyle="bold" />
 
@@ -153,7 +210,7 @@
                 android:paddingRight="12dp"
                 android:paddingBottom="6dp"
                 android:text="Xem tất cả"
-                android:textColor="#6B3C10"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -181,7 +238,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Chưa có lịch sử đọc. Hay mở một chương để bắt đầu."
-            android:textColor="#886B4B"
+            android:textColor="@color/text_muted"
             android:textSize="13sp" />
 
     </LinearLayout>

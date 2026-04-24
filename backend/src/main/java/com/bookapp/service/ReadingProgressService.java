@@ -38,7 +38,7 @@ public class ReadingProgressService {
     public ReadingProgressResponseDto ensure(EnsureReadingProgressRequest payload) {
         validateIdentity(payload.getUserId(), payload.getBookId());
         bookService.getById(payload.getBookId());
-        bookService.incrementViews(payload.getBookId().trim());
+        bookService.incrementViews(payload.getBookId().trim(), payload.getUserId().trim());
 
         ReadingProgress existing = readingProgressRepository
                 .findByUserIdAndBookId(payload.getUserId(), payload.getBookId())

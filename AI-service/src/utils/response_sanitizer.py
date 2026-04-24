@@ -1,11 +1,11 @@
 def sanitize_reader_ai_output(text: str, mode: str) -> str:
     raw = (text or "").strip()
     if not raw:
-        return (
-            "Không đủ thông tin để giải nghĩa đoạn văn bản này."
-            if mode == "explain"
-            else "Đoạn văn bản thiếu ngữ cảnh để tóm tắt."
-        )
+        if mode == "explain":
+            return "Không đủ thông tin để giải nghĩa đoạn văn bản này."
+        if mode == "qa":
+            return "Mình chưa đủ dữ kiện trong phần đã đọc để trả lời chắc chắn câu này."
+        return "Đoạn văn bản thiếu ngữ cảnh để tóm tắt."
 
     # We now fully support rich Markdown in the Android client using Markwon.
     # Therefore, we no longer artificially strip headings, bold, or italic formatting,

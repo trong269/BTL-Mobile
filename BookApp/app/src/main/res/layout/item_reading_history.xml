@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="Không có ảnh"
-            android:textColor="#5F6C80"
+            android:textColor="@color/text_secondary"
             android:textSize="11sp"
             android:textStyle="bold" />
     </FrameLayout>
@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textColor="#1B1F24"
+            android:textColor="@color/text_primary"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -61,7 +61,7 @@
             android:layout_marginTop="3dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#68707A"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp" />
 
         <TextView
@@ -69,7 +69,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:textColor="#304A86"
+            android:textColor="@color/text_primary"
             android:textSize="12sp"
             android:textStyle="bold" />
     </LinearLayout>
