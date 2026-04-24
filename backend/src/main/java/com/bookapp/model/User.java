@@ -25,6 +25,12 @@ public class User {
     private String role;
     private String plan;
 
+    private String fcmToken;
+    private LocalDateTime lastActiveAt;
+
+    private String resetPasswordOtp;
+    private LocalDateTime resetPasswordOtpExpiry;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

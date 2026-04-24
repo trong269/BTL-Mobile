@@ -15,13 +15,19 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Header
 
 data class LoginRequest(
     val username: String,
     val password: String
 )
 
+data class GoogleLoginRequest(
+    val idToken: String
+)
+
 data class LoginResponse(
+    val token: String,
     val user: User,
     val role: String
 )
@@ -30,6 +36,16 @@ data class RegisterRequest(
     val username: String,
     val email: String,
     val password: String
+)
+
+data class ForgotPasswordRequest(
+    val email: String
+)
+
+data class ResetPasswordRequest(
+    val email: String,
+    val otp: String,
+    val newPassword: String
 )
 
 data class EnsureReadingProgressRequest(
@@ -86,14 +102,27 @@ data class MessageResponse(
     val message: String
 )
 
+data class UpdateFcmTokenRequest(
+    val fcmToken: String
+)
+
 interface ApiService {
 
     // ========== AUTH ==========
     @POST("api/auth/login")
     fun login(@Body request: LoginRequest): Call<LoginResponse>
 
+    @POST("api/auth/google-login")
+    fun googleLogin(@Body request: GoogleLoginRequest): Call<LoginResponse>
+
     @POST("api/auth/register")
     fun register(@Body request: RegisterRequest): Call<User>
+
+    @POST("api/auth/forgot-password")
+    fun forgotPassword(@Body request: ForgotPasswordRequest): Call<MessageResponse>
+
+    @POST("api/auth/reset-password")
+    fun resetPassword(@Body request: ResetPasswordRequest): Call<MessageResponse>
 
     @GET("api/users/{userId}")
     fun getUserProfile(@Path("userId") userId: String): Call<User>
@@ -109,6 +138,19 @@ interface ApiService {
         @Path("userId") userId: String,
         @Body request: ChangePasswordRequest
     ): Call<MessageResponse>
+
+    @PUT("api/users/{userId}/fcm-token")
+    fun updateFcmToken(
+        @Path("userId") userId: String,
+        @Body request: UpdateFcmTokenRequest
+    ): Call<MessageResponse>
+
+    // ========== NOTIFICATIONS ==========
+    @GET("api/notifications/{userId}")
+    fun getUserNotifications(@Path("userId") userId: String): Call<List<com.bookapp.data.model.Notification>>
+
+    @PUT("api/notifications/{notificationId}/read")
+    fun markNotificationAsRead(@Path("notificationId") notificationId: String): Call<Void>
 
     // ========== BOOKS ==========
     @GET("api/books")

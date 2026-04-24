@@ -48,7 +48,7 @@ function mapUser(user: BackendUser): UserDto {
     username: user.username,
     name: user.fullName || user.username,
     email: user.email,
-    role: (user.role || 'USER').toLowerCase(),
+    role: (user.role || 'USER').toUpperCase(),
     plan: user.plan || 'Cơ bản',
     lastActive: user.updatedAt ? new Date(user.updatedAt).toLocaleString('vi-VN') : 'Chưa cập nhật',
     avatar: user.avatar || 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_35.png',
@@ -61,7 +61,7 @@ function toBackendPayload(payload: UserPayload) {
     fullName: payload.name,
     email: payload.email,
     password: payload.password || '',
-    role: payload.role.toUpperCase(),
+    role: payload.role,
     plan: payload.plan,
     avatar: payload.avatar || '',
   };
@@ -73,7 +73,7 @@ function toBackendCreatePayload(payload: CreateUserPayload) {
     fullName: payload.name,
     email: payload.email,
     password: payload.password,
-    role: payload.role.toUpperCase(),
+    role: payload.role,
     plan: payload.plan,
     avatar: payload.avatar || '',
   };

@@ -52,7 +52,7 @@
             android:inputType="text"
             android:imeOptions="actionSearch"
             android:paddingHorizontal="14dp"
-            android:textColor="#212121"
+            android:textColor="@color/text_input"
             android:textColorHint="#6D6D6D"
             android:textSize="14sp" />
     </LinearLayout>
@@ -85,7 +85,7 @@
         android:background="@drawable/home_chip_bg"
         android:text="Bộ lọc"
         android:textAllCaps="false"
-        android:textColor="#23408E"
+        android:textColor="@color/text_accent"
         android:textSize="12sp"
         android:textStyle="bold" />
 
@@ -96,7 +96,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="4dp"
-        android:textColor="#9099A4"
+        android:textColor="@color/text_muted"
         android:textSize="12sp"
         android:visibility="gone" />
 
@@ -126,7 +126,7 @@
             android:background="@drawable/home_chip_bg"
             android:text="&lt; Trang trước"
             android:textAllCaps="false"
-            android:textColor="#23408E"
+            android:textColor="@color/text_accent"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -136,7 +136,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
             android:text="1/1"
-            android:textColor="#3F4A57"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -148,7 +148,7 @@
             android:background="@drawable/home_chip_bg"
             android:text="Trang sau &gt;"
             android:textAllCaps="false"
-            android:textColor="#23408E"
+            android:textColor="@color/text_accent"
             android:textSize="12sp"
             android:textStyle="bold" />
     </LinearLayout>

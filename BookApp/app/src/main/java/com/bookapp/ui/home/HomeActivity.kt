@@ -1,6 +1,9 @@
 package com.bookapp.ui.home
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -9,6 +12,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -41,6 +45,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var tvFeaturedBookTitle: TextView
     private lateinit var btnContinueRead: Button
     private lateinit var topBookAdapter: TopBookAdapter
+    private lateinit var tvNotificationBadge: TextView
 
     private val allBooks = mutableListOf<Book>()
     private var currentPage = 1
@@ -50,10 +55,19 @@ class HomeActivity : AppCompatActivity() {
     private var featuredMonthlyBook: Book? = null
     private var lastOpenBookDetailMs = 0L
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Đã bật thông báo", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        requestNotificationPermission()
         bindBookGrid()
         bindTopRankings()
         bindFeatureButtons()
@@ -62,9 +76,51 @@ class HomeActivity : AppCompatActivity() {
         loadTopBooksFromDatabase()
     }
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         loadTopBooksFromDatabase()
+        loadUnreadNotificationCount()
+    }
+
+    private fun loadUnreadNotificationCount() {
+        if (!::tvNotificationBadge.isInitialized) return
+        
+        val prefs = getSharedPreferences("BookAppPrefs", MODE_PRIVATE)
+        val userId = prefs.getString("userId", null) ?: return
+
+        RetrofitClient.instance.getUserNotifications(userId)
+            .enqueue(object : Callback<List<com.bookapp.data.model.Notification>> {
+                override fun onResponse(
+                    call: Call<List<com.bookapp.data.model.Notification>>,
+                    response: Response<List<com.bookapp.data.model.Notification>>
+                ) {
+                    if (response.isSuccessful) {
+                        val unreadCount = response.body()?.count { !it.read } ?: 0
+                        if (unreadCount > 0) {
+                            tvNotificationBadge.visibility = View.VISIBLE
+                            tvNotificationBadge.text = if (unreadCount > 99) "99+" else unreadCount.toString()
+                        } else {
+                            tvNotificationBadge.visibility = View.GONE
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<List<com.bookapp.data.model.Notification>>, t: Throwable) {
+                    // Ignore background failure
+                }
+            })
     }
 
     private fun bindBookGrid() {
@@ -247,6 +303,13 @@ class HomeActivity : AppCompatActivity() {
         val btnSearchIcon = findViewById<android.widget.ImageButton>(R.id.btnSearchIcon)
         tvFeaturedBookTitle = findViewById(R.id.tvFeaturedBookTitle)
         btnContinueRead = findViewById(R.id.btnContinueRead)
+        val btnNotifications = findViewById<android.widget.ImageButton>(R.id.btnNotifications)
+        tvNotificationBadge = findViewById(R.id.tvNotificationBadge)
+
+        btnNotifications.setOnClickListener {
+            val intent = Intent(this, com.bookapp.ui.notification.NotificationActivity::class.java)
+            startActivity(intent)
+        }
 
         val performSearch = {
             val query = edtSearch.text.toString().trim()

@@ -13,6 +13,7 @@ import BookChapters from "./pages/BookChapters";
 import Categories from "./pages/Categories";
 import AIConfig from "./pages/AIConfig";
 import Users from "./pages/Users";
+import Notifications from "./pages/Notifications";
 import Help from "./pages/Help";
 import Login from "./pages/Login";
 import { AppProvider } from "./context/AppContext";
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="ai-config" element={<AIConfig />} />
             <Route path="users" element={<Users />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="help" element={<Help />} />
           </Route>
         </Routes>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/home_background"
@@ -47,12 +48,36 @@
                     android:textSize="30sp"
                     android:textStyle="bold" />
 
-                <TextView
+                <FrameLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="o"
-                    android:textColor="@color/text_accent"
-                    android:textSize="18sp" />
+                    android:layout_height="wrap_content">
+
+                    <ImageButton
+                        android:id="@+id/btnNotifications"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Thông báo"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@android:drawable/ic_popup_reminder"
+                        app:tint="@color/text_accent" />
+
+                    <TextView
+                        android:id="@+id/tvNotificationBadge"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="top|end"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/badge_bg"
+                        android:gravity="center"
+                        android:text="0"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </FrameLayout>
             </LinearLayout>
 
             <LinearLayout
@@ -76,7 +101,7 @@
                     android:maxLines="1"
                     android:paddingHorizontal="14dp"
                     android:singleLine="true"
-                    android:textColor="#4A2D12"
+                    android:textColor="@color/text_primary"
                     android:textColorHint="#9A7D60" />
 
                 <ImageButton
@@ -107,7 +132,7 @@
                     android:fontFamily="serif"
                     android:text="Nổi bật tháng này"
                     android:textAllCaps="true"
-                    android:textColor="#8A6A48"
+                    android:textColor="@color/text_muted"
                     android:textSize="11sp" />
 
                 <TextView
@@ -117,7 +142,7 @@
                     android:layout_marginTop="8dp"
                     android:fontFamily="serif"
                     android:text="Thánh đường tĩnh lặng"
-                    android:textColor="#24190F"
+                    android:textColor="@color/text_primary"
                     android:textSize="36sp"
                     android:textStyle="bold" />
 
@@ -127,7 +152,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:text="Tuyển tập giàu chiều sâu cho những phiên đọc tập trung và thư thái."
-                    android:textColor="#816140"
+                    android:textColor="@color/text_muted"
                     android:textSize="14sp"
                     android:visibility="gone" />
 
@@ -178,7 +203,7 @@
                         android:paddingHorizontal="14dp"
                         android:text="Thư viện"
                         android:textAllCaps="false"
-                        android:textColor="#6B3C10"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
@@ -192,7 +217,7 @@
                         android:paddingHorizontal="14dp"
                         android:text="Thể loại"
                         android:textAllCaps="false"
-                        android:textColor="#6B3C10"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <Button
@@ -205,7 +230,7 @@
                         android:paddingHorizontal="14dp"
                         android:text="Yêu thích"
                         android:textAllCaps="false"
-                        android:textColor="#6B3C10"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
                     <Button
@@ -218,7 +243,7 @@
                         android:paddingHorizontal="14dp"
                         android:text="Lịch sử"
                         android:textAllCaps="false"
-                        android:textColor="#6B3C10"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
             </HorizontalScrollView>
@@ -239,7 +264,7 @@
                     android:fontFamily="serif"
                     android:text="Sách mới"
                     android:textColor="@color/text_primary"
-                    android:textSize="34sp"
+                    android:textSize="28sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -288,7 +313,7 @@
                     android:background="@drawable/home_chip_bg"
                     android:text="Trước"
                     android:textAllCaps="false"
-                    android:textColor="#6B3C10"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -298,7 +323,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="10dp"
                     android:text="Trang 1/1"
-                    android:textColor="#6C4C2A"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -310,7 +335,7 @@
                     android:background="@drawable/home_chip_bg"
                     android:text="Sau"
                     android:textAllCaps="false"
-                    android:textColor="#6B3C10"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -331,7 +356,7 @@
                     android:fontFamily="serif"
                     android:text="Bảng xếp hạng"
                     android:textColor="@color/text_primary"
-                    android:textSize="30sp"
+                    android:textSize="28sp"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -364,7 +389,7 @@
                         android:paddingHorizontal="12dp"
                         android:text="Tháng"
                         android:textAllCaps="false"
-                        android:textColor="#6B3C10"
+                        android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -423,7 +448,7 @@
             android:background="@drawable/home_card_bg"
             android:text="Khám phá"
             android:textAllCaps="false"
-            android:textColor="#7A5A38"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp" />
 
         <Button
@@ -435,7 +460,7 @@
             android:background="@drawable/home_card_bg"
             android:text="Thư viện"
             android:textAllCaps="false"
-            android:textColor="#7A5A38"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp" />
 
         <Button
@@ -447,7 +472,7 @@
             android:background="@drawable/home_card_bg"
             android:text="Tài khoản"
             android:textAllCaps="false"
-            android:textColor="#7A5A38"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>
