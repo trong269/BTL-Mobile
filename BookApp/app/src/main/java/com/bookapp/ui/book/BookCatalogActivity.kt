@@ -150,7 +150,7 @@ class BookCatalogActivity : AppCompatActivity() {
         // Tab "Tất cả"
         addTab("Tất cả", null)
         // Tab "Nổi bật"
-        addTabMode("Nổi bật", "featured")
+//        addTabMode("Nổi bật", "featured")
         // Tab "Mới nhất"
         addTabMode("Mới nhất", "new")
         // Tabs thể loại
@@ -414,10 +414,11 @@ class BookCatalogActivity : AppCompatActivity() {
         
         dialog.window?.setBackgroundDrawableResource(R.drawable.home_card_bg)
         
-        // Set dialog size
+        // Set dialog size - max 80% of screen height to allow for dialog title and buttons
+        val maxHeight = (resources.displayMetrics.heightPixels * 0.8).toInt()
         dialog.window?.setLayout(
             (resources.displayMetrics.widthPixels * 0.9).toInt(),
-            WindowManager.LayoutParams.WRAP_CONTENT
+            maxHeight
         )
         
         // Populate filter options in dialog
@@ -515,24 +516,23 @@ class BookCatalogActivity : AppCompatActivity() {
         llRatingFilter.removeAllViews()
 
         val ratings = listOf(0.0, 1.0, 2.0, 3.0, 4.0, 5.0)
-        val ratingLabels = listOf("All", "☆", "★☆", "★★☆", "★★★☆", "★★★★☆")
+        val ratingLabels = listOf("All", "★", "★★", "★★★", "★★★★", "★★★★★")
 
-        // Luôn hiển thị rating filter
+        // Always display rating filter
         ratings.zip(ratingLabels).forEach { (rating, label) ->
             val btn = Button(this).apply {
                 text = label
-                textSize = 11f
+                textSize = 10f
                 isAllCaps = false
                 val isSelected = minRating == rating
                 setBackgroundResource(if (isSelected) R.drawable.chip_selected_bg else R.drawable.chip_unselected_bg)
                 setTextColor(if (isSelected) 0xFFFFFFFF.toInt() else 0xFF23408E.toInt())
                 val lp = LinearLayout.LayoutParams(
-                    0,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    1f
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply { marginEnd = 6 }
                 layoutParams = lp
-                setPadding(16, 8, 16, 8)
+                setPadding(12, 6, 12, 6)
                 setOnClickListener {
                     minRating = rating
                     buildDialogRatingFilter(dialogView)
@@ -563,7 +563,7 @@ class BookCatalogActivity : AppCompatActivity() {
         val yearList = mutableListOf("Tất cả")
         yearList.addAll(uniqueYears.sorted().reversed().map { it.toString() })
 
-        // Create adapter and set to spinner
+        // Create adapter with default Android layout (most stable)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, yearList)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerYear.adapter = adapter

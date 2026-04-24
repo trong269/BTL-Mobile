@@ -16,6 +16,7 @@ public class Review {
     private String id;
 
     private String userId;
+    private String userName;
     private String bookId;
 
     private int rating; // 1-5

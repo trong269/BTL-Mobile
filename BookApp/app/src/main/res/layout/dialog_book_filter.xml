@@ -9,7 +9,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="16dp">
+        android:paddingTop="16dp"
+        android:paddingBottom="32dp">
 
         <!-- Filter Category Section -->
         <TextView
@@ -47,19 +48,26 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Dánh giá"
-            android:textColor="@color/text_secondary"
+            android:text="Đánh giá"
+            android:textColor="#3F4A57"
             android:textSize="14sp"
             android:textStyle="bold"
             android:layout_marginBottom="10dp" />
 
-        <LinearLayout
-            android:id="@+id/llDialogRatingFilter"
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp" />
+            android:scrollbars="none"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/llDialogRatingFilter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingEnd="12dp" />
+        </HorizontalScrollView>
 
         <!-- Divider -->
         <View
@@ -81,7 +89,12 @@
         <Spinner
             android:id="@+id/spinnerDialogYearFilter"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="48dp"
+            android:background="@drawable/spinner_year_filter_bg"
+            android:paddingStart="16dp"
+            android:paddingEnd="40dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:layout_marginBottom="20dp" />
 
         <!-- Buttons -->
@@ -90,7 +103,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="end"
-            android:spacing="8dp">
+            android:spacing="8dp"
+            android:layout_marginBottom="8dp">
 
             <Button
                 android:id="@+id/btnDialogClearFilters"
