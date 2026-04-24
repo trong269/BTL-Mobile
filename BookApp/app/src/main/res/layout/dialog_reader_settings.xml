@@ -54,7 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="MÀU NỀN"
-                android:textColor="#8A8F96"
+                android:textColor="@color/text_muted"
                 android:textSize="15sp" />
 
             <LinearLayout
@@ -102,7 +102,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="KÍCH THƯỚC CHỮ"
-                android:textColor="#8A8F96"
+                android:textColor="@color/text_muted"
                 android:textSize="15sp" />
 
             <LinearLayout
@@ -117,7 +117,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Kích Thước"
-                    android:textColor="#23272D"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp" />
 
                 <TextView
@@ -158,7 +158,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="KÍCH THƯỚC DÒNG"
-                android:textColor="#8A8F96"
+                android:textColor="@color/text_muted"
                 android:textSize="15sp" />
 
             <LinearLayout
@@ -173,7 +173,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Kích Thước"
-                    android:textColor="#23272D"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp" />
 
                 <TextView
@@ -214,7 +214,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="KIỂU ĐỌC"
-                android:textColor="#8A8F96"
+                android:textColor="@color/text_muted"
                 android:textSize="15sp" />
 
             <LinearLayout
@@ -251,7 +251,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="TỰ ĐỘNG CUỘN (NÚT PLAY)"
-                android:textColor="#8A8F96"
+                android:textColor="@color/text_muted"
                 android:textSize="15sp" />
 
             <LinearLayout
@@ -266,7 +266,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Tốc Độ"
-                    android:textColor="#23272D"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp" />
 
                 <TextView
@@ -314,7 +314,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Thời Gian Lật Trang (giây)"
-                    android:textColor="#23272D"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp" />
 
                 <TextView
@@ -355,7 +355,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="KIỂU CHỮ"
-                android:textColor="#8A8F96"
+                android:textColor="@color/text_muted"
                 android:textSize="15sp" />
 
             <Spinner

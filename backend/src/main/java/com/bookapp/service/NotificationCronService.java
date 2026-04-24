@@ -76,4 +76,37 @@ public class NotificationCronService {
         }
         System.out.println("Cron job finished.");
     }
+
+    private void broadcastNotification(String title, String body) {
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            // Save to database
+            Notification notification = new Notification(user.getId(), title, body);
+            notification.setType("REMINDER");
+            notificationRepository.save(notification);
+
+            // Send Push Notification
+            if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
+                pushNotificationService.sendPushNotification(user.getFcmToken(), title, body);
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 30 7 * * ?") // 07:30 AM every day
+    public void sendMorningGreeting() {
+        System.out.println("Running morning notification cron job...");
+        broadcastNotification("Chào buổi sáng rực rỡ! ☀️", "Đừng quên nạp năng lượng bằng một vài trang sách hay nhé.");
+    }
+
+    @Scheduled(cron = "0 30 12 * * ?") // 12:30 PM every day
+    public void sendLunchBreakReading() {
+        System.out.println("Running lunch break notification cron job...");
+        broadcastNotification("Giờ nghỉ trưa đến rồi! ☕", "Để đôi mắt thư giãn bằng cách đắm chìm vào thế giới sách nào.");
+    }
+
+    @Scheduled(cron = "0 30 21 * * ?") // 09:30 PM every day
+    public void sendEveningReading() {
+        System.out.println("Running evening notification cron job...");
+        broadcastNotification("Thời gian hoàn hảo để đọc sách 🌙", "Chọn một cuốn sách yêu thích để khép lại một ngày thật đẹp nhé!");
+    }
 }

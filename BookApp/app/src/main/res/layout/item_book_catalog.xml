@@ -29,7 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="2"
-            android:textColor="#1B1F24"
+            android:textColor="@color/text_primary"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:maxLines="1"
-            android:textColor="#68707A"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 
         <TextView
@@ -50,7 +50,7 @@
             android:background="@drawable/chip_unselected_bg"
             android:paddingHorizontal="10dp"
             android:paddingVertical="3dp"
-            android:textColor="#23408E"
+            android:textColor="@color/text_accent"
             android:textSize="11sp"
             android:textStyle="bold" />
 
@@ -76,7 +76,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:textColor="#9099A4"
+                android:textColor="@color/text_muted"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -86,7 +86,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:maxLines="2"
-            android:textColor="#9099A4"
+            android:textColor="@color/text_muted"
             android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>

@@ -38,6 +38,11 @@ public class AuthController {
         return response;
     }
 
+    @PostMapping("/google-login")
+    public AuthResponse googleLogin(@RequestBody com.bookapp.dto.GoogleLoginRequest request) {
+        return authService.googleLogin(request.getIdToken());
+    }
+
     @PostMapping("/forgot-password")
     public org.springframework.http.ResponseEntity<?> forgotPassword(@RequestBody com.bookapp.dto.ForgotPasswordRequest request) {
         authService.forgotPassword(request.getEmail());

@@ -2,6 +2,8 @@
     <string name="app_name">BookApp</string>
     <string name="favorite_inactive">Thích</string>
     <string name="favorite_active">Yêu thích</string>
+
+    <!-- AI Reader -->
     <string name="reader_ai_action">AI</string>
     <string name="reader_ai_sheet_subtitle">Xử lý theo ngữ cảnh cuốn sách đang đọc</string>
     <string name="reader_ai_selection_label">Đoạn bạn đã chọn</string>
@@ -21,6 +23,8 @@
     <string name="reader_ai_error_server">AI đang bận hoặc chưa xử lý được đoạn này. Vui lòng thử lại sau.</string>
     <string name="reader_ai_error_unknown">Không thể xử lý yêu cầu AI lúc này.</string>
     <string name="reader_ai_copied">Đã sao chép kết quả AI</string>
+
+    <!-- QA -->
     <string name="reader_qa_open">QA</string>
     <string name="reader_qa_title">Hỏi đáp với sách</string>
     <string name="reader_qa_subtitle">Trả lời ngắn gọn theo phần nội dung đã đọc</string>
@@ -39,4 +43,8 @@
     <string name="reader_qa_error_invalid">Câu hỏi hoặc ngữ cảnh chưa đủ để trả lời rõ.</string>
     <string name="reader_qa_error_server">AI đang bận, thử lại sau ít phút.</string>
     <string name="reader_qa_error_unknown">Không thể xử lý câu hỏi lúc này.</string>
+
+    <!-- Google Login -->
+    <string name="default_web_client_id">565355262450-fam9e356pmsc817opbcjsdlnh7fpfobf.apps.googleusercontent.com</string>
+
 </resources>

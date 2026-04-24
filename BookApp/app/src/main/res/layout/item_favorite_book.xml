@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="Không có ảnh"
-            android:textColor="#8A6C4A"
+            android:textColor="@color/text_muted"
             android:textSize="11sp"
             android:textStyle="bold" />
     </FrameLayout>
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textColor="#4A2D12"
+            android:textColor="@color/text_primary"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -55,7 +55,7 @@
             android:layout_marginTop="3dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#886B4B"
+            android:textColor="@color/text_muted"
             android:textSize="12sp" />
 
         <Button
@@ -66,7 +66,7 @@
             android:background="@drawable/btn_outline_bg"
             android:text="Bỏ yêu thích"
             android:textAllCaps="false"
-            android:textColor="#8D4312"
+            android:textColor="@color/text_muted"
             android:textStyle="bold" />
     </LinearLayout>
 

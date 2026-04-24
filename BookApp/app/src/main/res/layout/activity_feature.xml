@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tính năng"
-            android:textColor="#1B1F24"
+            android:textColor="@color/text_primary"
             android:textSize="24sp"
             android:textStyle="bold" />
 
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="Nội dung tính năng"
-            android:textColor="#4E5762"
+            android:textColor="@color/text_primary"
             android:textSize="15sp" />
 
         <Button
