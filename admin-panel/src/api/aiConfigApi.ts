@@ -1,4 +1,4 @@
-import { axiosClient } from './axiosClient';
+import { aiAxiosClient } from './aiAxiosClient';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -115,47 +115,47 @@ export interface LogQueryParams {
 export const aiConfigApi = {
   // LLM Configuration
   getLLMConfig: async (): Promise<LLMConfig> => {
-    const response = await axiosClient.get('/ai/config/llm');
+    const response = await aiAxiosClient.get('/api/ai/config/llm');
     return response.data;
   },
 
   updateLLMConfig: async (config: LLMConfigUpdate): Promise<LLMConfig> => {
-    const response = await axiosClient.put('/ai/config/llm', config);
+    const response = await aiAxiosClient.put('/api/ai/config/llm', config);
     return response.data;
   },
 
   updateAPIKeys: async (keys: APIKeysUpdate): Promise<{ success: boolean; updated_keys: string[]; message: string }> => {
-    const response = await axiosClient.put('/ai/config/keys', keys);
+    const response = await aiAxiosClient.put('/api/ai/config/keys', keys);
     return response.data;
   },
 
   // Agents
   getAgents: async (): Promise<AgentInfo[]> => {
-    const response = await axiosClient.get('/ai/agents');
+    const response = await aiAxiosClient.get('/api/ai/agents');
     return response.data;
   },
 
   // Logs
   getLogs: async (params?: LogQueryParams): Promise<AILog[]> => {
-    const response = await axiosClient.get('/ai/logs', { params });
+    const response = await aiAxiosClient.get('/api/ai/logs', { params });
     return response.data;
   },
 
   getFileLogs: async (limit?: number, level?: string): Promise<FileLogEntry[]> => {
-    const response = await axiosClient.get('/ai/logs/file', {
+    const response = await aiAxiosClient.get('/api/ai/logs/file', {
       params: { limit, level }
     });
     return response.data;
   },
 
   deleteLogs: async (): Promise<{ success: boolean; message: string; cleared_files: string[]; cleared_memory_logs: boolean }> => {
-    const response = await axiosClient.delete('/ai/logs');
+    const response = await aiAxiosClient.delete('/api/ai/logs');
     return response.data;
   },
 
   // Statistics
   getStats: async (): Promise<AIStats> => {
-    const response = await axiosClient.get('/ai/stats');
+    const response = await aiAxiosClient.get('/api/ai/stats');
     return response.data;
   },
 };

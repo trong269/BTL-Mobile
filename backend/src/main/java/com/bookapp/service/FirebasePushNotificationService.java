@@ -1,5 +1,6 @@
 package com.bookapp.service;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -11,6 +12,11 @@ public class FirebasePushNotificationService {
     public void sendPushNotification(String token, String title, String body) {
         if (token == null || token.isEmpty()) {
             System.err.println("FCM Token is null or empty. Cannot send notification.");
+            return;
+        }
+
+        if (FirebaseApp.getApps().isEmpty()) {
+            System.err.println("Firebase is not initialized. Cannot send push notification.");
             return;
         }
 

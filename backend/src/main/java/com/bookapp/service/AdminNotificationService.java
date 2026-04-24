@@ -31,9 +31,14 @@ public class AdminNotificationService {
 
         if (request.isSendToAll()) {
             targetUsers = userRepository.findAll();
+            System.out.println("Sending notification to all users. Total users: " + targetUsers.size());
         } else {
             targetUsers = userRepository.findAllById(request.getUserIds());
+            System.out.println("Sending notification to specific users. Total users: " + targetUsers.size());
         }
+
+        int sentCount = 0;
+        int skippedCount = 0;
 
         for (User user : targetUsers) {
             Notification notification = new Notification();
@@ -46,9 +51,16 @@ public class AdminNotificationService {
             notificationRepository.save(notification);
 
             if (user.getFcmToken() != null && !user.getFcmToken().isEmpty()) {
+                System.out.println("Sending FCM to user " + user.getId() + " with token: " + user.getFcmToken().substring(0, Math.min(20, user.getFcmToken().length())) + "...");
                 fcmService.sendPushNotification(user.getFcmToken(), request.getTitle(), request.getBody());
+                sentCount++;
+            } else {
+                System.out.println("User " + user.getId() + " has no FCM token. Skipping push notification.");
+                skippedCount++;
             }
         }
+
+        System.out.println("Notification summary - Sent: " + sentCount + ", Skipped: " + skippedCount);
     }
 
     public long deleteAllAdminNotifications() {

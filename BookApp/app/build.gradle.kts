@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 // Load local.properties
@@ -35,19 +37,25 @@ android {
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             val devUrl = localProperties.getProperty("dev.base.url") ?: "http://10.0.2.2:8080/"
+            val devAiUrl = localProperties.getProperty("dev.ai.base.url") ?: "https://btl-mobile-ai-service.up.railway.app/"
             buildConfigField("String", "BASE_URL", "\"$devUrl\"")
+            buildConfigField("String", "AI_BASE_URL", "\"$devAiUrl\"")
         }
         create("staging") {
             dimension = "environment"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             val stagingUrl = localProperties.getProperty("staging.base.url") ?: "https://btl-mobile-staging.up.railway.app/"
+            val stagingAiUrl = localProperties.getProperty("staging.ai.base.url") ?: "https://btl-mobile-ai-service.up.railway.app/"
             buildConfigField("String", "BASE_URL", "\"$stagingUrl\"")
+            buildConfigField("String", "AI_BASE_URL", "\"$stagingAiUrl\"")
         }
         create("prod") {
             dimension = "environment"
-            val prodUrl = localProperties.getProperty("prod.base.url") ?: "https://btl-mobile-production.up.railway.app/"
+            val prodUrl = localProperties.getProperty("prod.base.url") ?: "https://btl-mobile-production.up.railway.app/api/"
+            val prodAiUrl = localProperties.getProperty("prod.ai.base.url") ?: "https://ai-service-bookapp-production.up.railway.app/"
             buildConfigField("String", "BASE_URL", "\"$prodUrl\"")
+            buildConfigField("String", "AI_BASE_URL", "\"$prodAiUrl\"")
         }
     }
 
@@ -69,8 +77,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
 
     buildFeatures {
