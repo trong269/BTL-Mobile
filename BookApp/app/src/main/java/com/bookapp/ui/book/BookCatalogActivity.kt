@@ -150,7 +150,7 @@ class BookCatalogActivity : AppCompatActivity() {
         // Tab "Tất cả"
         addTab("Tất cả", null)
         // Tab "Nổi bật"
-        addTabMode("Nổi bật", "featured")
+//        addTabMode("Nổi bật", "featured")
         // Tab "Mới nhất"
         addTabMode("Mới nhất", "new")
         // Tabs thể loại
@@ -563,7 +563,7 @@ class BookCatalogActivity : AppCompatActivity() {
         val yearList = mutableListOf("Tất cả")
         yearList.addAll(uniqueYears.sorted().reversed().map { it.toString() })
 
-        // Create adapter and set to spinner
+        // Create adapter with default Android layout (most stable)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, yearList)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerYear.adapter = adapter

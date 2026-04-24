@@ -81,7 +81,12 @@
         <Spinner
             android:id="@+id/spinnerDialogYearFilter"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="48dp"
+            android:background="@drawable/spinner_year_filter_bg"
+            android:paddingStart="16dp"
+            android:paddingEnd="40dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:layout_marginBottom="20dp" />
 
         <!-- Buttons -->

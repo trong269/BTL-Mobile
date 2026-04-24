@@ -426,17 +426,17 @@ class BookDetailActivity : AppCompatActivity() {
 
         when (tab) {
             "intro" -> {
-                tabIntro.setBackgroundResource(R.drawable.btn_primary_bg)
+                tabIntro.setBackgroundResource(R.drawable.auth_primary_button_bg)
                 tabIntro.setTextColor(activeTabColor)
                 panelIntro.visibility = View.VISIBLE
             }
             "reviews" -> {
-                tabReviews.setBackgroundResource(R.drawable.btn_primary_bg)
+                tabReviews.setBackgroundResource(R.drawable.auth_primary_button_bg)
                 tabReviews.setTextColor(activeTabColor)
                 panelReviews.visibility = View.VISIBLE
             }
             "comments" -> {
-                tabComments.setBackgroundResource(R.drawable.btn_primary_bg)
+                tabComments.setBackgroundResource(R.drawable.auth_primary_button_bg)
                 tabComments.setTextColor(activeTabColor)
                 panelComments.visibility = View.VISIBLE
             }
