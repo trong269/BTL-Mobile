@@ -1,6 +1,6 @@
 package com.bookapp.controller;
 
-import com.bookapp.model.Review;
+import com.bookapp.dto.ReviewResponseDto;
 import com.bookapp.service.ReviewService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +19,14 @@ public class ReviewController {
 
     // GET /api/reviews/book/{bookId}
     @GetMapping("/book/{bookId}")
-    public List<Review> getByBook(@PathVariable String bookId) {
+    public List<ReviewResponseDto> getByBook(@PathVariable String bookId) {
         return reviewService.getByBookId(bookId);
     }
 
     // POST /api/reviews
     // Body: { "bookId": "...", "userId": "...", "rating": 5, "review": "..." }
     @PostMapping
-    public Review addReview(@RequestBody Map<String, Object> body) {
+    public ReviewResponseDto addReview(@RequestBody Map<String, Object> body) {
         String bookId = (String) body.get("bookId");
         String userId = (String) body.get("userId");
         int rating = Integer.parseInt(body.get("rating").toString());
