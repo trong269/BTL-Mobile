@@ -1,6 +1,7 @@
 import json
 import re
 import unicodedata
+import time
 from typing import AsyncGenerator
 
 from fastapi import APIRouter, HTTPException
@@ -347,6 +348,8 @@ def _iter_stream_tokens(text: str):
     description="Nhận một đoạn văn bản và trả về bản tóm tắt ngắn gọn bằng tiếng Việt.",
 )
 async def summarize(body: TextRequest) -> AIResponse:
+    logger.info(f"POST /summarize | book='{body.book_name}' | text_length={len(body.text)}")
+    start_time = time.time()
     try:
         agent = AgentFactory.get_agent("summarize")
         result = await agent.arun(
@@ -356,9 +359,22 @@ async def summarize(body: TextRequest) -> AIResponse:
             context_after=body.context_after,
         )
         result = sanitize_reader_ai_output(result, mode="summarize")
-        logger.info("Summarize request successful")
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track request for statistics
+        from src.routers.config_router import track_agent_request
+        track_agent_request("summarize", duration_ms, success=True)
+
+        logger.info(f"POST /summarize SUCCESS | book='{body.book_name}' | result_length={len(result)} | duration={duration_ms:.0f}ms")
         return AIResponse(result=result, task="summarize")
     except Exception as error:
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track failed request
+        from src.routers.config_router import track_agent_request
+        track_agent_request("summarize", duration_ms, success=False)
+
+        logger.error(f"POST /summarize FAILED | book='{body.book_name}' | error={str(error)[:200]}")
         _raise_task_exception("summarize", error)
 
 
@@ -369,6 +385,8 @@ async def summarize(body: TextRequest) -> AIResponse:
     description="Nhận một đoạn văn bản và trả về phần giải thích chi tiết bằng tiếng Việt.",
 )
 async def explain(body: TextRequest) -> AIResponse:
+    logger.info(f"POST /explain | book='{body.book_name}' | text_length={len(body.text)}")
+    start_time = time.time()
     try:
         agent = AgentFactory.get_agent("explain")
         result = await agent.arun(
@@ -378,9 +396,22 @@ async def explain(body: TextRequest) -> AIResponse:
             context_after=body.context_after,
         )
         result = sanitize_reader_ai_output(result, mode="explain")
-        logger.info("Explain request successful")
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track request for statistics
+        from src.routers.config_router import track_agent_request
+        track_agent_request("explain", duration_ms, success=True)
+
+        logger.info(f"POST /explain SUCCESS | book='{body.book_name}' | result_length={len(result)} | duration={duration_ms:.0f}ms")
         return AIResponse(result=result, task="explain")
     except Exception as error:
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track failed request
+        from src.routers.config_router import track_agent_request
+        track_agent_request("explain", duration_ms, success=False)
+
+        logger.error(f"POST /explain FAILED | book='{body.book_name}' | error={str(error)[:200]}")
         _raise_task_exception("explain", error)
 
 
@@ -391,6 +422,8 @@ async def explain(body: TextRequest) -> AIResponse:
     description="Nhận câu hỏi trong chế độ đọc và trả về câu trả lời ngắn gọn, anti-spoiler.",
 )
 async def qa(body: QARequest) -> AIResponse:
+    logger.info(f"POST /qa | book='{body.book_name}' | question='{body.question[:50]}...'")
+    start_time = time.time()
     try:
         agent = AgentFactory.get_agent("qa")
         raw_result = await agent.arun(
@@ -401,9 +434,22 @@ async def qa(body: QARequest) -> AIResponse:
             chat_history=[item.model_dump() for item in body.chat_history],
         )
         result = _validate_qa_grounding(raw_result, body.context_chunks)
-        logger.info("QA request successful")
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track request for statistics
+        from src.routers.config_router import track_agent_request
+        track_agent_request("qa", duration_ms, success=True)
+
+        logger.info(f"POST /qa SUCCESS | book='{body.book_name}' | result_length={len(result)} | duration={duration_ms:.0f}ms")
         return AIResponse(result=result, task="qa")
     except Exception as error:
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track failed request
+        from src.routers.config_router import track_agent_request
+        track_agent_request("qa", duration_ms, success=False)
+
+        logger.error(f"POST /qa FAILED | book='{body.book_name}' | error={str(error)[:200]}")
         _raise_task_exception("qa", error)
 
 
@@ -461,6 +507,8 @@ async def qa_stream(body: QARequest) -> StreamingResponse:
     description="Sinh tối đa 5 câu hỏi gợi ý để người dùng hỏi nhanh trong chế độ đọc.",
 )
 async def suggestions(body: SuggestionRequest) -> SuggestionResponse:
+    logger.info(f"POST /suggestions | book='{body.book_name}' | chapter='{body.current_chapter_title}' | text_length={len(body.chapter_text)}")
+    start_time = time.time()
     try:
         agent = AgentFactory.get_agent("suggestions")
         raw_result = await agent.arun(
@@ -481,9 +529,23 @@ async def suggestions(body: SuggestionRequest) -> SuggestionResponse:
                 if len(suggestions_list) >= body.max_questions:
                     break
 
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track request for statistics
+        from src.routers.config_router import track_agent_request
+        track_agent_request("suggestions", duration_ms, success=True)
+
+        logger.info(f"POST /suggestions SUCCESS | book='{body.book_name}' | generated={len(suggestions_list)} questions | duration={duration_ms:.0f}ms")
         return SuggestionResponse(
             questions=suggestions_list[:body.max_questions],
             task="suggestions",
         )
     except Exception as error:
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Track failed request
+        from src.routers.config_router import track_agent_request
+        track_agent_request("suggestions", duration_ms, success=False)
+
+        logger.error(f"POST /suggestions FAILED | book='{body.book_name}' | error={str(error)[:200]}")
         _raise_task_exception("suggestions", error)
