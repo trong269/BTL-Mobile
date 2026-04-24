@@ -18,8 +18,8 @@ android {
         versionName = "1.0"
 
         // Backend API
-        buildConfigField("String", "BASE_URL", "\"http://192.168.1.233:8080/\"")
-        buildConfigField("String", "AI_BASE_URL", "\"http://192.168.1.233:8000/\"")
+        buildConfigField("String", "BASE_URL", "\"http://192.168.2.19:8080/\"")
+        buildConfigField("String", "AI_BASE_URL", "\"http://192.168.2.19:8000/\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -95,4 +95,4 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-}
+}
