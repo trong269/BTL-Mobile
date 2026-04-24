@@ -85,7 +85,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:text="1/1"
-            android:textColor="#A1A6AD"
+            android:textColor="@color/text_muted"
             android:textSize="17sp" />
 
         <ImageButton

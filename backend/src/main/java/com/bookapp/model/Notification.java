@@ -11,6 +11,7 @@ public class Notification {
     private String userId;
     private String title;
     private String body;
+    private String type;
     private boolean isRead;
     private LocalDateTime createdAt;
 
@@ -41,4 +42,7 @@ public class Notification {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 }

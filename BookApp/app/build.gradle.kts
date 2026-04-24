@@ -16,7 +16,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "BASE_URL", "\"http://192.168.2.19:8080/\"")
+        buildConfigField("String", "BASE_URL", "\"http://192.168.1.233:8080/\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -67,4 +67,6 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
 }
