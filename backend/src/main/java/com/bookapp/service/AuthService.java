@@ -12,10 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -37,24 +37,38 @@ public class AuthService {
 
     // Đăng ký
     public User register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên tài khoản đã tồn tại");
+        String username = normalize(request.getUsername());
+        String email = normalize(request.getEmail());
+        String password = normalize(request.getPassword());
+
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu thông tin đăng ký");
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email đã được sử dụng");
+        if (password.length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu phải có ít nhất 6 ký tự");
+        }
+
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên đăng nhập đã tồn tại");
+        }
+
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email đã tồn tại");
         }
 
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
         user.setRole("USER");
+        user.setPlan("Cơ bản");
         user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
 
-        // Gửi email chào mừng
+        // Gửi email
         if (savedUser.getEmail() != null && !savedUser.getEmail().isEmpty()) {
             String subject = "Chào mừng bạn đến với Book App! 🎉";
             String text = "Xin chào " + savedUser.getUsername() + ",\n\n" +
@@ -64,7 +78,7 @@ public class AuthService {
             new Thread(() -> emailService.sendEmail(savedUser.getEmail(), subject, text)).start();
         }
 
-        // Tạo thông báo chào mừng trong app
+        // Notification
         Notification welcomeNotification = new Notification(
                 savedUser.getId(),
                 "Chào mừng đến với BookApp 🎉",
@@ -75,14 +89,36 @@ public class AuthService {
         return savedUser;
     }
 
-    // Đăng nhập -> trả JWT
+    // Login thường
     public String login(AuthRequest request) {
-        User user = userRepository.findFirstByUsername(request.getUsername())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        String username = normalize(request.getUsername());
+        String password = normalize(request.getPassword());
+
+        if (username.isEmpty() || password.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu tài khoản hoặc mật khẩu");
+        }
+
+        List<User> candidates = userRepository.findAllByUsernameIgnoreCase(username);
+        if (candidates.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
         }
+
+        List<User> matchedUsers = candidates.stream()
+                .filter(u -> matchesPassword(u, password))
+                .toList();
+
+        if (matchedUsers.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
+        }
+
+        User user = matchedUsers.stream()
+                .max(
+                        Comparator
+                                .comparing((User u) -> u.getUpdatedAt() != null ? u.getUpdatedAt() : LocalDateTime.MIN)
+                                .thenComparing(u -> u.getCreatedAt() != null ? u.getCreatedAt() : LocalDateTime.MIN)
+                )
+                .orElse(matchedUsers.get(0));
 
         user.setLastActiveAt(LocalDateTime.now());
         userRepository.save(user);
@@ -90,28 +126,31 @@ public class AuthService {
         return jwtUtil.generateToken(user.getId(), user.getRole());
     }
 
+    // Login Google
     public AuthResponse googleLogin(String idToken) {
         try {
-            com.google.firebase.auth.FirebaseToken decodedToken = com.google.firebase.auth.FirebaseAuth.getInstance().verifyIdToken(idToken);
+            com.google.firebase.auth.FirebaseToken decodedToken =
+                    com.google.firebase.auth.FirebaseAuth.getInstance().verifyIdToken(idToken);
+
             String email = decodedToken.getEmail();
             String name = decodedToken.getName();
-            
+
             if (email == null || email.isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tài khoản Google không có email");
             }
-            
+
             User user = userRepository.findFirstByEmail(email).orElse(null);
-            
+
             if (user == null) {
                 user = new User();
                 user.setUsername(name != null ? name : email.split("@")[0]);
                 user.setEmail(email);
-                user.setPassword(passwordEncoder.encode(java.util.UUID.randomUUID().toString())); // Mật khẩu ngẫu nhiên
+                user.setPassword(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
                 user.setRole("USER");
                 user.setCreatedAt(LocalDateTime.now());
                 user.setLastActiveAt(LocalDateTime.now());
                 user = userRepository.save(user);
-                
+
                 Notification welcomeNotification = new Notification(
                         user.getId(),
                         "Chào mừng đến với BookApp 🎉",
@@ -122,15 +161,16 @@ public class AuthService {
                 user.setLastActiveAt(LocalDateTime.now());
                 userRepository.save(user);
             }
-            
+
             String token = jwtUtil.generateToken(user.getId(), user.getRole());
-            
+
             AuthResponse response = new AuthResponse();
             response.setToken(token);
             response.setUser(user);
             response.setRole(user.getRole());
-            
+
             return response;
+
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Xác thực Google thất bại: " + e.getMessage());
         }
@@ -176,11 +216,35 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã xác nhận đã hết hạn");
         }
 
-        // 🔥 QUAN TRỌNG: encode password
         user.setPassword(passwordEncoder.encode(newPassword));
 
         user.setResetPasswordOtp(null);
         user.setResetPasswordOtpExpiry(null);
         userRepository.save(user);
+    }
+
+    private boolean matchesPassword(User user, String rawPassword) {
+        String storedPassword = user.getPassword();
+        if (storedPassword == null || storedPassword.isBlank()) {
+            return false;
+        }
+
+        if (looksLikeBcryptHash(storedPassword)) {
+            try {
+                return passwordEncoder.matches(rawPassword, storedPassword);
+            } catch (IllegalArgumentException ignored) {
+                return false;
+            }
+        }
+
+        return storedPassword.equals(rawPassword);
+    }
+
+    private boolean looksLikeBcryptHash(String value) {
+        return value.startsWith("$2a$") || value.startsWith("$2b$") || value.startsWith("$2y$");
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 }

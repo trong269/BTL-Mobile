@@ -29,12 +29,15 @@ class PromptFactory:
     Map:
         'summarize' → summarize.md
         'explain'   → explanation.md
+        'qa'        → qa.md
+        'suggestions' -> suggestions.md
     """
 
     _PROMPT_FILES: dict[str, str] = {
         "summarize":      "summarize.md",
         "explain":        "explanation.md",
-        "analyze_image":  "analyze_image.md",
+        "qa":             "qa.md",
+        "suggestions":    "suggestions.md",
     }
     
     @staticmethod
@@ -58,5 +61,9 @@ class PromptFactory:
         return PromptFactory.get("explain")
 
     @staticmethod
-    def get_analyze_image_prompt() -> SystemMessage:
-        return PromptFactory.get("analyze_image")
+    def get_qa_prompt() -> SystemMessage:
+        return PromptFactory.get("qa")
+
+    @staticmethod
+    def get_suggestions_prompt() -> SystemMessage:
+        return PromptFactory.get("suggestions")
