@@ -14,7 +14,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS middleware for admin-panel
+# CORS middleware for admin-panel and production
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -22,6 +22,7 @@ app.add_middleware(
         "http://localhost:3000",  # Alternative dev port
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "https://ai-book-app-three.vercel.app",  # Production Vercel app
     ],
     allow_credentials=True,
     allow_methods=["*"],
