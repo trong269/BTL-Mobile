@@ -1,13 +1,18 @@
 package com.bookapp.ui.home
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -19,6 +24,9 @@ import com.bookapp.data.model.Book
 import com.bookapp.ui.book.BookDetailActivity
 import com.bookapp.ui.book.BookCatalogActivity
 import com.bookapp.ui.feature.FeatureActivity
+import com.bookapp.ui.feature.FavoriteListActivity
+import com.bookapp.ui.feature.LibraryActivity
+import com.bookapp.ui.feature.ReadingHistoryActivity
 import com.bookapp.ui.profile.ProfileActivity
 import retrofit2.Call
 import retrofit2.Callback
@@ -34,25 +42,85 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var btnTopWeekTab: Button
     private lateinit var btnTopMonthTab: Button
     private lateinit var tvTopDescription: TextView
+    private lateinit var tvFeaturedBookTitle: TextView
+    private lateinit var btnContinueRead: Button
     private lateinit var topBookAdapter: TopBookAdapter
+    private lateinit var tvNotificationBadge: TextView
 
     private val allBooks = mutableListOf<Book>()
     private var currentPage = 1
     private var selectedTopPeriod = TOP_PERIOD_WEEK
     private var topBooksWeek: List<Book> = emptyList()
     private var topBooksMonth: List<Book> = emptyList()
+    private var featuredMonthlyBook: Book? = null
     private var lastOpenBookDetailMs = 0L
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Đã bật thông báo", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        requestNotificationPermission()
         bindBookGrid()
         bindTopRankings()
         bindFeatureButtons()
         bindBottomNavigation()
         loadBooks()
         loadTopBooksFromDatabase()
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadTopBooksFromDatabase()
+        loadUnreadNotificationCount()
+    }
+
+    private fun loadUnreadNotificationCount() {
+        if (!::tvNotificationBadge.isInitialized) return
+        
+        val prefs = getSharedPreferences("BookAppPrefs", MODE_PRIVATE)
+        val userId = prefs.getString("userId", null) ?: return
+
+        RetrofitClient.instance.getUserNotifications(userId)
+            .enqueue(object : Callback<List<com.bookapp.data.model.Notification>> {
+                override fun onResponse(
+                    call: Call<List<com.bookapp.data.model.Notification>>,
+                    response: Response<List<com.bookapp.data.model.Notification>>
+                ) {
+                    if (response.isSuccessful) {
+                        val unreadCount = response.body()?.count { !it.read } ?: 0
+                        if (unreadCount > 0) {
+                            tvNotificationBadge.visibility = View.VISIBLE
+                            tvNotificationBadge.text = if (unreadCount > 99) "99+" else unreadCount.toString()
+                        } else {
+                            tvNotificationBadge.visibility = View.GONE
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<List<com.bookapp.data.model.Notification>>, t: Throwable) {
+                    // Ignore background failure
+                }
+            })
     }
 
     private fun bindBookGrid() {
@@ -110,7 +178,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun loadBooks() {
-        showError("Dang tai du lieu sach...")
+        showError("Đang tải dữ liệu sách...")
 
         RetrofitClient.instance.getAllBooks()
             .enqueue(object : Callback<List<Book>> {
@@ -119,15 +187,17 @@ class HomeActivity : AppCompatActivity() {
                         val books = response.body().orEmpty()
                         allBooks.clear()
                         allBooks.addAll(books)
+                        updateFeaturedMonthlyBook()
                         currentPage = 1
                         renderPage()
                     } else {
-                        showError("Khong tai duoc danh sach sach (HTTP ${response.code()})")
+                        showError("Không tải được danh sách sách (HTTP ${response.code()})")
                     }
                 }
 
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
-                    showError("Loi ket noi: ${t.message ?: "Khong xac dinh"}")
+                    updateFeaturedMonthlyBook()
+                    showError("Lỗi kết nối: ${t.message ?: "Không xác định"}")
                 }
             })
     }
@@ -153,12 +223,14 @@ class HomeActivity : AppCompatActivity() {
                 override fun onResponse(call: Call<List<Book>>, response: Response<List<Book>>) {
                     if (response.isSuccessful) {
                         topBooksMonth = response.body().orEmpty()
+                        updateFeaturedMonthlyBook()
                         renderSelectedTopList()
                     }
                 }
 
                 override fun onFailure(call: Call<List<Book>>, t: Throwable) {
                     topBooksMonth = emptyList()
+                    updateFeaturedMonthlyBook()
                     renderSelectedTopList()
                 }
             })
@@ -170,7 +242,7 @@ class HomeActivity : AppCompatActivity() {
             tvPageIndicator.text = "Trang 1/1"
             btnPrevPage.isEnabled = false
             btnNextPage.isEnabled = false
-            showError("Chua co sach trong he thong")
+            showError("Chưa có sách trong hệ thống")
             topBooksWeek = emptyList()
             topBooksMonth = emptyList()
             renderSelectedTopList()
@@ -197,7 +269,7 @@ class HomeActivity : AppCompatActivity() {
         val activeBackground = R.drawable.home_primary_button_bg
         val inactiveBackground = R.drawable.home_chip_bg
         val activeTextColor = ContextCompat.getColor(this, android.R.color.white)
-        val inactiveTextColor = ContextCompat.getColor(this, R.color.home_primary_dark)
+        val inactiveTextColor = ContextCompat.getColor(this, R.color.text_accent)
 
         btnTopWeekTab.setBackgroundResource(if (isWeekSelected) activeBackground else inactiveBackground)
         btnTopMonthTab.setBackgroundResource(if (isWeekSelected) inactiveBackground else activeBackground)
@@ -205,10 +277,10 @@ class HomeActivity : AppCompatActivity() {
         btnTopMonthTab.setTextColor(if (isWeekSelected) inactiveTextColor else activeTextColor)
 
         if (isWeekSelected) {
-            tvTopDescription.text = "Cap nhat xu huong trong 7 ngay gan nhat"
+            tvTopDescription.text = "Cập nhật xu hướng trong 7 ngày gần nhất"
             topBookAdapter.submitList(topBooksWeek, "7 ngay")
         } else {
-            tvTopDescription.text = "Nhung dau sach noi bat nhat trong 30 ngay"
+            tvTopDescription.text = "Những đầu sách nổi bật nhất trong 30 ngày"
             topBookAdapter.submitList(topBooksMonth, "30 ngay")
         }
     }
@@ -228,36 +300,67 @@ class HomeActivity : AppCompatActivity() {
 
     private fun bindFeatureButtons() {
         val edtSearch = findViewById<EditText>(R.id.edtSearch)
-        edtSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                val query = edtSearch.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    val intent = Intent(this, BookCatalogActivity::class.java).apply {
-                        putExtra(BookCatalogActivity.EXTRA_QUERY, query)
-                    }
-                    startActivity(intent)
+        val btnSearchIcon = findViewById<android.widget.ImageButton>(R.id.btnSearchIcon)
+        tvFeaturedBookTitle = findViewById(R.id.tvFeaturedBookTitle)
+        btnContinueRead = findViewById(R.id.btnContinueRead)
+        val btnNotifications = findViewById<android.widget.ImageButton>(R.id.btnNotifications)
+        tvNotificationBadge = findViewById(R.id.tvNotificationBadge)
+
+        btnNotifications.setOnClickListener {
+            val intent = Intent(this, com.bookapp.ui.notification.NotificationActivity::class.java)
+            startActivity(intent)
+        }
+
+        val performSearch = {
+            val query = edtSearch.text.toString().trim()
+            if (query.isNotEmpty()) {
+                val intent = Intent(this, BookCatalogActivity::class.java).apply {
+                    putExtra(BookCatalogActivity.EXTRA_QUERY, query)
                 }
+                startActivity(intent)
+            }
+        }
+
+        // Search via keyboard
+        edtSearch.setOnEditorActionListener { _, actionId, event ->
+            val isKeyboardSearch = actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE
+            val isEnterKey = actionId == EditorInfo.IME_NULL &&
+                event?.keyCode == KeyEvent.KEYCODE_ENTER &&
+                event.action == KeyEvent.ACTION_DOWN
+
+            if (isKeyboardSearch || isEnterKey) {
+                performSearch()
                 true
             } else {
                 false
             }
         }
 
-        findViewById<Button>(R.id.btnContinueRead).setOnClickListener {
-            openFeature("Tiep tuc doc", "Mo lai sach dang doc va tiep tuc hanh trinh cua ban.")
+        // Search via button click
+        btnSearchIcon.setOnClickListener {
+            performSearch()
+        }
+
+        btnContinueRead.setOnClickListener {
+            val featured = featuredMonthlyBook
+            if (featured == null) {
+                Toast.makeText(this, "Hiện chưa có sách nổi bật tháng này", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            openBookDetail(featured)
         }
         findViewById<Button>(R.id.btnLibrary).setOnClickListener {
-            openFeature("Thu vien", "Quan ly tat ca sach ban da mua, dang doc va da doc.")
+            openLibrary(null)
         }
         findViewById<Button>(R.id.btnCategories).setOnClickListener {
             val intent = Intent(this, BookCatalogActivity::class.java)
             startActivity(intent)
         }
         findViewById<Button>(R.id.btnFavorites).setOnClickListener {
-            openFeature("Yeu thich", "Xem danh sach sach ban da danh dau yeu thich.")
+            startActivity(Intent(this, FavoriteListActivity::class.java))
         }
         findViewById<Button>(R.id.btnHistory).setOnClickListener {
-            openFeature("Lich su doc", "Theo doi tien trinh va lich su doc gan day.")
+            startActivity(Intent(this, ReadingHistoryActivity::class.java))
         }
         findViewById<TextView>(R.id.btnSeeAllRecommended).setOnClickListener {
             val intent = Intent(this, BookCatalogActivity::class.java).apply {
@@ -276,7 +379,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun bindBottomNavigation() {
         findViewById<Button>(R.id.navHome).setOnClickListener {
-            Toast.makeText(this, "Ban dang o trang Home", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Bạn đang ở trang Home", Toast.LENGTH_SHORT).show()
         }
         findViewById<Button>(R.id.navExplore).setOnClickListener {
             val intent = Intent(this, BookCatalogActivity::class.java).apply {
@@ -285,7 +388,7 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
         findViewById<Button>(R.id.navLibrary).setOnClickListener {
-            openFeature("Thu vien", "Truy cap thu vien ca nhan cua ban.")
+            openLibrary(null)
         }
         findViewById<Button>(R.id.navProfile).setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
@@ -300,22 +403,51 @@ class HomeActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    private fun openLibrary(initialTab: String?) {
+        val intent = Intent(this, LibraryActivity::class.java)
+        if (!initialTab.isNullOrBlank()) {
+            intent.putExtra(LibraryActivity.EXTRA_INITIAL_TAB, initialTab)
+        }
+        startActivity(intent)
+    }
+
     private fun openBookDetail(book: Book) {
         val now = System.currentTimeMillis()
         if (now - lastOpenBookDetailMs < 600L) return
 
         val id = book.id?.trim()
         if (id.isNullOrEmpty()) {
-            Toast.makeText(this, "Sach nay chua co ID hop le", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Sách này chưa có ID hợp lệ", Toast.LENGTH_SHORT).show()
             return
         }
 
         lastOpenBookDetailMs = now
         val intent = Intent(this, BookDetailActivity::class.java).apply {
             putExtra(BookDetailActivity.EXTRA_BOOK_ID, id)
-            putExtra(BookDetailActivity.EXTRA_BOOK_TITLE, book.title ?: "Chi tiet sach")
+            putExtra(BookDetailActivity.EXTRA_BOOK_TITLE, book.title ?: "Chi tiết sách")
         }
         startActivity(intent)
+    }
+
+    private fun updateFeaturedMonthlyBook() {
+        val topMonthly = topBooksMonth.firstOrNull { !it.id.isNullOrBlank() }
+        val fallback = allBooks
+            .filter { !it.id.isNullOrBlank() }
+            .maxByOrNull { it.views ?: 0 }
+
+        val nextFeatured = topMonthly ?: fallback
+        featuredMonthlyBook = nextFeatured
+
+        if (!::tvFeaturedBookTitle.isInitialized) {
+            return
+        }
+
+        if (nextFeatured == null) {
+            tvFeaturedBookTitle.text = "Chưa có sách nổi bật"
+            return
+        }
+
+        tvFeaturedBookTitle.text = nextFeatured.title?.trim().orEmpty().ifEmpty { "Chưa có tiêu đề" }
     }
 
     companion object {

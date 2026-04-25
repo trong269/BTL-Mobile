@@ -1,6 +1,8 @@
 package com.bookapp.ui.book
 
 import android.content.Intent
+import android.os.Build
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,12 +51,15 @@ class BookCatalogAdapter(
         private val tvDescription: TextView = itemView.findViewById(R.id.tvCatalogDescription)
 
         fun bind(book: Book) {
-            tvTitle.text = book.title ?: "Chua co tieu de"
-            tvAuthor.text = "Tac gia: ${book.author ?: "Khong ro"}"
+            tvTitle.text = book.title ?: "Chưa có tiêu đề"
+            tvAuthor.text = "Tác giả: ${book.author ?: "Không rõ"}"
             tvCategory.text = categoryNameResolver(book.categoryId)
             tvRating.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
             tvChapters.text = "${book.totalChapters ?: 0} chuong"
-            tvDescription.text = book.description ?: ""
+            
+            // Decode HTML entities and strip HTML tags from description
+            val description = book.description ?: ""
+            tvDescription.text = decodeHtmlDescription(description)
 
             // Load ảnh bìa
             if (!book.coverImage.isNullOrBlank()) {
@@ -78,7 +83,7 @@ class BookCatalogAdapter(
                 val context = itemView.context
                 val id = book.id?.trim()
                 if (id.isNullOrEmpty()) {
-                    Toast.makeText(context, "Sach nay chua co ID hop le", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Sách này chưa có ID hợp lệ", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 
@@ -89,6 +94,24 @@ class BookCatalogAdapter(
                 }
                 context.startActivity(intent)
             }
+        }
+
+        private fun decodeHtmlDescription(html: String): CharSequence {
+            // Decode HTML entities first
+            val decoded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
+            } else {
+                @Suppress("DEPRECATION")
+                Html.fromHtml(html)
+            }
+            
+            // Strip HTML tags (if any remain)
+            val text = decoded.toString()
+            return text.replace("<[^>]*>".toRegex(), "")  // Remove HTML tags
+                .replace("&[a-zA-Z]+;".toRegex(), "")     // Remove remaining HTML entities
+                .replace("&#\\d+;".toRegex(), "")         // Remove numeric entities
+                .replace("&#x[0-9a-fA-F]+;".toRegex(), "")  // Remove hex entities
+                .trim()
         }
     }
 }

@@ -12,9 +12,9 @@ class FeatureActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_feature)
 
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "Tinh nang"
+        val title = intent.getStringExtra(EXTRA_TITLE) ?: "Tính năng"
         val description = intent.getStringExtra(EXTRA_DESCRIPTION)
-            ?: "Noi dung tinh nang se duoc tai tai day."
+            ?: "Nội dung tính năng sẽ được tải tại đây."
 
         findViewById<TextView>(R.id.tvFeatureTitle).text = title
         findViewById<TextView>(R.id.tvFeatureDescription).text = description

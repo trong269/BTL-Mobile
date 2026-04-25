@@ -1,15 +1,20 @@
 package com.bookapp.ui.book
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.text.Html
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bookapp.R
@@ -20,12 +25,20 @@ import com.bookapp.data.api.ToggleFavoriteRequest
 import com.bookapp.data.api.ToggleFavoriteResponse
 import com.bookapp.data.api.FavoriteStatusResponse
 import com.bookapp.data.model.Book
+import com.bookapp.data.model.Chapter
 import com.bookapp.data.model.Comment
 import com.bookapp.data.model.Review
+import com.bookapp.ui.feature.LibraryStorage
 import com.bumptech.glide.Glide
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.R as MaterialR
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import androidx.lifecycle.lifecycleScope
+import com.bookapp.data.local.OfflineManager
+import kotlinx.coroutines.launch
 
 class BookDetailActivity : AppCompatActivity() {
 
@@ -41,11 +54,12 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var tvCategory: TextView
     private lateinit var tvRatingBadge: TextView
     private lateinit var tvChapters: TextView
-    private lateinit var tvPages: TextView
     private lateinit var tvViews: TextView
     private lateinit var tvDescription: TextView
     private lateinit var btnFavorite: Button
     private lateinit var btnReadNow: Button
+    private lateinit var btnChapterList: Button
+    private lateinit var btnDownload: Button
 
     // Tabs
     private lateinit var tabIntro: Button
@@ -69,9 +83,12 @@ class BookDetailActivity : AppCompatActivity() {
     private lateinit var edtCommentInput: EditText
     private lateinit var btnSubmitComment: Button
     private lateinit var tvNoComments: TextView
+    private var commentsList = mutableListOf<Comment>()
 
     private var bookId: String? = null
     private var isFavorited = false
+    private var currentBook: Book? = null
+    private lateinit var offlineManager: OfflineManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +97,7 @@ class BookDetailActivity : AppCompatActivity() {
         bookId = intent.getStringExtra(EXTRA_BOOK_ID)?.trim()?.takeIf { it.isNotEmpty() }
 
         if (bookId == null) {
-            Toast.makeText(this, "Khong the mo chi tiet sach do thieu ID", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể mở chi tiết sách do thiếu ID", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -88,7 +105,7 @@ class BookDetailActivity : AppCompatActivity() {
         val bindViewsSuccess = runCatching {
             bindViews()
         }.onFailure {
-            Toast.makeText(this, "Khong the tai giao dien chi tiet sach", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể tải giao diện chi tiết sách", Toast.LENGTH_SHORT).show()
             finish()
         }.isSuccess
 
@@ -98,6 +115,8 @@ class BookDetailActivity : AppCompatActivity() {
 
         loadBookDetail()
         checkFavoriteStatus()
+        offlineManager = OfflineManager(this)
+        checkDownloadStatus()
     }
 
     private fun bindViews() {
@@ -107,11 +126,12 @@ class BookDetailActivity : AppCompatActivity() {
         tvCategory = findViewById(R.id.tvDetailCategory)
         tvRatingBadge = findViewById(R.id.tvDetailRatingBadge)
         tvChapters = findViewById(R.id.tvDetailChapters)
-        tvPages = findViewById(R.id.tvDetailPages)
         tvViews = findViewById(R.id.tvDetailViews)
         tvDescription = findViewById(R.id.tvDetailDescription)
         btnFavorite = findViewById(R.id.btnFavorite)
         btnReadNow = findViewById(R.id.btnReadNow)
+        btnChapterList = findViewById(R.id.btnChapterList)
+        btnDownload = findViewById(R.id.btnDownload)
 
         tabIntro = findViewById(R.id.tabIntro)
         tabReviews = findViewById(R.id.tabReviews)
@@ -160,7 +180,17 @@ class BookDetailActivity : AppCompatActivity() {
 
         // Read now
         btnReadNow.setOnClickListener {
-            Toast.makeText(this, "Tinh nang doc sach dang duoc phat trien!", Toast.LENGTH_SHORT).show()
+            val id = bookId ?: return@setOnClickListener
+            addToRecentLibrary(id)
+            val intent = Intent(this, ReaderActivity::class.java).apply {
+                putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
+                putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
+            }
+            startActivity(intent)
+        }
+
+        btnChapterList.setOnClickListener {
+            showChapterListDialog()
         }
 
         // Submit review
@@ -168,6 +198,8 @@ class BookDetailActivity : AppCompatActivity() {
 
         // Submit comment
         btnSubmitComment.setOnClickListener { submitComment() }
+
+        btnDownload.setOnClickListener { handleDownload() }
     }
 
     private fun loadBookDetail() {
@@ -179,27 +211,47 @@ class BookDetailActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             response.body()?.let { bindBook(it) }
                         } else {
-                            Toast.makeText(this@BookDetailActivity, "Khong tai duoc thong tin sach", Toast.LENGTH_SHORT).show()
+                            tryLoadingLocal(id)
                         }
                     }
                     override fun onFailure(call: Call<Book>, t: Throwable) {
-                        Toast.makeText(this@BookDetailActivity, "Loi ket noi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        tryLoadingLocal(id)
                     }
                 })
         }.onFailure {
-            Toast.makeText(this, "Khong the tai chi tiet sach", Toast.LENGTH_SHORT).show()
+            tryLoadingLocal(id)
+        }
+    }
+
+    private fun tryLoadingLocal(id: String) {
+        lifecycleScope.launch {
+            val localBook = offlineManager.getLocalBook(id)
+            if (localBook != null) {
+                val book = Book(
+                    id = localBook.id,
+                    title = localBook.title,
+                    author = localBook.author,
+                    description = localBook.description,
+                    coverImage = localBook.coverImage,
+                    totalChapters = localBook.totalChapters
+                )
+                bindBook(book)
+                Toast.makeText(this@BookDetailActivity, "Đang xem ở chế độ ngoại tuyến", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@BookDetailActivity, "Lỗi kết nối máy chủ", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun bindBook(book: Book) {
-        tvTitle.text = book.title ?: "Chua co tieu de"
-        tvAuthor.text = "Tac gia: ${book.author ?: "Khong ro"}"
-        tvCategory.text = book.categoryId?.take(8) ?: "Chua phan loai"
+        currentBook = book
+        tvTitle.text = book.title ?: "Chưa có tiêu đề"
+        tvAuthor.text = "Tác giả: ${book.author ?: "Không rõ"}"
+        tvCategory.text = book.categoryId?.take(8) ?: "Chưa phân loại"
         tvRatingBadge.text = book.avgRating?.let { String.format("%.1f", it) } ?: "N/A"
         tvChapters.text = "${book.totalChapters ?: 0}"
-        tvPages.text = "${book.totalPages ?: 0}"
         tvViews.text = "${book.views ?: 0}"
-        tvDescription.text = book.description?.takeIf { it.isNotBlank() } ?: "(Chua co mo ta)"
+        tvDescription.text = book.description?.takeIf { it.isNotBlank() }?.let { decodeHtmlDescription(it) } ?: "(Chưa có mô tả)"
 
         if (!book.coverImage.isNullOrBlank()) {
             Glide.with(this)
@@ -231,7 +283,7 @@ class BookDetailActivity : AppCompatActivity() {
     private fun toggleFavorite() {
         val userId = getUserId()
         if (userId == null) {
-            Toast.makeText(this, "Vui long dang nhap de su dung tinh nang nay", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng đăng nhập để sử dụng tính năng này", Toast.LENGTH_SHORT).show()
             return
         }
         val id = bookId ?: return
@@ -242,16 +294,24 @@ class BookDetailActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             isFavorited = response.body()?.favorited ?: !isFavorited
                             updateFavoriteButton()
-                            val msg = if (isFavorited) "Da them vao yeu thich" else "Da xoa khoi yeu thich"
+                            val libItem = buildLibraryItem(id)
+                            if (libItem != null) {
+                                if (isFavorited) {
+                                    LibraryStorage.addFavorite(this@BookDetailActivity, libItem)
+                                } else {
+                                    LibraryStorage.removeFavorite(this@BookDetailActivity, id)
+                                }
+                            }
+                            val msg = if (isFavorited) "Đã thêm vào yêu thích" else "Đã xóa khỏi yêu thích"
                             Toast.makeText(this@BookDetailActivity, msg, Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<ToggleFavoriteResponse>, t: Throwable) {
-                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Lỗi: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
         }.onFailure {
-            Toast.makeText(this, "Khong the cap nhat yeu thich", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể cập nhật yêu thích", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -264,7 +324,7 @@ class BookDetailActivity : AppCompatActivity() {
         } else {
             btnFavorite.text = getString(R.string.favorite_inactive)
             btnFavorite.setBackgroundResource(R.drawable.btn_outline_bg)
-            btnFavorite.setTextColor(0xFF23408E.toInt())
+            btnFavorite.setTextColor(ContextCompat.getColor(this, R.color.text_accent))
             btnFavorite.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
         }
     }
@@ -293,9 +353,9 @@ class BookDetailActivity : AppCompatActivity() {
                 .enqueue(object : Callback<List<Comment>> {
                     override fun onResponse(call: Call<List<Comment>>, response: Response<List<Comment>>) {
                         if (response.isSuccessful) {
-                            val comments = response.body().orEmpty()
-                            commentAdapter.submitList(comments)
-                            tvNoComments.visibility = if (comments.isEmpty()) View.VISIBLE else View.GONE
+                            commentsList = response.body()?.toMutableList() ?: mutableListOf()
+                            commentAdapter.submitList(commentsList)
+                            tvNoComments.visibility = if (commentsList.isEmpty()) View.VISIBLE else View.GONE
                         }
                     }
                     override fun onFailure(call: Call<List<Comment>>, t: Throwable) {}
@@ -306,7 +366,7 @@ class BookDetailActivity : AppCompatActivity() {
     private fun submitReview() {
         val userId = getUserId()
         if (userId == null) {
-            Toast.makeText(this, "Vui long dang nhap de danh gia", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng đăng nhập để đánh giá", Toast.LENGTH_SHORT).show()
             return
         }
         val id = bookId ?: return
@@ -314,7 +374,7 @@ class BookDetailActivity : AppCompatActivity() {
         val text = edtReviewInput.text.toString().trim()
 
         if (rating == 0) {
-            Toast.makeText(this, "Vui long chon so sao", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng chọn số sao", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -327,33 +387,33 @@ class BookDetailActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             edtReviewInput.setText("")
                             ratingBarInput.rating = 5f
-                            Toast.makeText(this@BookDetailActivity, "Da gui danh gia!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Đã gửi đánh giá!", Toast.LENGTH_SHORT).show()
                             loadReviews()
                         } else {
-                            Toast.makeText(this@BookDetailActivity, "Loi gui danh gia (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Lỗi gửi đánh giá (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<Review>, t: Throwable) {
                         btnSubmitReview.isEnabled = true
-                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Lỗi: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
         }.onFailure {
             btnSubmitReview.isEnabled = true
-            Toast.makeText(this, "Khong the gui danh gia", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể gửi đánh giá", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun submitComment() {
         val userId = getUserId()
         if (userId == null) {
-            Toast.makeText(this, "Vui long dang nhap de binh luan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Vui lòng đăng nhập để bình luận", Toast.LENGTH_SHORT).show()
             return
         }
         val id = bookId ?: return
         val content = edtCommentInput.text.toString().trim()
         if (content.isEmpty()) {
-            Toast.makeText(this, "Noi dung binh luan khong the trong", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Nội dung bình luận không thể trống", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -364,29 +424,38 @@ class BookDetailActivity : AppCompatActivity() {
                     override fun onResponse(call: Call<Comment>, response: Response<Comment>) {
                         btnSubmitComment.isEnabled = true
                         if (response.isSuccessful) {
+                            val newComment = response.body()
+                            if (newComment != null) {
+                                // Thêm comment mới vào danh sách (tránh race condition)
+                                commentsList.add(0, newComment)
+                                commentAdapter.submitList(commentsList.toList())
+                                tvNoComments.visibility = View.GONE
+                            }
                             edtCommentInput.setText("")
-                            Toast.makeText(this@BookDetailActivity, "Da gui binh luan!", Toast.LENGTH_SHORT).show()
-                            loadComments()
+                            Toast.makeText(this@BookDetailActivity, "Đã gửi bình luận!", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(this@BookDetailActivity, "Loi gui binh luan (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BookDetailActivity, "Lỗi gửi bình luận (HTTP ${response.code()})", Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<Comment>, t: Throwable) {
                         btnSubmitComment.isEnabled = true
-                        Toast.makeText(this@BookDetailActivity, "Loi: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@BookDetailActivity, "Lỗi: ${t.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
         }.onFailure {
             btnSubmitComment.isEnabled = true
-            Toast.makeText(this, "Khong the gui binh luan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Không thể gửi bình luận", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun showTab(tab: String) {
+        val inactiveTabColor = ContextCompat.getColor(this, R.color.text_secondary)
+        val activeTabColor = ContextCompat.getColor(this, android.R.color.white)
+
         // Reset all tabs
         listOf(tabIntro, tabReviews, tabComments).forEach {
             it.setBackgroundResource(android.R.color.transparent)
-            it.setTextColor(0xFF68707A.toInt())
+            it.setTextColor(inactiveTabColor)
         }
         panelIntro.visibility = View.GONE
         panelReviews.visibility = View.GONE
@@ -394,18 +463,18 @@ class BookDetailActivity : AppCompatActivity() {
 
         when (tab) {
             "intro" -> {
-                tabIntro.setBackgroundResource(R.drawable.btn_primary_bg)
-                tabIntro.setTextColor(0xFFFFFFFF.toInt())
+                tabIntro.setBackgroundResource(R.drawable.auth_primary_button_bg)
+                tabIntro.setTextColor(activeTabColor)
                 panelIntro.visibility = View.VISIBLE
             }
             "reviews" -> {
-                tabReviews.setBackgroundResource(R.drawable.btn_primary_bg)
-                tabReviews.setTextColor(0xFFFFFFFF.toInt())
+                tabReviews.setBackgroundResource(R.drawable.auth_primary_button_bg)
+                tabReviews.setTextColor(activeTabColor)
                 panelReviews.visibility = View.VISIBLE
             }
             "comments" -> {
-                tabComments.setBackgroundResource(R.drawable.btn_primary_bg)
-                tabComments.setTextColor(0xFFFFFFFF.toInt())
+                tabComments.setBackgroundResource(R.drawable.auth_primary_button_bg)
+                tabComments.setTextColor(activeTabColor)
                 panelComments.visibility = View.VISIBLE
             }
         }
@@ -414,5 +483,223 @@ class BookDetailActivity : AppCompatActivity() {
     private fun getUserId(): String? {
         val prefs = getSharedPreferences("BookAppPrefs", MODE_PRIVATE)
         return prefs.getString("userId", null)
+    }
+
+    private fun showChapterListDialog() {
+        val id = bookId ?: return
+
+        RetrofitClient.instance.getChaptersByBook(id)
+            .enqueue(object : Callback<List<Chapter>> {
+                override fun onResponse(call: Call<List<Chapter>>, response: Response<List<Chapter>>) {
+                    if (response.isSuccessful) {
+                        val chapters = response.body().orEmpty().filter { !it.id.isNullOrBlank() }
+                        if (chapters.isEmpty()) {
+                            Toast.makeText(this@BookDetailActivity, "Sách chưa có chương", Toast.LENGTH_SHORT).show()
+                        } else {
+                            showChapterDialogWithData(chapters)
+                        }
+                    } else {
+                        tryLoadingLocalChapters(id)
+                    }
+                }
+
+                override fun onFailure(call: Call<List<Chapter>>, t: Throwable) {
+                    tryLoadingLocalChapters(id)
+                }
+            })
+    }
+
+    private fun tryLoadingLocalChapters(id: String) {
+        lifecycleScope.launch {
+            val localChapters = offlineManager.getLocalChapters(id)
+            if (localChapters.isNotEmpty()) {
+                val chapters = localChapters.map { 
+                    Chapter(
+                        id = it.id,
+                        bookId = it.bookId,
+                        chapterNumber = it.chapterNumber,
+                        title = it.title,
+                        content = it.content
+                    )
+                }
+                showChapterDialogWithData(chapters)
+            } else {
+                Toast.makeText(this@BookDetailActivity, "Không tải được danh sách chương", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showChapterDialogWithData(chapters: List<Chapter>) {
+        val id = bookId ?: return
+        val dialog = BottomSheetDialog(this)
+        val content = layoutInflater.inflate(R.layout.dialog_reader_chapters, null)
+        dialog.setContentView(content)
+
+        val pageSize = 15
+        content.findViewById<TextView>(R.id.tvDialogChapterTitle)?.text = tvTitle.text
+        content.findViewById<ImageButton>(R.id.btnDialogChapterClose)?.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        val recycler = content.findViewById<RecyclerView>(R.id.recyclerReaderChapters)
+        val tvPageIndicator = content.findViewById<TextView>(R.id.tvPageIndicator)
+        val btnPageFirst = content.findViewById<ImageButton>(R.id.btnPageFirst)
+        val btnPagePrev = content.findViewById<ImageButton>(R.id.btnPagePrev)
+        val btnPageNext = content.findViewById<ImageButton>(R.id.btnPageNext)
+        val btnPageLast = content.findViewById<ImageButton>(R.id.btnPageLast)
+
+        val adapter = ReaderChapterAdapter { selectedChapter ->
+            dialog.dismiss()
+            val chapterId = selectedChapter.id ?: return@ReaderChapterAdapter
+            addToRecentLibrary(id)
+            val intent = Intent(this, ReaderActivity::class.java).apply {
+                putExtra(ReaderActivity.EXTRA_BOOK_ID, id)
+                putExtra(ReaderActivity.EXTRA_BOOK_TITLE, tvTitle.text.toString())
+                putExtra(ReaderActivity.EXTRA_TARGET_CHAPTER_ID, chapterId)
+            }
+            startActivity(intent)
+        }
+
+        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.adapter = adapter
+
+        val totalPages = ((chapters.size + pageSize - 1) / pageSize).coerceAtLeast(1)
+        var currentPage = 0
+
+        fun updatePagerButtons() {
+            val canGoPrev = currentPage > 0
+            val canGoNext = currentPage < totalPages - 1
+
+            btnPageFirst.isEnabled = canGoPrev
+            btnPagePrev.isEnabled = canGoPrev
+            btnPageNext.isEnabled = canGoNext
+            btnPageLast.isEnabled = canGoNext
+
+            btnPageFirst.alpha = if (canGoPrev) 1f else 0.35f
+            btnPagePrev.alpha = if (canGoPrev) 1f else 0.35f
+            btnPageNext.alpha = if (canGoNext) 1f else 0.35f
+            btnPageLast.alpha = if (canGoNext) 1f else 0.35f
+        }
+
+        fun renderPage() {
+            val start = currentPage * pageSize
+            val end = (start + pageSize).coerceAtMost(chapters.size)
+            val pageItems = chapters.subList(start, end)
+
+            adapter.submitList(pageItems, null)
+            tvPageIndicator.text = "${currentPage + 1}/$totalPages"
+            updatePagerButtons()
+        }
+
+        btnPageFirst.setOnClickListener {
+            if (currentPage != 0) {
+                currentPage = 0
+                renderPage()
+            }
+        }
+
+        btnPagePrev.setOnClickListener {
+            if (currentPage > 0) {
+                currentPage -= 1
+                renderPage()
+            }
+        }
+
+        btnPageNext.setOnClickListener {
+            if (currentPage < totalPages - 1) {
+                currentPage += 1
+                renderPage()
+            }
+        }
+
+        btnPageLast.setOnClickListener {
+            if (currentPage != totalPages - 1) {
+                currentPage = totalPages - 1
+                renderPage()
+            }
+        }
+
+        renderPage()
+
+        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        dialog.behavior.skipCollapsed = true
+        dialog.show()
+        dialog.findViewById<View>(MaterialR.id.design_bottom_sheet)
+            ?.setBackgroundResource(android.R.color.transparent)
+    }
+
+    private fun addToRecentLibrary(bookId: String) {
+        val item = buildLibraryItem(bookId)
+        if (item != null) {
+            LibraryStorage.addRecent(this, item)
+        }
+    }
+
+    private fun buildLibraryItem(bookId: String): LibraryStorage.LibraryBookItem? {
+        val book = currentBook
+        return if (book != null) {
+            LibraryStorage.fromBook(book, fallbackBookId = bookId, fallbackTitle = tvTitle.text.toString())
+        } else {
+            LibraryStorage.basicItem(bookId, tvTitle.text.toString())
+        }
+    }
+
+    private fun decodeHtmlDescription(html: String): CharSequence {
+        // Decode HTML entities first
+        val decoded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
+        } else {
+            @Suppress("DEPRECATION")
+            Html.fromHtml(html)
+        }
+        
+        // Strip HTML tags (if any remain)
+        val text = decoded.toString()
+        return text.replace("<[^>]*>".toRegex(), "")  // Remove HTML tags
+            .replace("&[a-zA-Z]+;".toRegex(), "")     // Remove remaining HTML entities
+            .replace("&#\\d+;".toRegex(), "")         // Remove numeric entities
+            .replace("&#x[0-9a-fA-F]+;".toRegex(), "")  // Remove hex entities
+            .trim()
+    }
+
+    private fun checkDownloadStatus() {
+        val id = bookId ?: return
+        lifecycleScope.launch {
+            if (offlineManager.isBookDownloaded(id)) {
+                btnDownload.text = "Đã Tải Offline (Xóa)"
+                btnDownload.setTextColor(0xFFE53935.toInt())
+            } else {
+                btnDownload.text = "Tải Đọc Offline"
+                btnDownload.setTextColor(ContextCompat.getColor(this@BookDetailActivity, R.color.text_accent))
+            }
+        }
+    }
+
+    private fun handleDownload() {
+        val id = bookId ?: return
+        val book = currentBook ?: return
+
+        lifecycleScope.launch {
+            if (offlineManager.isBookDownloaded(id)) {
+                offlineManager.deleteDownloadedBook(id)
+                Toast.makeText(this@BookDetailActivity, "Đã xóa bản offline", Toast.LENGTH_SHORT).show()
+                checkDownloadStatus()
+            } else {
+                btnDownload.isEnabled = false
+                btnDownload.text = "Đang tải..."
+                
+                try {
+                    offlineManager.downloadBook(book) { current, total ->
+                        // Progress update if needed
+                    }
+                    Toast.makeText(this@BookDetailActivity, "Tải sách thành công!", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this@BookDetailActivity, "Lỗi tải sách: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    btnDownload.isEnabled = true
+                    checkDownloadStatus()
+                }
+            }
+        }
     }
 }

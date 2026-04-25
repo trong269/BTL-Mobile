@@ -60,8 +60,8 @@ class TopBookAdapter(
 
             bindCover(book.coverImage)
             tvTopRank.text = "Top #$rank"
-            tvTopBookTitle.text = book.title?.takeIf { it.isNotBlank() } ?: "Chua co tieu de"
-            tvTopBookAuthor.text = book.author?.takeIf { it.isNotBlank() } ?: "Khong ro tac gia"
+            tvTopBookTitle.text = book.title?.takeIf { it.isNotBlank() } ?: "Chưa có tiêu đề"
+            tvTopBookAuthor.text = book.author?.takeIf { it.isNotBlank() } ?: "Không rõ tác giả"
 
             val metaParts = mutableListOf<String>()
             if (viewsText > 0) {

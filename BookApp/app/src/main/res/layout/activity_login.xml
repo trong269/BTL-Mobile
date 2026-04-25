@@ -2,105 +2,161 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/auth_gradient_bg"
+    android:background="@color/home_background"
     android:fillViewport="true"
     android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:orientation="vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="28dp">
+        android:paddingLeft="26dp"
+        android:paddingTop="34dp"
+        android:paddingRight="26dp"
+        android:paddingBottom="24dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="BookApp"
-            android:textColor="@android:color/white"
-            android:textSize="34sp"
+            android:layout_marginTop="18dp"
+            android:fontFamily="serif"
+            android:lineSpacingExtra="2dp"
+            android:text="Chào mừng bạn trở lại"
+            android:textColor="@color/text_primary"
+            android:textSize="54sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Nen tang doc sach cho nguoi yeu tri thuc"
-            android:textColor="#D8FFFFFF"
-            android:textSize="14sp" />
+            android:layout_marginTop="12dp"
+            android:text="Tiến vào không gian đọc sách của bạn"
+            android:textColor="@color/text_secondary"
+            android:textSize="21sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="34dp"
+            android:text="TÊN TÀI KHOẢN"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/edtUsername"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/auth_input_bg"
+            android:hint="Nhập tên tài khoản"
+            android:inputType="text"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
+            android:textSize="18sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:background="@drawable/auth_card_bg"
-            android:elevation="6dp"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_marginTop="18dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Dang nhap"
-                android:textColor="#1B1F24"
-                android:textSize="24sp"
+                android:layout_weight="1"
+                android:text="MẬT KHẨU"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvForgotPassword"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Dang nhap de tiep tuc doc sach cua ban"
-                android:textColor="#6C7380"
-                android:textSize="13sp" />
-
-            <EditText
-                android:id="@+id/edtUsername"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/auth_input_bg"
-                android:hint="Username"
-                android:inputType="text"
-                android:paddingHorizontal="14dp"
-                android:textColor="#1B1F24"
-                android:textColorHint="#8A909A" />
-
-            <EditText
-                android:id="@+id/edtPassword"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/auth_input_bg"
-                android:hint="Password"
-                android:inputType="textPassword"
-                android:paddingHorizontal="14dp"
-                android:textColor="#1B1F24"
-                android:textColorHint="#8A909A" />
-
-            <Button
-                android:id="@+id/btnLogin"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/auth_primary_button_bg"
-                android:text="Dang nhap"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvGoToRegister"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:text="Chua co tai khoan? Dang ky ngay"
-                android:textColor="@color/auth_primary"
+                android:text="QUÊN MẬT KHẨU?"
+                android:textColor="@color/text_muted"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <EditText
+            android:id="@+id/edtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/auth_input_bg"
+            android:hint="..............."
+            android:inputType="textPassword"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_input"
+            android:textColorHint="@color/text_muted"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="26dp"
+            android:background="@drawable/auth_primary_button_bg"
+            android:text="Đăng nhập"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvGoToRegister"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="26dp"
+            android:text="Chưa có tài khoản? Đăng ký ngay"
+            android:textColor="@color/text_secondary"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="@color/text_muted" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:text="HOẶC"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="@color/text_muted" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnGoogleLogin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/auth_input_bg"
+            android:text="Đăng nhập bằng Google"
+            android:textAllCaps="false"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </ScrollView>

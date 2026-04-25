@@ -14,7 +14,7 @@ const defaultNewUser: CreateUserPayload = {
   name: '',
   email: '',
   password: '',
-  role: 'user',
+  role: 'USER',
   plan: 'Cơ bản',
   avatar: '',
 };
@@ -47,11 +47,7 @@ export default function Users() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (activeFilter === 'admin') {
-      return matchesSearch && user.role === 'admin';
-    }
-
-    if (activeFilter === 'premium') {
-      return matchesSearch && user.plan === 'Premium';
+      return matchesSearch && user.role === 'ADMIN';
     }
 
     return matchesSearch;
@@ -70,8 +66,7 @@ export default function Users() {
   const currentUsers = filteredUsers.slice(startIndex, endIndex);
 
   const totalUsers = users.length;
-  const adminUsers = users.filter((u) => u.role === 'admin').length;
-  const premiumUsers = users.filter((u) => u.plan === 'Premium').length;
+  const adminUsers = users.filter((u) => u.role === 'ADMIN').length;
 
   const resetCreateForm = () => {
     setNewUser(defaultNewUser);
@@ -200,16 +195,6 @@ export default function Users() {
             <p className="text-2xl font-serif font-semibold text-on-surface">{adminUsers.toLocaleString()}</p>
           </div>
         </div>
-
-        <div className="bg-surface-container-lowest p-6 rounded-[2rem] border border-outline-variant/20 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-tertiary-container text-on-surface flex items-center justify-center shrink-0">
-            <Crown className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-on-surface-variant">Thành viên Premium</p>
-            <p className="text-2xl font-serif font-semibold text-on-surface">{premiumUsers.toLocaleString()}</p>
-          </div>
-        </div>
       </div>
 
       <div className="bg-surface-container-lowest rounded-[2rem] border border-outline-variant/20 shadow-sm overflow-hidden">
@@ -246,16 +231,6 @@ export default function Users() {
             >
               Admin
             </button>
-            <button
-              onClick={() => setActiveFilter('premium')}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeFilter === 'premium'
-                  ? 'bg-secondary-container text-on-surface'
-                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
-              }`}
-            >
-              Premium
-            </button>
           </div>
         </div>
 
@@ -265,8 +240,7 @@ export default function Users() {
               <tr className="bg-surface-container-low border-b border-outline-variant/20">
                 <th className="p-4 font-medium text-sm text-on-surface-variant">Người dùng</th>
                 <th className="p-4 font-medium text-sm text-on-surface-variant">Vai trò</th>
-                <th className="p-4 font-medium text-sm text-on-surface-variant">Gói</th>
-                <th className="p-4 font-medium text-sm text-on-surface-variant">Hoạt động cuối</th>
+                <th className="p-4 font-medium text-sm text-on-surface-variant"> Cập nhật lần cuối</th>
                 <th className="p-4 font-medium text-sm text-on-surface-variant text-right">Thao tác</th>
               </tr>
             </thead>
@@ -286,19 +260,13 @@ export default function Users() {
                     <td className="p-4">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'admin'
+                          user.role === 'ADMIN'
                             ? 'bg-primary-container/30 text-primary border border-primary/20'
                             : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/30'
                         }`}
                       >
-                        {user.role === 'admin' && <Shield className="w-3 h-3" />}
-                        {user.role === 'admin' ? 'Admin' : 'User'}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`inline-flex items-center gap-1 text-sm ${user.plan === 'Premium' ? 'text-secondary font-medium' : 'text-on-surface-variant'}`}>
-                        {user.plan === 'Premium' && <Crown className="w-3.5 h-3.5" />}
-                        {user.plan}
+                        {user.role === 'ADMIN' && <Shield className="w-3 h-3" />}
+                        {user.role === 'ADMIN' ? 'Admin' : 'User'}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-on-surface-variant">{user.lastActive}</td>
@@ -326,7 +294,7 @@ export default function Users() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-on-surface-variant">
+                  <td colSpan={4} className="p-8 text-center text-on-surface-variant">
                     Không tìm thấy người dùng nào phù hợp với điều kiện lọc.
                   </td>
                 </tr>
@@ -436,7 +404,7 @@ export default function Users() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Vai trò</label>
                   <select
@@ -444,20 +412,8 @@ export default function Users() {
                     onChange={(e) => setNewUser((prev) => ({ ...prev, role: e.target.value }))}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-on-surface mb-1.5">Gói</label>
-                  <select
-                    value={newUser.plan}
-                    onChange={(e) => setNewUser((prev) => ({ ...prev, plan: e.target.value }))}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  >
-                    <option value="Cơ bản">Cơ bản</option>
-                    <option value="Premium">Premium</option>
+                    <option value="USER">User</option>
+                    <option value="ADMIN">Admin</option>
                   </select>
                 </div>
               </div>
@@ -556,7 +512,7 @@ export default function Users() {
                 <p className="mt-1 text-xs text-on-surface-variant">Để trống nếu không muốn đổi mật khẩu.</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-on-surface mb-1.5">Vai trò</label>
                   <select
@@ -564,20 +520,8 @@ export default function Users() {
                     onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-on-surface mb-1.5">Gói</label>
-                  <select
-                    value={editingUser.plan}
-                    onChange={(e) => setEditingUser({ ...editingUser, plan: e.target.value })}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  >
-                    <option value="Cơ bản">Cơ bản</option>
-                    <option value="Premium">Premium</option>
+                    <option value="USER">User</option>
+                    <option value="ADMIN">Admin</option>
                   </select>
                 </div>
               </div>

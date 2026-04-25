@@ -20,7 +20,7 @@
             android:id="@+id/imgTopBookCover"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:contentDescription="Top book cover"
+            android:contentDescription="Ảnh bìa sách nổi bật"
             android:scaleType="centerCrop" />
 
         <TextView
@@ -28,8 +28,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Chua cap nhat"
-            android:textColor="#5F6C80"
+            android:text="Chưa cập nhật"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp"
             android:textStyle="bold" />
     </FrameLayout>
@@ -59,7 +59,7 @@
             android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textColor="#182031"
+            android:textColor="@color/text_primary"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -70,7 +70,7 @@
             android:layout_marginTop="3dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#5A667D"
+            android:textColor="@color/text_secondary"
             android:textSize="11sp" />
 
         <TextView
@@ -80,7 +80,7 @@
             android:layout_marginTop="3dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#32435C"
+            android:textColor="@color/text_primary"
             android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>

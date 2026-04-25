@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_reader_rounded_bg"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="10dp">
+
+        <ImageButton
+            android:id="@+id/btnDialogChapterClose"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Đóng danh sách chương"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="@color/reader_primary" />
+
+        <TextView
+            android:id="@+id/tvDialogChapterTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="Danh sách chương"
+            android:textColor="@color/reader_text_primary"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:visibility="invisible" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E8E8E8" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerReaderChapters"
+        android:layout_width="match_parent"
+        android:layout_height="520dp"
+        android:clipToPadding="false"
+        android:paddingBottom="10dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp">
+
+        <ImageButton
+            android:id="@+id/btnPageFirst"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Trang đầu"
+            android:src="@android:drawable/ic_media_previous"
+            android:tint="#AEB4BC" />
+
+        <ImageButton
+            android:id="@+id/btnPagePrev"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="12dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Trang trước"
+            android:src="@android:drawable/ic_media_rew"
+            android:tint="#AEB4BC" />
+
+        <TextView
+            android:id="@+id/tvPageIndicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="1/1"
+            android:textColor="@color/text_muted"
+            android:textSize="17sp" />
+
+        <ImageButton
+            android:id="@+id/btnPageNext"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginEnd="12dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Trang sau"
+            android:src="@android:drawable/ic_media_ff"
+            android:tint="#AEB4BC" />
+
+        <ImageButton
+            android:id="@+id/btnPageLast"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@android:color/transparent"
+                android:contentDescription="Trang cuối"
+            android:src="@android:drawable/ic_media_next"
+            android:tint="#AEB4BC" />
+    </LinearLayout>
+
+</LinearLayout>

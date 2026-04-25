@@ -24,7 +24,7 @@
                 android:layout_width="34dp"
                 android:layout_height="34dp"
                 android:background="@drawable/back_round_bg"
-                android:contentDescription="Quay lai"
+                android:contentDescription="Quay lại"
                 android:padding="5dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_back_arrow" />
@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:text="Danh muc sach"
+                android:text="Danh mục sách"
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -48,11 +48,11 @@
             android:background="@drawable/home_card_bg"
             android:drawableStart="@android:drawable/ic_menu_search"
             android:drawablePadding="10dp"
-            android:hint="Tim kiem sach, tac gia, the loai..."
+            android:hint="Tìm kiếm sách, tác giả, thể loại, ..."
             android:inputType="text"
             android:imeOptions="actionSearch"
             android:paddingHorizontal="14dp"
-            android:textColor="#212121"
+            android:textColor="@color/text_input"
             android:textColorHint="#6D6D6D"
             android:textSize="14sp" />
     </LinearLayout>
@@ -72,6 +72,23 @@
             android:paddingHorizontal="12dp" />
     </HorizontalScrollView>
 
+    <!-- Filter options -->
+    <!-- Removed - now using Dialog -->
+
+    <!-- Filter toggle button -->
+    <Button
+        android:id="@+id/btnToggleFilter"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/home_chip_bg"
+        android:text="Bộ lọc"
+        android:textAllCaps="false"
+        android:textColor="@color/text_accent"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
     <!-- Kết quả + Loading -->
     <TextView
         android:id="@+id/tvCatalogStatus"
@@ -79,7 +96,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="4dp"
-        android:textColor="#9099A4"
+        android:textColor="@color/text_muted"
         android:textSize="12sp"
         android:visibility="gone" />
 
@@ -107,9 +124,9 @@
             android:layout_height="40dp"
             android:layout_weight="1"
             android:background="@drawable/home_chip_bg"
-            android:text="&lt; Trang truoc"
+            android:text="&lt; Trang trước"
             android:textAllCaps="false"
-            android:textColor="#23408E"
+            android:textColor="@color/text_accent"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -119,7 +136,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="10dp"
             android:text="1/1"
-            android:textColor="#3F4A57"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -131,7 +148,7 @@
             android:background="@drawable/home_chip_bg"
             android:text="Trang sau &gt;"
             android:textAllCaps="false"
-            android:textColor="#23408E"
+            android:textColor="@color/text_accent"
             android:textSize="12sp"
             android:textStyle="bold" />
     </LinearLayout>
